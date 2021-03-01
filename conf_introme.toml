@@ -1,0 +1,19 @@
+# File used by VCFanno to define how a VCF file should be annotated
+
+[[annotation]]
+file="introme_annotate.spliceai.vcf.gz"
+fields = ["DS_AG", "DS_AL", "DS_DG", "DS_DL", "DP_AG", "DP_AL", "DP_DG", "DP_DL"]
+ops=["self", "self", "self", "self", "self", "self", "self", "self"]
+names=["SpliceAI_Acceptor_Gain", "SpliceAI_Acceptor_Loss", "SpliceAI_Donor_Gain", "SpliceAI_Donor_Loss",  "SpliceAI_DP_Acceptor_Gain", "SpliceAI_DP_Acceptor_Loss", "SpliceAI_DP_Donor_Gain", "SpliceAI_DP_Donor_Loss"]
+
+[[annotation]]
+file="introme_annotate.mmsplice.vcf.gz"
+fields = ["mmsplice_dl"]
+ops=["self"]
+names=["MMSplice_Delta_Logit"]
+
+[[annotation]]
+file="introme_annotate.functions.vcf.gz"
+fields = ["variant_type", "ag_created", "gt_created"]
+ops=["self","self","self"]
+names=["Variant_Type", "AG_Created", "GT_Created"]
