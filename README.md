@@ -4,23 +4,30 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 
 ## Requirements
 
-We suggest using the dockerised versions of Introme, ideally implemented on.
-
-Introme has also been wrapped in Workflow Description Language and implemented using [Terra](https://terra.bio/). We are currently in the process of implementing Introme using [CAVATICA](https://www.cavatica.org).
-
-
+### Software requirements
 Since Introme combines multiple splice-prediction tools, there is a large number of dependencies required to run Introme locally. 
+- vcfanno
+- TBA
 
+### Variant Annotation file requirements
+- SpliceAI
+- TBA
+
+## Installation
+We suggest using the dockerised versions of Introme, <info to be finalised>
+
+    
 ## Running Introme
+Introme can be run using either a local installation, or Docker. Furthermore, we have wrapped Introme in Workflow Description Language and implemented using [Terra](https://terra.bio/). We are currently in the process of implementing Introme using [CAVATICA](https://www.cavatica.org), which uses the [SevenBridges Genomics](https://www.sevenbridges.com/) platform.
 
-### Requirements
+### Required parameters
 - `b` Input BED file (i.e. regions of interest)
 - `g` Input GTF file
 - `p` Output file prefix
 - `r` Reference genome
 - `v` Input VCF file
 
-### Options
+### Optional parameters
 - `f` Score all variants regardless of variant frequency
 - `l` List of genes to filter for (.txt file or list accepted) 
 - `q` Score all variants regardless of quality score
