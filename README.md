@@ -5,20 +5,34 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 ## Requirements
 
 ### Software requirements
-Since Introme combines multiple splice-prediction tools, there is a large number of dependencies required to run Introme locally. 
 - vcfanno
-- TBA
+- spliceai
+- vep
+- MMSplice vep plugin and python package
+- bedtools
+- bcftools
+- samtools
+- tabix
+- R
+- R packages: ROCR, caret
+- python3
+- python packages: pysam, csv, Bio.Seq, argparse, mmsplice
 
 ### Variant Annotation file requirements
 - SpliceAI
-- TBA
+- gnomAD
+- [MGRB](https://www.garvan.org.au/research/kinghorn-centre-for-clinical-genomics/research-programs/sydney-genomics-collaborative/mgrb), [Pinese et al, 2020](https://www.nature.com/articles/s41467-019-14079-0)
+- CADD v1.3
+- SPIDEX v1.0
+- dbscSNV v1.1
 
 ## Installation
-We suggest using the dockerised versions of Introme, <info to be finalised>
-
+We suggest using the dockerised versions of Introme, <instructions to be finalised>
     
 ## Running Introme
-Introme can be run using either a local installation, or Docker. Furthermore, we have wrapped Introme in Workflow Description Language and implemented using [Terra](https://terra.bio/). We are currently in the process of implementing Introme using [CAVATICA](https://www.cavatica.org), which uses the [SevenBridges Genomics](https://www.sevenbridges.com/) platform.
+Introme can be run using either a local installation, or Docker. 
+
+Furthermore, we have wrapped Introme in Workflow Description Language and implemented using [Terra](https://terra.bio/). We are currently in the process of implementing Introme using [CAVATICA](https://www.cavatica.org), which uses the [SevenBridges Genomics](https://www.sevenbridges.com/) platform.
 
 ### Required parameters
 - `b` Input BED file (i.e. regions of interest)
@@ -37,12 +51,14 @@ Introme can be run using either a local installation, or Docker. Furthermore, we
 `./run_introme.sh -r $genome.fa -g $gtf -b $bed -v $input -p $prefix`
 
 
-## Interpreting Introme Outputs
+## Interpreting Introme Results
 
 The variant-level scores and supporting information are then fed into the Introme decision tree model to classify the likelihood of a variant altering splicing, which produces an Introme score from 0–1. **We recommend the use of 0.54 as a threshold**, producing a sensitivity of 0.9 and a specificity of 0.95, calculated on the validation dataset. When high specificity is required, a threshold of 0.75 results in a sensitivity of 0.8 and a specificity of 0.97.
 
 We are working on implementing automatic interpretation for the outcome of the splice-altering variant. Until this feature is in place, all of the input scores which make up Introme's final prediction are included in the final .tsv file if further information on the variant prediction is required. 
 
+## Reference Genome versions
+Introme currently supports VCF files aligned to the hs37d5 reference genome. GRCh38 is not yet supported.
 
 ## Funding
 
