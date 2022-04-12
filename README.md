@@ -27,7 +27,7 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 - dbscSNV v1.1
 
 ## Installation
-We suggest using the dockerised versions of Introme, <instructions to be finalised>
+We suggest using the dockerised versions of Introme, _instructions to be finalised_.
     
 ## Running Introme
 Introme can be run using either a local installation, or Docker. 
