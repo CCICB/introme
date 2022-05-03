@@ -14,15 +14,15 @@ shift $(( $OPTIND - 1 )) # Remove parsed options and args from $@ list
 echo $(gzip -d -c $input_VCF | grep -v '^#' | wc -l) 'variants in input VCF'
 
 # Correctly formats the input VCF file for Introme
-bcftools sort $input_VCF | uniq | bgzip > output/$prefix.sorted.vcf.gz # Ensures the file is sorted correctly prior to subsetting
-bcftools norm -m-both output/$prefix.sorted.vcf.gz | bgzip > output/$prefix.sorted.norm.vcf.gz # Removes multiallelics
+bcftools sort $input_VCF | uniq | bgzip > $prefix.sorted.vcf.gz # Ensures the file is sorted correctly prior to subsetting
+bcftools norm -m-both $prefix.sorted.vcf.gz | bgzip > $prefix.sorted.norm.vcf.gz # Removes multiallelics
 
 echo $(gzip -d -c $input_VCF | grep -v '^#' | wc -l) 'variants prior to subsetting'
 
 echo $(date +%x_%r) 'Beginning subsetting to genomic regions of interest'
-bedtools intersect -header -u -a output/$prefix.sorted.norm.vcf.gz -b $input_BED | bgzip > output/$prefix.subset.vcf.gz # -u for unique record in VCF
+bedtools intersect -header -u -a $prefix.sorted.norm.vcf.gz -b $input_BED | bgzip > $prefix.subset.vcf.gz # -u for unique record in VCF
 
-tabix -p vcf $out_dir/working_files/$prefix.subset.vcf.gz
+tabix -p vcf $prefix.subset.vcf.gz
 
-echo $(gzip -d -c output/$prefix.subset.vcf.gz | grep -v '^#' | wc -l) 'variants after subsetting'
+echo $(gzip -d -c $prefix.subset.vcf.gz | grep -v '^#' | wc -l) 'variants after subsetting'
 echo $(date +%x_%r) 'Subsetting complete'
