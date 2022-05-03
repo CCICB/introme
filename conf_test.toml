@@ -1,5 +1,0 @@
-[[annotation]]
-file="annotations/regions.bed.gz"
-columns = [6]
-ops=["self"]
-names=["Gene_Regions"]
