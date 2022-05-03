@@ -20,7 +20,7 @@ task subset {
 	}
 }
 
-workflow subset {
+workflow introme_subset {
 	input {
 		File vcf
     File bam
