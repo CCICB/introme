@@ -20,7 +20,7 @@ task subset {
 	}
 }
 
-workflow test {
+workflow subset {
 	input {
 		File vcf
     File bam
