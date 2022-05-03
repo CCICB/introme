@@ -24,7 +24,7 @@ task MMSplice {
 	}
 }
 
-workflow test {
+workflow mmsplice {
 	input {
 		File vcf
 		File ref_genome
