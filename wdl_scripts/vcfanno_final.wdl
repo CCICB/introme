@@ -25,7 +25,7 @@ task vcfanno {
 	}
 }
 
-workflow test {
+workflow run_vcfanno {
 	input {
 		File vcf
 		File spliceai
@@ -39,11 +39,11 @@ workflow test {
 	call vcfanno {
 		input:
 			vcf=vcf,
-		  spliceai=spliceai,
-		  spliceai_tbi=spliceai_tbi,
-		  mmsplice=mmsplice,
-      mmsplice_tbi=mmsplice_tbi,
-		  spliceogen=spliceogen,
-		  spliceogen_tbi=spliceogen_tbi
+			spliceai=spliceai,
+			spliceai_tbi=spliceai_tbi,
+			mmsplice=mmsplice,
+			mmsplice_tbi=mmsplice_tbi,
+			spliceogen=spliceogen,
+			spliceogen_tbi=spliceogen_tbi
 	}
 }
