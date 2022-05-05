@@ -4,7 +4,7 @@ task subset {
 	input {
 		File vcf
 		File bam
-    String prefix
+		String prefix
 	}
 
 	command {
@@ -23,13 +23,13 @@ task subset {
 workflow introme_subset {
 	input {
 		File vcf
-    File bam
+		File bam
 	}
 
 	call vcfanno {
 		input:
 			vcf=vcf,
-      bam=bam,
-      prefix=prefix
+			bam=bam,
+			prefix=prefix
 	}
 }
