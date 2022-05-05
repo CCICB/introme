@@ -39,7 +39,7 @@ task vcfanno {
 	}
 }
 
-workflow test {
+workflow run_vcfanno {
 	input {
 		File vcf
 		File gnomad
