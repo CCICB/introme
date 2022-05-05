@@ -22,11 +22,11 @@ task Spliceogen {
     }
 }
 
-workflow test {
+workflow run_spliceogen {
 	input {
-    	File vcf
-        File ref_genome
-        File gtf
+    		File vcf
+        	File ref_genome
+        	File gtf
     }
     
     call Spliceogen {
