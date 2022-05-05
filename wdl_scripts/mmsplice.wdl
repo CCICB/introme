@@ -4,7 +4,7 @@ task MMSplice {
 	input {
 		File vcf
 		File ref_genome
-    File gtf
+		File gtf
 	}
 
 	command {
@@ -28,7 +28,7 @@ workflow run_mmsplice {
 	input {
 		File vcf
 		File ref_genome
-        File gtf
+		File gtf
 	}
 
 	call MMSplice {
