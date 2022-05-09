@@ -17,7 +17,7 @@ echo $(gzip -d -c $input_VCF | grep -v '^#' | wc -l) 'variants in input VCF'
 bcftools sort $input_VCF | uniq | bgzip > $prefix.sorted.vcf.gz # Ensures the file is sorted correctly prior to subsetting
 bcftools norm -m-both $prefix.sorted.vcf.gz | bgzip > $prefix.sorted.norm.vcf.gz # Removes multiallelics
 
-echo $(gzip -d -c $input_VCF | grep -v '^#' | wc -l) 'variants prior to subsetting'
+echo $(gzip -d -c $prefix.sorted.norm.vcf.gz | grep -v '^#' | wc -l) 'variants prior to subsetting'
 
 echo $(date +%x_%r) 'Beginning subsetting to genomic regions of interest'
 bedtools intersect -header -u -a $prefix.sorted.norm.vcf.gz -b $input_BED | bgzip > $prefix.subset.vcf.gz # -u for unique record in VCF
