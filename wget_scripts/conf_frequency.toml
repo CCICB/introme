@@ -2,13 +2,13 @@
 # File for allele frequency annotation using wdl
 
 [[annotation]]
-file="annotations/gnomad.genomes.sites.merged.AF_AC_AN_only.vcf.gz"
-fields = ["AF", "AC", "AN", "POPMAX", "AF_POPMAX", "AC_POPMAX", "AN_POPMAX"]
-ops=["self", "self", "self", "self", "self", "self", "self"]
-names=["gnomAD_AF", "gnomAD_AC", "gnomAD_AN", "gnomAD_PopMax", "gnomAD_PM_AF", "gnomAD_PM_AC", "gnomAD_PM_AN"]
+file="gnomad.genomes.sites.merged.AF_AC_AN_only.vcf.gz"
+fields = ["AF_POPMAX"]
+ops=["self"]
+names=["gnomAD_PM_AF"]
 
 [[annotation]]
-file="annotations/reheadered.MGRB.vcf.gz"
-fields=["AC", "AF"]
-ops=["self", "self"]
-names=["MGRB_AC", "MGRB_AF"]
+file="reheadered.MGRB.vcf.gz"
+fields=["AF"]
+ops=["self"]
+names=["MGRB_AF"]
