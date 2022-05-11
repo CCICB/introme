@@ -10,7 +10,7 @@ while getopts "b:p:q:v:" opt; do
     case $opt in
         b) input_BED="$OPTARG";; # Input BED file (i.e. regions of interest)
         p) prefix="$OPTARG";; # Output file prefix
-        q) no_qual_filter="$OPTARG";; # trigger no quality filter command
+        q) qual_filter="$OPTARG";; # Use (1) or not use (0) quality filter
         v) input_VCF="$OPTARG";; # Input VCF file
     esac
 done
@@ -36,7 +36,7 @@ echo $(date +%x_%r) 'Subsetting complete'
 
 echo $(date +%x_%r) 'Beginning quality filtering'
 
-if [ $no_qual_filter == 0 ]; then
+if [ $qual_filter == 1 ]; then
     bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL$min_QUAL || QUAL='.') && MAX(FORMAT/DP[*])$min_DP && MAX(FORMAT/AD[*:1])$min_AD" $prefix.subset.vcf.gz | bgzip > $prefix.subset.highquality.vcf.gz
 else
     bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL$min_QUAL || QUAL='.')" $prefix.subset.vcf.gz | bgzip > $prefix.subset.highquality.vcf.gz
