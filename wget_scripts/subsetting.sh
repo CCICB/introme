@@ -37,9 +37,9 @@ echo $(date +%x_%r) 'Subsetting complete'
 echo $(date +%x_%r) 'Beginning quality filtering'
 
 if [ $no_qual_filter == 0 ]; then
-    bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL$min_QUAL || QUAL='.') && MAX(FORMAT/DP[*])$min_DP && MAX(FORMAT/AD[*:1])$min_AD" $out_dir/working_files/$prefix.subset.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.vcf.gz
+    bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL$min_QUAL || QUAL='.') && MAX(FORMAT/DP[*])$min_DP && MAX(FORMAT/AD[*:1])$min_AD" $prefix.subset.vcf.gz | bgzip > $prefix.subset.highquality.vcf.gz
 else
-    bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL$min_QUAL || QUAL='.')" $out_dir/working_files/$prefix.subset.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.vcf.gz
+    bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL$min_QUAL || QUAL='.')" $prefix.subset.vcf.gz | bgzip > $prefix.subset.highquality.vcf.gz
 fi
 
 tabix -p vcf $prefix.subset.highquality.vcf.gz
