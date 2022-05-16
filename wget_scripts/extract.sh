@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Define inputs for score extraction portion of introme
-while getopts "a:b:c:d:" opt; do
+while getopts "a:b:c:p:" opt; do
     case $opt in
         a) spliceai_vcf="$OPTARG";; # SpliceAI output VCF
         b) spliceogen_txt="$OPTARG";; # Spliceogen output txt
         c) mmsplice_vcf="$OPTARG";; # MMSplice output vcf
-        d) prefix="$OPTARG";; # Output file prefix
+        p) prefix="$OPTARG";; # Output file prefix
     esac
 done
 shift $(( $OPTIND - 1 )) # Remove parsed options and args from $@ list
