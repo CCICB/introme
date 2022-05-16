@@ -1,0 +1,66 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
+##INFO=<ID=alt_acceptor,Number=1,Type=Float,Description="Alt variant acceptor score">
+##INFO=<ID=alt_acceptor_intron,Number=1,Type=Float,Description="Alt variant acceptor intron score">
+##INFO=<ID=alt_donor,Number=1,Type=Float,Description="Alt variant donor score">
+##INFO=<ID=alt_donor_intron,Number=1,Type=Float,Description="Alt variant donor intron score">
+##INFO=<ID=alt_exon,Number=1,Type=Float,Description="Alt variant exon score">
+##INFO=<ID=delta_logit_PSI,Number=1,Type=Float,Description="MMSplice Delta Logit PSI score">
+##INFO=<ID=pathogenicity,Number=1,Type=Float,Description="MMSplice Pathogenicity score">
+##INFO=<ID=ref_acceptor,Number=1,Type=Float,Description="Reference acceptor score">
+##INFO=<ID=ref_acceptor_intron,Number=1,Type=Float,Description="Reference acceptor intron score">
+##INFO=<ID=ref_donor,Number=1,Type=Float,Description="Reference donor score">
+##INFO=<ID=ref_donor_intron,Number=1,Type=Float,Description="Reference donor intron score">
+##INFO=<ID=ref_exon,Number=1,Type=Float,Description="Reference exon score">
+##INFO=<ID=gene,Number=1,Type=String,Description="Gene SpliceAI score is associated with">
+##INFO=<ID=DS_AG,Number=1,Type=Float,Description="Delta score (acceptor gain)">
+##INFO=<ID=DS_AL,Number=1,Type=Float,Description="Delta score (acceptor loss)">
+##INFO=<ID=DS_DG,Number=1,Type=Float,Description="Delta score (donor gain)">
+##INFO=<ID=DS_DL,Number=1,Type=Float,Description="Delta score (donor loss)">
+##INFO=<ID=DP_AG,Number=1,Type=Integer,Description="Delta position (acceptor gain) relative to the variant position">
+##INFO=<ID=DP_AL,Number=1,Type=Integer,Description="Delta position (acceptor loss) relative to the variant position">
+##INFO=<ID=DP_DG,Number=1,Type=Integer,Description="Delta position (donor gain) relative to the variant position">
+##INFO=<ID=DP_DL,Number=1,Type=Integer,Description="Delta position (donor loss) relative to the variant position">
+##INFO=<ID=variant_type,Number=1,Type=String,Description="Variant type, e.g. SNV,INDEL,INSDEL (incl. MNV)">
+##INFO=<ID=ag_created,Number=1,Type=String,Description="AG dinucleotide created because of variant (reported as the strand)">
+##INFO=<ID=ag_lost,Number=1,Type=String,Description="AG dinucleotide lost because of variant (reported as the strand)">
+##INFO=<ID=gt_created,Number=1,Type=String,Description="GT dinucleotide created because of variant (reported as the strand)">
+##INFO=<ID=gt_lost,Number=1,Type=String,Description="GT dinucleotide lost because of variant (reported as the strand)">
+##INFO=<ID=mesDonRef,Number=1,Type=Float,Description="MaxEntScan donor ref score">
+##INFO=<ID=mesDonAlt,Number=1,Type=Float,Description="MaxEntScan donor alt score">
+##INFO=<ID=mesAccRef,Number=1,Type=Float,Description="MaxEntScan acceptor ref score">
+##INFO=<ID=mesAccAlt,Number=1,Type=Float,Description="MaxEntScan acceptor alt score">
+##INFO=<ID=ESEmaxRef,Number=1,Type=Float,Description="ESRSeq maximum ref score">
+##INFO=<ID=ESEmaxAlt,Number=1,Type=Float,Description="ESRSeq maximum alt score">
+##INFO=<ID=ESEminRef,Number=1,Type=Float,Description="ESRSeq minimum ref score">
+##INFO=<ID=ESEminAlt,Number=1,Type=Float,Description="ESRSeq minimum alt score">
+##INFO=<ID=DonGainP,Number=1,Type=Float,Description="Spliceogen Donor Gain Probability">
+##INFO=<ID=AccGainP,Number=1,Type=Float,Description="Spliceogen Acceptor Gain Probability">
+##INFO=<ID=DonLossP,Number=1,Type=Float,Description="Spliceogen Donor Loss Probability">
+##INFO=<ID=AccLossP,Number=1,Type=Float,Description="Spliceogen Acceptor Loss Probability">
+##contig=<ID=1>
+##contig=<ID=10>
+##contig=<ID=11>
+##contig=<ID=12>
+##contig=<ID=13>
+##contig=<ID=14>
+##contig=<ID=15>
+##contig=<ID=16>
+##contig=<ID=17>
+##contig=<ID=18>
+##contig=<ID=19>
+##contig=<ID=2>
+##contig=<ID=20>
+##contig=<ID=21>
+##contig=<ID=22>
+##contig=<ID=3>
+##contig=<ID=4>
+##contig=<ID=5>
+##contig=<ID=6>
+##contig=<ID=7>
+##contig=<ID=8>
+##contig=<ID=9>
+##contig=<ID=X>
+##contig=<ID=Y>
+##bcftools_viewVersion=1.9+htslib-1.9
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
