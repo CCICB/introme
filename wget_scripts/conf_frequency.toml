@@ -12,3 +12,9 @@ file="reheadered.MGRB.vcf.gz"
 fields=["AF"]
 ops=["self"]
 names=["MGRB_AF"]
+
+[[annotation]]
+file="regions.bed.gz"
+columns = [6]
+ops=["self"]
+names=["Gene_Regions"]
