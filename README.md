@@ -7,7 +7,6 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 ### Software requirements
 - vcfanno
 - spliceai
-- vep
 - MMSplice vep plugin and python package
 - bedtools
 - bcftools
@@ -19,15 +18,19 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 - python packages: pysam, csv, Bio.Seq, argparse, mmsplice
 
 ### Variant Annotation file requirements
+Introme requires the following files to be downloaded and placed in the annotations folder.
+
 - CADD v1.3 VCF created using the instructions at: https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md
 - gnomad.genomes.sites.merged.AF_AC_AN_only.vcf.gz
 - [MGRB](https://www.garvan.org.au/research/kinghorn-centre-for-clinical-genomics/research-programs/sydney-genomics-collaborative/mgrb), [Pinese et al, 2020](https://www.nature.com/articles/s41467-019-14079-0)
-- CADD v1.3 
 - [SPIDEX v1.0](https://www.openbioinformatics.org/annovar/spidex_download_form.php)
 - dbscSNV v1.1
 
 ## Installation
 We suggest using the dockerised versions of Introme, _instructions to be finalised_.
+
+### Local Install
+
     
 ## Running Introme
 Introme can be run using either a local installation, or Docker. 
