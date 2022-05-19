@@ -5,9 +5,9 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 ## Requirements
 
 ### Software requirements
+- Docker
 - vcfanno
 - spliceai
-- MMSplice vep plugin and python package
 - bedtools
 - bcftools
 - samtools
@@ -15,7 +15,7 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 - R
 - R packages: ROCR, caret
 - python3
-- python packages: pysam, csv, Bio.Seq, argparse, mmsplice
+- python packages: pysam, csv, Bio.Seq, argparse
 
 ### Variant Annotation file requirements
 Introme requires the following files to be downloaded and placed in the annotations folder.
@@ -30,6 +30,18 @@ Introme requires the following files to be downloaded and placed in the annotati
 We suggest using the dockerised versions of Introme, _instructions to be finalised_.
 
 ### Local Install
+1. Install the above software requirements
+2. Download the required annotation files
+3. Build the docker containers for MMSplice and Spliceogen using the code below. If you tag the containers differently, ensure you update the `docker run` section in the _run_introme.sh_ script.
+
+```
+cd MMSplice
+docker build -t mmsplice .
+```
+```
+cd Spliceogen
+docker build -t spliceogen .
+```
 
     
 ## Running Introme
