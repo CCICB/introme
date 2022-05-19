@@ -145,7 +145,7 @@ export IRELATE_MAX_GAP=1000 # Note: this is set to speed up annotation when .csi
 # Run the appropriate annotation command based off the mode supplied
 if [ $mode == "full" ]; then
     echo $(date +%x_%r) 'Beginning annotation'
-    vcfanno -p $(getconf _NPROCESSORS_ONLN) conf.toml $out_dir/working_files/$prefix.subset.highquality.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz # The conf.toml file specifies what VCFanno should annotate
+    vcfanno -p $(getconf _NPROCESSORS_ONLN) conf_frequency.toml $out_dir/working_files/$prefix.subset.highquality.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz # The conf.toml file specifies what VCFanno should annotate
 elif [ $mode == "fast" ]; then
     bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"TYPE='snp'" $out_dir/working_files/$prefix.subset.highquality.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz # Filter file for SNPs
     tabix -p vcf $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz
