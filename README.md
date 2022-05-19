@@ -5,7 +5,7 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 ## Requirements
 
 ### Software requirements
-- Docker
+- [Docker](https://docs.docker.com/get-docker/)
 - [vcfanno](https://github.com/brentp/vcfanno) 
 - [spliceai](https://github.com/Illumina/SpliceAI)
 - [bedtools](https://bedtools.readthedocs.io/en/latest/content/installation.html)
@@ -24,14 +24,13 @@ Introme requires the following files to be downloaded and placed in the annotati
 - gnomad.genomes.sites.merged.AF_AC_AN_only.vcf.gz
 - [MGRB](https://www.garvan.org.au/research/kinghorn-centre-for-clinical-genomics/research-programs/sydney-genomics-collaborative/mgrb), [Pinese et al, 2020](https://www.nature.com/articles/s41467-019-14079-0)
 - [SPIDEX v1.0](https://www.openbioinformatics.org/annovar/spidex_download_form.php)
-- dbscSNV v1.1
+- [dbscSNV v1.1](http://www.liulab.science/dbscsnv.html)
 
 ### Additional file requirements
 - A gtf file, ideally containing only protein coding regions
 - A bed file with the regions of interest, you can use either a restricted gene list or a protein coding bed file
 
 ## Installation
-We suggest using the dockerised versions of Introme, _instructions to be finalised_.
 
 ### Local Install
 1. Install the above software requirements
@@ -46,6 +45,14 @@ docker build -t mmsplice .
 cd Spliceogen
 docker build -t spliceogen .
 ```
+4. Run introme using the run command `./run_introme.sh -r $genome.fa -g $gtf -b $bed -v $input -p $prefix`
+
+### Docker Local Install
+A more streamlined install of introme for running locally is being developed using Docker. 
+
+### WDL install
+The wdl scripts are in the [wdl_scripts](https://github.com/CCICB/introme/tree/master/wdl_scripts) folder. These scripts were set up for implementation using Terra, currently requiring multiple individual wdl scripts for each process within Introme. A condensed version is being developed. 
+
     
 ## Running Introme
 Introme can be run using either a local installation, or Docker. 
