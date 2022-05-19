@@ -6,13 +6,13 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 
 ### Software requirements
 - Docker
-- vcfanno
-- spliceai
-- bedtools
-- bcftools
-- samtools
-- tabix
-- R
+- [vcfanno](https://github.com/brentp/vcfanno) 
+- [spliceai](https://github.com/Illumina/SpliceAI)
+- [bedtools](https://bedtools.readthedocs.io/en/latest/content/installation.html)
+- [bcftools](http://www.htslib.org/download/)
+- [samtools](http://www.htslib.org/download/)
+- [htslib](http://www.htslib.org/download/)
+- [R](https://www.r-project.org/)
 - R packages: ROCR, caret
 - python3
 - python packages: pysam, csv, Bio.Seq, argparse
@@ -46,7 +46,6 @@ docker build -t mmsplice .
 cd Spliceogen
 docker build -t spliceogen .
 ```
-
     
 ## Running Introme
 Introme can be run using either a local installation, or Docker. 
