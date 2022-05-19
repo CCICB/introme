@@ -26,6 +26,10 @@ Introme requires the following files to be downloaded and placed in the annotati
 - [SPIDEX v1.0](https://www.openbioinformatics.org/annovar/spidex_download_form.php)
 - dbscSNV v1.1
 
+### Additional file requirements
+- A gtf file, ideally containing only protein coding regions
+- A bed file with the regions of interest, you can use either a restricted gene list or a protein coding bed file
+
 ## Installation
 We suggest using the dockerised versions of Introme, _instructions to be finalised_.
 
