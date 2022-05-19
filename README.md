@@ -33,8 +33,8 @@ Introme requires the following files to be downloaded and placed in the annotati
 ## Installation
 
 ### Local Install
-1. Install the above software requirements
-2. Download the required annotation files
+1. Install the above software requirements.
+2. Download the required annotation files and file requirements.
 3. Build the docker containers for MMSplice and Spliceogen using the code below. If you tag the containers differently, ensure you update the `docker run` section in the _run_introme.sh_ script.
 
 ```
