@@ -17,7 +17,7 @@ while read line; do
     strand=$(echo "$line" | cut -f8 | grep -wo "Gene_Strand=.*" | sed 's/Gene_Strand=//g' | cut -f1 -d';')
     
     # Assign variant type for future annotations
-    if [[ "${#ref}" == 1 ]] &_& [[ "${#alt}" == 1 ]]; then
+    if [[ "${#ref}" == 1 ]] && [[ "${#alt}" == 1 ]]; then
         variant_type="SNV"
     elif [[ "${#ref}" > 1 ]] && [[ "${#alt}" == 1 ]]; then
         variant_type="INDEL"
