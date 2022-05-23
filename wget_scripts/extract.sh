@@ -47,7 +47,7 @@ done < <(bcftools view -H $spliceai_vcf | awk '$8 ~ /,/')
 # Format SpliceAI output for vcfanno
 bcftools view -H $prefix.spliceai.rmcommas.vcf | cut -f1-8 | grep "SpliceAI" | sed 's/|/gene=/' | sed 's/SpliceAI=*.*gene/gene/' | sed 's/|/;DS_AG=/' | sed 's/|/;DS_AL=/' | sed 's/|/;DS_DG=/' | sed 's/|/;DS_DL=/' | sed 's/|/;DP_AG=/' | sed 's/|/;DP_AL=/' | sed 's/|/;DP_DG=/' | sed 's/|/;DP_DL=/' >> introme_annotate.spliceai.vcf
 bcftools sort introme_annotate.spliceai.vcf -o introme_annotate.spliceai.sort.vcf
-uniq introme_annotate.spliceai.vcf | bgzip > introme_annotate.spliceai.vcf.gz
+uniq introme_annotate.spliceai.sort.vcf | bgzip > introme_annotate.spliceai.vcf.gz
 tabix -f introme_annotate.spliceai.vcf.gz
 
 
