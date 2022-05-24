@@ -21,10 +21,10 @@ ops=["self", "self"]
 names=["SPIDEX_dPSI_Max_Tissue", "SPIDEX_dPSI_Zscore"]
 
 [[annotation]]
-file="gencode_v26_branchpoints.csv.liftedtohg19.sorted.vcf.gz"
-fields = ["branchpoint_prob", "U2_binding_energy"]
-ops=["self", "self"]
-names=["Branchpointer_Branchpoint_Prob", "Branchpointer_U2_Binding_Energy"]
+file="annotations/gencode_v26_branchpoints.csv.liftedtohg19.collated.bed.gz"
+columns=[4,5,6,7,8]
+ops=["self", "self", "self", "self", "self"]
+names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_U2_Binding_Energy", "Branchpointer_max_Prob"]
 
 [[annotation]]
 file="gencode.v28lift37.annotation.gtf.bed.gz"
