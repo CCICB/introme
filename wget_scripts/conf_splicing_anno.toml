@@ -1,0 +1,51 @@
+# File used by VCFanno to define how a VCF file should be annotated
+# File for splicing score annotation (from annotation file)
+
+[[annotation]]
+file="cadd_v1.3.vcf.gz"
+names=["CADD_Phred", "CADD_Raw"]
+ops=["self", "self"]
+fields=["phred", "raw"]
+# Used process outlined on https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md to create CADD vcf file from original download
+
+[[annotation]]
+file="dbscSNV1.1.vcf.gz"
+fields = ["ada_score", "rf_score"]
+ops=["self", "self"]
+names=["dbscSNV_AdaBoost_Score", "dbscSNV_RandomForest_Score"]
+
+[[annotation]]
+file="hg19_spidex.sorted.vcf.gz"
+fields = ["dpsi_max_tissue", "dpsi_zscore"]
+ops=["self", "self"]
+names=["SPIDEX_dPSI_Max_Tissue", "SPIDEX_dPSI_Zscore"]
+
+[[annotation]]
+file="gencode_v26_branchpoints.csv.liftedtohg19.sorted.vcf.gz"
+fields = ["branchpoint_prob", "U2_binding_energy"]
+ops=["self", "self"]
+names=["Branchpointer_Branchpoint_Prob", "Branchpointer_U2_Binding_Energy"]
+
+[[annotation]]
+file="gencode.v28lift37.annotation.gtf.bed.gz"
+columns = [4, 5]
+ops=["self", "self"]
+names=["Gene_Symbol", "Gene_Strand"]
+
+[[annotation]]
+file="regions.bed.gz"
+columns = [6]
+ops=["self"]
+names=["Gene_Regions"]
+
+[[annotation]]
+file="location.bed.gz"
+columns = [6]
+ops=["self"]
+names=["Gene_Location"]
+
+[[annotation]]
+file="U12.bed.gz"
+columns = [4]
+ops=["self"]
+names=["Intron_Type"]
