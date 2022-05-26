@@ -3,12 +3,17 @@
 ### Script to generate consensus scores for Introme
 
 if(!require("ROCR")) {
-  install.packages("ROCR", repos = "http://cran.us.r-project.org", quiet = TRUE)
+  install.packages("ROCR", repos = "https://cloud.r-project.org/", quiet = TRUE)
   suppressPackageStartupMessages(library(ROCR))
 }
 
+if(!require("C50")) {
+  install.packages(install.packages("C50", repos = "https://cloud.r-project.org/", dependencies = TRUE))
+  suppressPackageStartupMessages(library(C50))
+}
+
 if(!require("caret")) {
-  install.packages("caret", quiet = TRUE)
+  install.packages(install.packages("caret", repos = "https://cloud.r-project.org/", dependencies = TRUE))
   suppressPackageStartupMessages(library(caret))
 }
 
@@ -31,6 +36,7 @@ Introme_file$Branchpointer_max_Prob <- as.numeric(Introme_file$Branchpointer_max
 Introme_file$Branchpointer_U2_Binding_Energy <- as.numeric(Introme_file$Branchpointer_U2_Binding_Energy)
 Introme_file$Branchpointer_options <- as.numeric(Introme_file$Branchpointer_options)
 Introme_file$Branchpointer_max_U2_Binding_Energy <- as.numeric(Introme_file$Branchpointer_max_U2_Binding_Energy)
+Introme_file$Intron_Type <- as.character(Introme_file$Intron_Type)
 Introme_file$Intron_Type[is.na(Introme_file$Intron_Type)] <- "U2"
 Introme_file$Intron_Type <- as.factor(Introme_file$Intron_Type)
 Introme_file$Gene_Regions <- as.factor(Introme_file$Gene_Regions)
