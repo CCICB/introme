@@ -2,10 +2,10 @@
 # File for splicing score annotation (from annotation file)
 
 [[annotation]]
-file="cadd_v1.3.vcf.gz"
-names=["CADD_Phred", "CADD_Raw"]
-ops=["self", "self"]
-fields=["phred", "raw"]
+file="cadd_v1.3.gencode.v28lift37.phred.vcf.gz"
+names=["CADD_Phred"]
+ops=["self"]
+fields=["phred"]
 # Used process outlined on https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md to create CADD vcf file from original download
 
 [[annotation]]
@@ -21,7 +21,7 @@ ops=["self", "self"]
 names=["SPIDEX_dPSI_Max_Tissue", "SPIDEX_dPSI_Zscore"]
 
 [[annotation]]
-file="annotations/gencode_v26_branchpoints.csv.liftedtohg19.collated.bed.gz"
+file="gencode_v26_branchpoints.csv.liftedtohg19.collated.bed.gz"
 columns=[4,5,6,7,8]
 ops=["self", "self", "self", "self", "self"]
 names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_U2_Binding_Energy", "Branchpointer_max_Prob"]
