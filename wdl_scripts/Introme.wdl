@@ -18,7 +18,7 @@ workflow introme {
 		File MGRB_tbi
 		File regions
 		File regions_tbi
-        Float allele_frequency
+		Float allele_frequency
 		File cadd
 		File cadd_tbi
 		File dbscSNV
@@ -51,8 +51,8 @@ workflow introme {
 			gnomad_tbi=gnomad_tbi,
 			MGRB=MGRB,
 			MGRB_tbi=MGRB_tbi,
-            regions=regions,
-            regions_tbi=regions_tbi
+			regions=regions,
+			regions_tbi=regions_tbi
 	}
     
 	call filter {
@@ -69,7 +69,7 @@ workflow introme {
 			grchX=grchX,
 			distance=1000,
 			mask=0,
-            prefix=prefix
+			prefix=prefix
 	}
     
     call MMSplice {
@@ -214,7 +214,7 @@ task filter {
 
 	output {
 		File out_filter = "${prefix}.subset.highquality.annotated.filtered.vcf.gz"
-        File out_rmanno = "${prefix}.subset.highquality.annotated.filtered.rmanno.vcf.gz"
+		File out_rmanno = "${prefix}.subset.highquality.annotated.filtered.rmanno.vcf.gz"
 	}
 
 	runtime {
@@ -292,7 +292,7 @@ task Spliceogen {
     }
     
     runtime {
-    	docker: 'patsul/introme-spliceogen'
+		docker: 'patsul/introme-spliceogen'
     }
 }
 
@@ -333,7 +333,7 @@ task extract {
 task vcfanno_splicing_anno {
 	input {
 		File vcf
-        String prefix
+		String prefix
 		File cadd
 		File cadd_tbi
 		File dbscSNV
@@ -370,7 +370,7 @@ task vcfanno_splicing {
 	input {
 		File vcf
 		String prefix
-        File spliceai
+		File spliceai
 		File spliceai_tbi
 		File spliceogen
 		File spliceogen_tbi
@@ -411,7 +411,7 @@ task clean {
     }
     
     runtime {
-    	docker: 'patsul/introme-subsetting'
+		docker: 'patsul/introme-subsetting'
     }
 }
 
@@ -432,6 +432,6 @@ task score {
 
 	runtime {
 		docker: 'patsul/introme-scoring'
-        memory: "10G"
+		memory: "10G"
 	}
 }
