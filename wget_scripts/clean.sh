@@ -63,4 +63,4 @@ while read line; do
 
         echo "$line" | awk -v v="$variant_type" -v g="$gene_location" -v r="$region_replace" '{$7=v; $10=g; $12=r; print }' OFS='\t' >> $prefix.annotated.cleaned.tsv
     fi
-done < $annotated_vcf
+done < $prefix.annotated.tsv
