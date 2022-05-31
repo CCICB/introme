@@ -52,8 +52,8 @@ Note: The MMSplice Docker Container requires more memory than the standard setti
 ### Docker Local Install
 A more streamlined install of introme for running locally is being developed using Docker. 
 
-### WDL install
-The wdl scripts are in the [wdl_scripts](https://github.com/CCICB/introme/tree/master/wdl_scripts) folder. These scripts were set up for implementation using Terra, currently requiring multiple individual wdl scripts for each process within Introme. A condensed version is being developed. 
+### WDL Install
+The wdl script is labelled Introme.wdl in the [wdl_scripts](https://github.com/CCICB/introme/tree/master/wdl_scripts) folder. These scripts were set up for implementation using Terra. All of the annotation files are required to be in the same folder, and specified as inputs to ensure proper annotation using vcfanno, these requirements will be further documented in the folder.
 
     
 ## Running Introme
