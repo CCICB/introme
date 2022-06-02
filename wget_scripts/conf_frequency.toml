@@ -18,3 +18,9 @@ file="regions.bed.gz"
 columns = [6]
 ops=["self"]
 names=["Gene_Regions"]
+
+[[annotation]]
+file="gencode.v28lift37.annotation.gtf.bed.gz"
+columns = [4, 5]
+ops=["self", "self"]
+names=["Gene_Symbol", "Gene_Strand"]
