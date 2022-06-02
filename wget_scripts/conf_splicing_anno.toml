@@ -27,12 +27,6 @@ ops=["self", "self", "self", "self", "self"]
 names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_U2_Binding_Energy", "Branchpointer_max_Prob"]
 
 [[annotation]]
-file="gencode.v28lift37.annotation.gtf.bed.gz"
-columns = [4, 5]
-ops=["self", "self"]
-names=["Gene_Symbol", "Gene_Strand"]
-
-[[annotation]]
 file="location.bed.gz"
 columns = [6]
 ops=["self"]
