@@ -1,6 +1,5 @@
 version 1.0
 
-
 ## WORKFLOW DEFINITIONS 
 workflow introme {
 	input {
@@ -52,7 +51,9 @@ workflow introme {
 			MGRB=MGRB,
 			MGRB_tbi=MGRB_tbi,
 			regions=regions,
-			regions_tbi=regions_tbi
+			regions_tbi=regions_tbi,
+			gencode=gencode,
+			gencode_tbi=gencode_tbi
 	}
     
 	call filter {
@@ -72,7 +73,7 @@ workflow introme {
 			prefix=prefix
 	}
     
-    call MMSplice {
+	call MMSplice {
 		input:
 			vcf=filter.out_rmanno,
 			ref_genome=ref_genome,
@@ -100,15 +101,13 @@ workflow introme {
 			SPIDEX_tbi=SPIDEX_tbi,
 			branchpointer=branchpointer,
 			branchpointer_tbi=branchpointer_tbi,
-			gencode=gencode,
-			gencode_tbi=gencode_tbi,
 			locations=locations,
 			locations_tbi=locations_tbi,
 			U12=U12,
 			U12_tbi=U12_tbi
 	}
     
-    call extract {
+	call extract {
 		input:
 			annotated_vcf=filter.out_filter,
 			prefix=prefix,
@@ -118,7 +117,7 @@ workflow introme {
 			ref_genome=ref_genome
 	}
     
-    call vcfanno_splicing {
+	call vcfanno_splicing {
 		input:
 			vcf=vcfanno_splicing_anno.vcfanno_spliceanno,
 			prefix=prefix,
@@ -132,13 +131,13 @@ workflow introme {
 			functions_tbi=extract.out_functions_tbi
 	}
     
-    call clean {
+	call clean {
 		input:
 			vcf=vcfanno_splicing.vcfanno_splicing,
 			prefix=prefix
-    }
-    
-    call score {
+	}
+
+	call score {
 		input:
 			tsv=clean.clean_output,
 			prefix=prefix
@@ -167,7 +166,7 @@ task subset {
 	}
 
 	runtime {
-		docker: 'patsul/introme-subsetting'
+		docker: 'patsul/introme-base'
 	}
 }
 
@@ -182,6 +181,8 @@ task vcfanno_freq {
 		File MGRB_tbi
 		File regions
 		File regions_tbi
+		File gencode
+		File gencode_tbi
 	}
 
 	command {
@@ -218,7 +219,7 @@ task filter {
 	}
 
 	runtime {
-		docker: 'patsul/introme-subsetting'
+		docker: 'patsul/introme-base'
 	}
 }
 
@@ -287,12 +288,12 @@ task Spliceogen {
 		cp output/*.vcf_out.txt /cromwell_root/${prefix}.spliceogen.txt
 	}
 	
-    output {
+	output {
 		File spliceogen_output = "${prefix}.spliceogen.txt"
-    }
+	}
     
-    runtime {
-		docker: 'patsul/introme-spliceogen'
+	runtime {
+    		docker: 'patsul/introme-spliceogen'
     }
 }
 
@@ -326,7 +327,7 @@ task extract {
 	}
 
 	runtime {
-		docker: 'patsul/introme-subsetting'
+		docker: 'patsul/introme-base'
 	}
 }
 
@@ -342,8 +343,6 @@ task vcfanno_splicing_anno {
 		File SPIDEX_tbi
 		File branchpointer
 		File branchpointer_tbi
-		File gencode
-		File gencode_tbi
 		File locations
 		File locations_tbi
 		File U12
@@ -361,7 +360,7 @@ task vcfanno_splicing_anno {
 
 	runtime {
 		docker: 'patsul/introme-vcfanno'
-		disks: "local-disk 50 SSD"
+		disks: "local-disk 75 SSD"
 	}
 }
 
@@ -411,7 +410,7 @@ task clean {
     }
     
     runtime {
-		docker: 'patsul/introme-subsetting'
+		docker: 'patsul/introme-base'
     }
 }
 
