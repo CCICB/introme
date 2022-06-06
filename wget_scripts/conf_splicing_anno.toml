@@ -2,7 +2,7 @@
 # File for splicing score annotation (from annotation file)
 
 [[annotation]]
-file="cadd_v1.3.gencode.v28lift37.phred.vcf.gz"
+file="cadd_v1.3.vcf.gz"
 names=["CADD_Phred"]
 ops=["self"]
 fields=["phred"]
