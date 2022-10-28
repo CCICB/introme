@@ -52,7 +52,7 @@ docker build -t spliceogen .
 ```
 Note: The MMSplice Docker Container requires more memory than the standard settings for Docker. Upgrade the memory to 10GB to ensure it runs.
 
-4. Run introme using the run command `./run_introme.sh -r $genome.fa -g $gtf -b $bed -v $input -p $prefix`
+6. Run introme using the run command `./run_introme.sh -r $genome.fa -g $gtf -b $bed -v $input -p $prefix`
 
 ### Docker Local Install
 A more streamlined install of introme for running locally is being developed using Docker. 
