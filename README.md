@@ -27,15 +27,20 @@ Introme requires the following files to be downloaded and placed in the annotati
 - [dbscSNV v1.1](http://www.liulab.science/dbscsnv.html)
 
 ### Additional file requirements
-- A gtf file, ideally containing only protein coding regions
+- A gtf file, ideally containing only protein coding regions to speed up annotations
 - A bed file with the regions of interest, you can use either a restricted gene list or a protein coding bed file
 
 ## Installation
 
+### WDL Install
+The wdl script is labelled Introme.wdl in the [wdl_scripts](https://github.com/CCICB/introme/tree/master/wdl_scripts) folder. These scripts were set up for implementation using Terra. All of the annotation files are required to be in the same folder, and specified as inputs to ensure proper annotation using vcfanno, these requirements will be further documented in the folder.
+
 ### Local Install
-1. Install the above software requirements.
-2. Download the required annotation files and file requirements.
-3. Build the docker containers for MMSplice and Spliceogen using the code below. If you tag the containers differently, ensure you update the `docker run` section in the _run_introme.sh_ script.
+1. Install the above software requirements and pull Introme. 
+2. Download the required annotation files and file requirements and place them in the annotations folder.
+3. Update the _.conf_ files with the correct paths (shouldn't be necessary if the same annotation files are used).
+4. Pull [MMSplice](https://github.com/gagneurlab/MMSplice_MTSplice) and [Spliceogen](https://github.com/VCCRI/Spliceogen) into the Introme folder from the links provided (ensure the original docker files are not deleted).
+5. Build the docker containers for MMSplice and Spliceogen using the code below. If you tag the containers differently, ensure you update the `docker run` section in the _run_introme.sh_ script.
 
 ```
 cd MMSplice
@@ -51,9 +56,6 @@ Note: The MMSplice Docker Container requires more memory than the standard setti
 
 ### Docker Local Install
 A more streamlined install of introme for running locally is being developed using Docker. 
-
-### WDL Install
-The wdl script is labelled Introme.wdl in the [wdl_scripts](https://github.com/CCICB/introme/tree/master/wdl_scripts) folder. These scripts were set up for implementation using Terra. All of the annotation files are required to be in the same folder, and specified as inputs to ensure proper annotation using vcfanno, these requirements will be further documented in the folder.
 
     
 ## Running Introme
@@ -85,7 +87,7 @@ The variant-level scores and supporting information are then fed into the Introm
 We are working on implementing automatic interpretation for the outcome of the splice-altering variant. Until this feature is in place, all of the input scores which make up Introme's final prediction are included in the final .tsv file if further information on the variant prediction is required. 
 
 ## Reference Genome versions
-Introme currently supports VCF files aligned to the hs37d5 reference genome. GRCh38 is not yet supported.
+Introme currently supports VCF files aligned to the hs37d5 reference genome. GRCh38 is not yet fully supported, but is under development with plans to release it soon.
 
 ## Funding
 
@@ -104,3 +106,7 @@ The development of Introme has been supported grants, fellowships and scholarshi
 Introme was initially developed by Dr. Mark Cowley, Dr. Velimir Gayevskiy and Dr. Sarah Beecroft at the Garvan Institute's Kinghorn Centre for Clinical Genomics, and the initial implementation can be found at [KCCG's Introme Repository](https://github.com/KCCG/introme). 
 
 Introme has since been adapted and reimplemented by Patricia Sullivan, Dr. Mark Cowley and Dr. Mark Pinese at the Children's Cancer Institute. This version extends on KCCG's Introme in terms of accuracy, the addition of mulitple splice-scoring tools, and the use of machine learning.
+
+## Support
+
+For additional questions or assistance using Introme, contact psullivan@ccia.org.au (Patricia Sullivan).
