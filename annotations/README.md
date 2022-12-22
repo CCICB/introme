@@ -5,3 +5,5 @@ GENCODE GTF
 CADD V1.3-1.5 (NOT V1.6)
 SPIDEX V1.1
 dbscSNV
+
+To allow for allele frequency annotation and filtering, download an annotation file (e.g. gnomAD) to this folder.
