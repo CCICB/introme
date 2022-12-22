@@ -1,0 +1,163 @@
+# File used by VCFanno to define how a VCF file should be annotated
+
+[[annotation]]
+file="annotations/whole_genome_SNVs.tsv.gz"
+columns=[6]
+ops=["max"]
+names=["cadd_phred"]
+
+[[annotation]]
+file = "annotations/regions.hg38.bed.gz"
+columns = [6]
+ops = ["uniq"]
+names = ["region_list"]
+
+[[postannotation]]
+fields = ["region_list"]
+op = "lua:regions(region_list)"
+name = "gene_regions"
+type = "String"
+
+[[postannotation]]
+fields = ["region_list"]
+op = "delete"
+
+[[annotation]]
+file = "annotations/omim.hg38.bed.gz"
+columns = [4]
+ops = ["uniq"]
+names = ["omim_inheritance"]
+
+[[annotation]]
+file = "annotations/clinvar_20220730.vcf.gz"
+fields = ["CLNSIG"]
+ops = ["uniq"]
+names = ["clinvar_clinicalSignificance"]
+
+[[annotation]]
+file = "annotations/dbscSNV1.1.hg38.vcf.gz"
+fields = ["ada_score", "rf_score"]
+ops = ["self", "self"]
+names = ["dbscSNV_AdaBoost", "dbscSNV_RandomForest"]
+
+[[annotation]]
+file="annotations/spidex.hg38.vcf.gz"
+fields=["dpsi_max_tissue", "dpsi_zscore"]
+ops=["self", "self"]
+names=["SPIDEX_dPSI_Max_Tissue", "SPIDEX_dPSI_Zscore"]
+
+[[annotation]]
+file="annotations/branchpointer.hg38.bed.gz"
+columns=[4,5]
+ops=["max", "max"]
+names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy"]
+
+[[annotation]]
+file = "annotations/U12.hg38.bed.gz"
+columns = [4, 5, 6]
+ops = ["self", "self", "self"]
+names = ["U12", "U12_strand", "U12_score"]
+
+## SpliceAI Annotations
+#SpliceAI SNV
+[[annotation]]
+file = "annotations/spliceai_scores.masked.snv.hg38.vcf.gz"
+fields = ["SpliceAI"]
+names = ["SpliceAI_NonSeparated_snv"]
+ops = ["self"]
+
+#SpliceAI Indel
+[[annotation]]
+file = "annotations/spliceai_scores.masked.indel.hg38.vcf.gz"
+fields = ["SpliceAI"]
+names = ["SpliceAI_NonSeparated_indel"]
+ops = ["self"]
+
+#SpliceAI SNV Processing
+[[postannotation]]
+fields = ["SpliceAI_NonSeparated_snv"]
+op = "lua:spliceai(SpliceAI_NonSeparated_snv)"
+type = "String"
+name = "SpliceAI_processed"
+
+#SpliceAI Indel Processing
+[[postannotation]]
+fields = ["SpliceAI_NonSeparated_indel"]
+op = "lua:spliceai(SpliceAI_NonSeparated_indel)"
+type = "String"
+name = "SpliceAI_processed"
+
+#SpliceAI ALLELE
+# [[postannotation]]
+# fields = ["SpliceAI_processed"]
+# op = "lua:split(SpliceAI_processed,'|')[1]"
+# type = "String"
+# name = "ALLELE_spliceai"
+
+#SpliceAI SYMBOL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[2]"
+type = "String"
+name = "SpliceAI_Gene"
+
+#SpliceAI DS_AG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[3]"
+type = "Float"
+name = "DS_AG"
+
+#SpliceAI DS_AL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[4]"
+type = "Float"
+name = "DS_AL"
+
+#SpliceAI DS_DG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[5]"
+type = "Float"
+name = "DS_DG"
+
+#SpliceAI DS_DL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[6]"
+type = "Float"
+name = "DS_DL"
+
+#SpliceAI DP_AG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[7]"
+type = "Float"
+name = "DP_AG"
+
+#SpliceAI DP_AL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[8]"
+type = "Float"
+name = "DP_AL"
+
+#SpliceAI DP_DG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[9]"
+type = "Float"
+name = "DP_DG"
+
+#SpliceAI DP_DL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[10]"
+type = "Float"
+name = "DP_DL"
+
+#SpliceAI delete
+[[postannotation]]
+fields = ["SpliceAI_processed", "SpliceAI_NonSeparated_indel", "SpliceAI_NonSeparated_snv"]
+op = "delete"

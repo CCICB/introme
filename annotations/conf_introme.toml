@@ -1,0 +1,31 @@
+# File used by VCFanno to define how a VCF file should be annotated
+
+[[annotation]]
+file="introme_annotate.mmsplice.vcf.gz"
+fields = ["alt_acceptor", "alt_acceptor_intron", "alt_donor", "alt_donor_intron", "alt_exon", "delta_logit_PSI", "pathogenicity", "ref_acceptor", "ref_acceptor_intron", "ref_donor", "ref_donor_intron", "ref_exon"]
+ops=["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
+names=["MMSplice_alt_acceptor", "MMSplice_alt_acceptor_intron", "MMSplice_alt_donor", "MMSplice_alt_donor_intron", "MMSplice_alt_exon", "MMSplice_delta_logit_PSI", "MMSplice_pathogenicity", "MMSplice_ref_acceptor", "MMSplice_ref_acceptor_intron", "MMSplice_ref_donor", "MMSplice_ref_donor_intron", "MMSplice_ref_exon"]
+
+[[annotation]]
+file="introme_annotate.functions.vcf.gz"
+fields = ["variant_type", "ag_created", "ag_lost", 'gt_created', 'gt_lost']
+ops=["self","self","self", "self", "self"]
+names=["Variant_Type", "AG_Created", "AG_Lost", "GT_Created", "GT_Lost"]
+
+[[annotation]]
+file = "introme_annotate.spliceogen.vcf.gz"
+fields = ["mesDonRef", "mesDonAlt", "mesAccRef", "mesAccAlt", "ESEmaxRef", "ESEmaxAlt", "ESEminRef", "ESEminAlt", "DonGainP", "AccGainP", "DonLossP", "AccLossP"]
+ops = ["self", "self","self" ,"self", "self", "self", "self", "self", "self", "self", "self", "self"]
+names = ["mesDonRef", "mesDonAlt", "mesAccRef", "mesAccAlt", "ESEmaxRef", "ESEmaxAlt", "ESEminRef", "ESEminAlt", "DonGainP", "AccGainP", "DonLossP", "AccLossP"]
+
+[[annotation]]
+file = "introme_annotate.ESE.vcf.gz"
+fields = ["SRSF1_ref", "SRSF1_alt", "SRSF1_igM_ref", "SRSF1_igM_alt", "SRSF2_ref", "SRSF2_alt", "SRSF5_ref", "SRSF5_alt", "SRSF6_ref", "SRSF6_alt", "hnRNPA1_ref", "hnRNPA1_alt"]
+ops = ["max", "max", "max", "max", "max", "max", "max", "max", "max", "max", "max", "max"]
+names = ["SRSF1_ref", "SRSF1_alt", "SRSF1_igM_ref", "SRSF1_igM_alt", "SRSF2_ref", "SRSF2_alt", "SRSF5_ref", "SRSF5_alt", "SRSF6_ref", "SRSF6_alt", "hnRNPA1_ref", "hnRNPA1_alt"]
+
+[[annotation]]
+file = "introme_annotate.spliceai.vcf.gz"
+fields = ["DS_AG", "DS_AL", "DS_DG", "DS_DL", "DP_AG", "DP_AL", "DP_DG", "DP_DL"]
+ops = ["self", "self","self" ,"self", "self", "self", "self", "self"]
+names = ["SpliceAI_Acceptor_Gain", "SpliceAI_Acceptor_Loss", "SpliceAI_Donor_Gain", "SpliceAI_Donor_Loss", "DP_AG", "DP_AL", "DP_DG", "DP_DL"]

@@ -1,0 +1,28 @@
+## Gencode annotations
+[[annotation]]
+file = "annotations/gencode.v41.annotation.gtf.gz"
+columns = [3,7,9]
+ops = ["self","uniq","self"]
+names = ["gencode_types","strand","gencode"]
+
+[[postannotation]]
+fields = ["gencode_types"]
+op = "lua:location(gencode_types)"
+name = "location"
+type = "String"
+
+[[postannotation]]
+fields = ["gencode"]
+op = "lua:find(gencode, 'gene_name')"
+name = "gene"
+type = "String"
+
+[[postannotation]]
+fields = ["gencode"]
+op = "lua:find(gencode, 'gene_type')"
+name = "gene_type"
+type = "String"
+
+[[postannotation]]
+fields = ["gencode_types","gencode"]
+op = "delete"
