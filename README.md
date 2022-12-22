@@ -64,21 +64,25 @@ Introme can be run using either a local installation, or Docker.
 Furthermore, we have wrapped Introme in Workflow Description Language and implemented using [Terra](https://terra.bio/). We are currently in the process of implementing Introme using [CAVATICA](https://www.cavatica.org), which uses the [SevenBridges Genomics](https://www.sevenbridges.com/) platform.
 
 ### Required parameters
-- `b` Input BED file (i.e. regions of interest)
 - `g` Input GTF file
 - `p` Output file prefix
 - `r` Reference genome
 - `v` Input VCF file
 
 ### Optional parameters
-- `f` Score all variants regardless of variant frequency
-- `l` List of genes to filter for (.txt file or list accepted) 
+- `a` Genome assembly (can be inferred from genome build if in the file name)
+- `b` Input BED file (i.e. regions of interest)
+- `f` Score all variants ≤ a specified variant allele frequency
 - `q` Score all variants regardless of quality score
+- `s` Turn off Introme single score check
 
-### Example
+### Examples
 
-`./run_introme.sh -r $genome.fa -g $gtf -b $bed -v $input -p $prefix`
+Run Introme with base parameters:
+`./run_introme.sh -r $genome.fa -g $gtf -v $input -p $prefix`
 
+Run Introme on a specified gene list (BED format) for variants below 0.1% allele frequency:
+`./run_introme.sh -r $genome.fa -g $gtf -v $input -p $prefix -b $bed -f 0.001`
 
 ## Interpreting Introme Results
 
@@ -87,7 +91,7 @@ The variant-level scores and supporting information are then fed into the Introm
 We are working on implementing automatic interpretation for the outcome of the splice-altering variant. Until this feature is in place, all of the input scores which make up Introme's final prediction are included in the final .tsv file if further information on the variant prediction is required. 
 
 ## Reference Genome versions
-Introme currently supports VCF files aligned to the hs37d5 reference genome. GRCh38 is not yet fully supported, but is under development with plans to release it soon.
+Introme currently supports VCF files aligned to the both GRCh37 and GRCh38 reference genomes. Please specify using -a 'hg19/hg38' if your reference genome is not specified in the name of the fasta file.
 
 ## Funding
 
