@@ -28,18 +28,25 @@ function location(str)
 
 	for i=1,#fields do
 		if contains(fields[i], "gene") then
-                        return "intronic"
-                end
+        	return "intronic"
+        end
 	end
 end
 
 function find(str, search)
 	local fields = split(str, " ")
+	local result = ""
 	for i=1,#fields do
 		if contains(fields[i], search) then
-			return split(fields[i+1]:gsub("%p",""))[1]
+		local match = split(fields[i+1]:gsub("[^%d^%a^_^-]",""))[1]
+			if result == "" then
+				result = match
+			elseif not(contains(result, match)) then
+				result = result .. "," .. match
+			end
 		end
 	end
+	return result
 end
 
 function regions(region_string)

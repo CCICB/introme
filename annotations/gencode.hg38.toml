@@ -8,7 +8,7 @@ names = ["gencode_types","strand","gencode"]
 [[postannotation]]
 fields = ["gencode_types"]
 op = "lua:location(gencode_types)"
-name = "location"
+name = "Gene_Location"
 type = "String"
 
 [[postannotation]]
@@ -26,3 +26,10 @@ type = "String"
 [[postannotation]]
 fields = ["gencode_types","gencode"]
 op = "delete"
+
+# Optional Allele frequency annotations using gnomAD
+# [[annotation]]
+# file="annotations/gnomad.genomes.sites.merged.AF_AC_AN_only.vcf.gz"
+# fields = ["AF", "AC", "AN", "POPMAX", "AF_POPMAX", "AC_POPMAX", "AN_POPMAX"]
+# ops=["self", "self", "self", "self", "self", "self", "self"]
+# names=["gnomAD_AF", "gnomAD_AC", "gnomAD_AN", "gnomAD_PopMax", "gnomAD_PM_AF", "gnomAD_PM_AC", "gnomAD_PM_AN"]
