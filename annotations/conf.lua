@@ -40,7 +40,7 @@ function find(str, search)
 	local result = ""
 	for i=1,#fields do
 		if contains(fields[i], search) then
-		local match = split(fields[i+1]:gsub("[^%w^_^-]",""))[1]
+			local match = fields[i+1]:gsub("[^%w^-^_]","")
 			if result == "" then
 				result = match
 			elseif not(contains(result, match)) then
