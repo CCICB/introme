@@ -52,7 +52,7 @@ docker build -t spliceogen .
 ```
 Note: The MMSplice Docker Container requires more memory than the standard settings for Docker. Upgrade the memory to 10GB to ensure it runs.
 
-6. Run introme using the run command `./run_introme.sh -r $genome.fa -g $gtf -b $bed -v $input -p $prefix`
+6. Run introme using the run command `./run_introme.sh -r genome.fa -g annotation.gtf -v variants.vcf.gz -p prefix`
 
 ### Docker Local Install
 A more streamlined install of introme for running locally is being developed using Docker. 
@@ -64,7 +64,7 @@ Introme can be run using either a local installation, or Docker.
 Furthermore, we have wrapped Introme in Workflow Description Language and implemented using [Terra](https://terra.bio/). We are currently in the process of implementing Introme using [CAVATICA](https://www.cavatica.org), which uses the [SevenBridges Genomics](https://www.sevenbridges.com/) platform.
 
 ### Required parameters
-- `g` Input GTF file
+- `g` Input GTF file (ideally gencode)
 - `p` Output file prefix
 - `r` Reference genome
 - `v` Input VCF file
@@ -79,14 +79,14 @@ Furthermore, we have wrapped Introme in Workflow Description Language and implem
 ### Examples
 
 Run Introme with base parameters:
-`./run_introme.sh -r $genome.fa -g $gtf -v $input -p $prefix`
+`./run_introme.sh -r genome.fa -g annotation.gtf -v variants.vcf.gz -p prefix`
 
 Run Introme on a specified gene list (BED format) for variants below 0.1% allele frequency:
-`./run_introme.sh -r $genome.fa -g $gtf -v $input -p $prefix -b $bed -f 0.001`
+`./run_introme.sh -r genome.fa -g annotation.gtf -v variants.vcf.gz -p prefix -b genelist.bed -f 0.001`
 
 ## Interpreting Introme Results
 
-The variant-level scores and supporting information are then fed into the Introme decision tree model to classify the likelihood of a variant altering splicing, which produces an Introme score from 0–1. **We recommend the use of 0.54 as a threshold**, producing a sensitivity of 0.9 and a specificity of 0.95, calculated on the validation dataset. When high specificity is required, a threshold of 0.75 results in a sensitivity of 0.8 and a specificity of 0.97.
+The variant-level scores and supporting information are then fed into the Introme decision tree model to classify the likelihood of a variant altering splicing, which produces an Introme score from 0–1. **We recommend the use of 0.61 as a threshold**, producing a sensitivity of 0.91 and a specificity of 0.91, calculated on the validation dataset. When high specificity is required, a threshold of 0.83 results in a sensitivity of 0.8 and a specificity of 0.975.
 
 We are working on implementing automatic interpretation for the outcome of the splice-altering variant. Until this feature is in place, all of the input scores which make up Introme's final prediction are included in the final .tsv file if further information on the variant prediction is required. 
 
