@@ -61,7 +61,7 @@ Introme_file$Introme <- Predict_scores$SAV
 Introme_file[apply(Introme_file[17:56], 1, function(x) all(is.na(x)) == "TRUE"),"Introme"] <- 0
 
 # To toggle: Threshold filtering
-# Introme_file_thresholds <- subset(Introme_file, Introme_file$Introme >= 0.52)
+# Introme_file_thresholds <- subset(Introme_file, Introme_file$Introme >= 0.61)
 # write.table(Introme_file_thresholds, file=args[3]_threshold, quote=FALSE, sep='\t', row.names=FALSE, na = ".")
 
 # Save output
