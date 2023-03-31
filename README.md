@@ -5,7 +5,7 @@ Introme is an _in silico_ splice predictor which evaluates a variant’s likelih
 ## Licensing
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Introme source code is provided under the GPLv3 license. Introme combines predictions from several third party sources, and the licenses associated with these sources are listed under NOTICE. Elements used to generate the final Introme prediction are under the CC BY NC 4.0 license for academic and non-commercial use. We are considering the development of a commercial use version of Introme that does not contain sources with such restrictions. 
+Introme source code is provided under the [GPLv3](https://github.com/CCICB/introme/blob/master/LICENSE) license. Introme combines splicing scores from several tools and third party packages provided under open source licenses, please see [NOTICE](https://github.com/CCICB/introme/blob/master/NOTICE) for additional details. Introme is free for academic and non-commercial use. All other use requires a commercial license from Children's Cancer Institute, and potentially a commercial SpliceAI license obtained from Illumina, Inc.
 
 ## Requirements
 
@@ -26,14 +26,13 @@ Introme source code is provided under the GPLv3 license. Introme combines predic
 Introme requires the following files to be downloaded and placed in the annotations folder.
 
 - CADD v1.3 VCF created using the instructions at: https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md
-- gnomad.genomes.sites.merged.AF_AC_AN_only.vcf.gz
-- [MGRB](https://www.garvan.org.au/research/kinghorn-centre-for-clinical-genomics/research-programs/sydney-genomics-collaborative/mgrb), [Pinese et al, 2020](https://www.nature.com/articles/s41467-019-14079-0)
 - [SPIDEX v1.0](https://www.openbioinformatics.org/annovar/spidex_download_form.php)
 - [dbscSNV v1.1](http://www.liulab.science/dbscsnv.html)
 
 ### Additional file requirements
-- A gtf file, ideally containing only protein coding regions to speed up annotations
-- A bed file with the regions of interest, you can use either a restricted gene list or a protein coding bed file
+- A vcf file of variants to analyse
+- A gtf file, ideally containing only protein coding regions to speed up annotations (we recommend gencode)
+- A reference genome fasta file
 
 ## Installation
 
@@ -62,7 +61,7 @@ Note: The MMSplice Docker Container requires more memory than the standard setti
 ### Docker Local Install
 A more streamlined install of introme for running locally is being developed using Docker. 
 
-    
+
 ## Running Introme
 Introme can be run using either a local installation, or Docker. 
 
