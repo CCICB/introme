@@ -1,0 +1,26 @@
+Note that Introme combines splicing scores from several tools and third party packages. 
+The individual licenses listed below apply to the third party tools used within Introme.
+
+########################################################################################
+
+Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+  - SpliceAI models
+
+GPL v3
+  - caret
+  - dbscSNV
+  - Intron Annotation and Orthology Database
+  
+MIT
+  - bcftools 
+  - bedtools
+  - htslib
+  - MMSplice
+  - Spliceogen
+  - vcfanno
+  
+bsd 3-clause
+  - Branchpointer
+  
+Artistic License
+  - Spliceogen
