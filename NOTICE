@@ -6,10 +6,11 @@ The individual licenses listed below apply to the third party tools used within 
 Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
   - SpliceAI models
 
-GPL v3
+GNU GENERAL PUBLIC LICENSE 3.0
   - caret
   - dbscSNV
   - Intron Annotation and Orthology Database
+  - SPIDEX
   
 MIT
   - bcftools 
