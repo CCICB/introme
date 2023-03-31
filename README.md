@@ -2,9 +2,10 @@
 
 Introme is an _in silico_ splice predictor which evaluates a variant’s likelihood of altering splicing by combining predictions from multiple splice-scoring tools, combined with additional splicing rules, and gene architecture features. Introme can accurately predict the impact of coding and noncoding variants on splicing through investigating for the potential damage, creation or strengthening of splice elements and outperforms all leading tools that we tested.
 
-## Licencing
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Licensing
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
+Introme source code is provided under the GPLv3 license. Introme combines predictions from several third party sources, and the licenses associated with these sources are listed under NOTICE. Elements used to generate the final Introme prediction are under the CC BY NC 4.0 license for academic and non-commercial use. We are considering the development of a commercial use version of Introme that does not contain sources with such restrictions. 
 
 ## Requirements
 
