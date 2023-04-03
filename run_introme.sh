@@ -95,9 +95,6 @@ elif [ -z $genome ]; then
     fi
 fi
 
-echo "$genome"
-
-
 ##################################
 # STEP 1: subsetting the VCF to genomic regions of interest (first because it gets rid of the most variants)
 
@@ -121,6 +118,11 @@ variant_count=$(bcftools view -H $out_dir/working_files/$prefix.subset.vcf.gz | 
 echo $(date +%x_%r) 'Subsetting complete -' $variant_count 'variants remaining'
 
 if [[ $variant_count == 0 ]]; then
+    if [ -z $input_BED ]; then
+        echo $(date +%x_%r) 'No variants were in regions of interest - is your GTF file restricted to certain regions?'
+    else
+        echo $(date +%x_%r) 'No variants were in regions of interest - perhaps expand your BED file to more regions of interest'
+    fi
     exit 1
 fi
 
@@ -141,6 +143,7 @@ variant_count=$(bcftools view -H $out_dir/working_files/$prefix.subset.highquali
 echo $(date +%x_%r) 'Quality filtering complete -' $variant_count 'variants remaining'
 
 if [[ $variant_count == 0 ]]; then
+    echo $(date +%x_%r) 'No variants passed quality filtering - perhaps rerun with -q (triggers no quality filtering)'
     exit 1
 fi
 
@@ -153,14 +156,14 @@ export IRELATE_MAX_GAP=1000 # Note: this is set to speed up annotation when .csi
 # Run the appropriate annotation command based off the mode supplied
 if [ $mode == "full" ]; then
     echo $(date +%x_%r) 'Beginning annotation'
-    vcfanno -p $(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/gencode.$genome.toml $out_dir/working_files/$prefix.subset.highquality.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz # The conf.toml file specifies what VCFanno should annotate
+    vcfanno -p $(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/gencode.$genome.toml $out_dir/working_files/$prefix.subset.highquality.vcf.gz 2>/dev/null | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz # The conf.toml file specifies what VCFanno should annotate
 elif [ $mode == "fast" ]; then
     bcftools filter --threads $(getconf _NPROCESSORS_ONLN) -i"TYPE='snp'" $out_dir/working_files/$prefix.subset.highquality.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz # Filter file for SNPs
     tabix -p vcf $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz
     echo $(gzip -d -c $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz | grep -v '^#' | wc -l) 'variants after SNP filtering for fast mode'
 
     echo $(date +%x_%r) 'Beginning annotation'
-    vcfanno -p $(getconf _NPROCESSORS_ONLN) conf_fast.toml $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz # The conf.toml file specifies what VCFanno should annotate
+    vcfanno -p $(getconf _NPROCESSORS_ONLN) conf_fast.toml $out_dir/working_files/$prefix.subset.highquality.SNPs.vcf.gz 2>/dev/null | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz # The conf.toml file specifies what VCFanno should annotate
 fi
 
 tabix -p vcf $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz
@@ -222,7 +225,7 @@ if [ $mode == "full" ]; then
     # # Run SpliceAI
     echo $(date +%x_%r) 'Starting to run SpliceAI'
 
-    spliceai -I $out_dir/working_files/$prefix.subset.highquality.annotated.filtered.rmanno.vcf -D 1000 -R $reference_genome -A grch37 -O $out_dir/working_files/$prefix.spliceai.vcf
+    spliceai -I $out_dir/working_files/$prefix.subset.highquality.annotated.filtered.rmanno.vcf -D 1000 -R $reference_genome -A grch37 -O $out_dir/working_files/$prefix.spliceai.vcf 2>/dev/null
     ./extractSpliceAI.sh -p $prefix
 
     echo $(date +%x_%r) 'Finished running SpliceAI'
@@ -246,7 +249,6 @@ if [ $mode == "full" ]; then
     tabix introme_annotate.spliceogen.vcf.gz
 
     echo $(date +%x_%r) 'Finished running Spliceogen'
-
 fi
 
 #################################
@@ -269,16 +271,16 @@ MNVs=$(bcftools filter -i"TYPE!='snp' && TYPE!='indel'" $out_dir/working_files/$
 
 if [[ $MNVs > 0 ]]; then
     echo $MNVs 'MNV/insdel variants to score'
-    ./Testing/MNV.sh -r $reference_genome -p $prefix -f $out_dir/working_files/$prefix.subset.highquality.annotated.filtered.vcf.gz
+    ./MNV.sh -a $genome -r $reference_genome -p $prefix -f $out_dir/working_files/$prefix.subset.highquality.annotated.filtered.vcf.gz 2>/dev/null
 else
     echo 'No MNV/insdel variants to score'
 fi
 
 echo $(date +%x_%r) 'Splicing annotation'
-vcfanno -p $(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/annotate.$genome.toml $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.splicing_anno.vcf.gz
+vcfanno -p $(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/annotate.$genome.toml $out_dir/working_files/$prefix.subset.highquality.annotated.vcf.gz 2>/dev/null | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.splicing_anno.vcf.gz
 tabix -f $out_dir/working_files/$prefix.subset.highquality.annotated.splicing_anno.vcf.gz
 
-vcfanno -p $(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/conf_introme.toml $out_dir/working_files/$prefix.subset.highquality.annotated.splicing_anno.vcf.gz | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz
+vcfanno -p $(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/conf_introme.toml $out_dir/working_files/$prefix.subset.highquality.annotated.splicing_anno.vcf.gz 2>/dev/null | bgzip > $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz
 tabix -f $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz
 
 ##################################
@@ -286,9 +288,9 @@ tabix -f $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.
 
 # Check if CSQ column is present (VEP)
 if [[ ! -z $(bcftools view $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz | grep "CSQ") ]]; then
-    bcftools query -H -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%INFO/Variant_Type\t%INFO/gene\t%INFO/strand\t%INFO/Gene_Location\t%INFO/Intron_Type\t%INFO/U12_score\t%INFO/Gene_Regions\t%INFO/CSQ\t%INFO/CADD_Phred\t%INFO/SPIDEX_dPSI_Max_Tissue\t%INFO/SPIDEX_dPSI_Zscore\t%INFO/dbscSNV_AdaBoost_Score\t%INFO/dbscSNV_RandomForest_Score\t%INFO/mesAccRef\t%INFO/mesAccAlt\t%INFO/mesDonRef\t%INFO/mesDonAlt\t%INFO/AG_Created\t%INFO/AG_Lost\t%INFO/GT_Lost\t%INFO/GT_Created\t%INFO/Branchpointer_Prob\t%INFO/Branchpointer_U2_Binding_Energy\t%INFO/SpliceAI_Acceptor_Gain\t%INFO/SpliceAI_Acceptor_Loss\t%INFO/SpliceAI_Donor_Gain\t%INFO/SpliceAI_Donor_Loss\t%INFO/DP_AG\t%INFO/DP_AL\t%INFO/DP_DG\t%INFO/DP_DL\t%INFO/AccGainP\t%INFO/AccLossP\t%INFO/DonGainP\t%INFO/DonLossP\t%INFO/MMSplice_alt_acceptor\t%INFO/MMSplice_alt_acceptor_intron\t%INFO/MMSplice_alt_donor\t%INFO/MMSplice_alt_donor_intron\t%INFO/MMSplice_alt_exon\t%INFO/MMSplice_delta_logit_PSI\t%INFO/MMSplice_pathogenicity\t%INFO/MMSplice_ref_acceptor\t%INFO/MMSplice_ref_acceptor_intron\t%INFO/MMSplice_ref_donor\t%INFO/MMSplice_ref_donor_intron\t%INFO/MMSplice_ref_exon\t%INFO/SRSF1_ref\t%INFO/SRSF1_alt\t%INFO/SRSF1_igM_ref\t%INFO/SRSF1_igM_alt\t%INFO/SRSF2_ref\t%INFO/SRSF2_alt\t%INFO/SRSF5_ref\t%INFO/SRSF5_alt\t%INFO/SRSF6_ref\t%INFO/SRSF6_alt\t%INFO/hnRNPA1_ref\t%INFO/hnRNPA1_alt\t%INFO/ESEmaxRef\t%INFO/ESEmaxAlt\t%INFO/ESEminRef\t%INFO/ESEminAlt[\t%GT][\t%DP][\t%AD][\t%GQ]\n' $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz > $out_dir/working_files/$prefix.annotated.tsv
+    bcftools query -H -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%INFO/Variant_Type\t%INFO/gene\t%INFO/strand\t%INFO/Gene_Location\t%INFO/Intron_Type\t%INFO/U12_score\t%INFO/Gene_Regions\t%INFO/CSQ\t%INFO/CADD_Phred\t%INFO/SPIDEX_dPSI_Max_Tissue\t%INFO/SPIDEX_dPSI_Zscore\t%INFO/dbscSNV_AdaBoost_Score\t%INFO/dbscSNV_RandomForest_Score\t%INFO/mesAccRef\t%INFO/mesAccAlt\t%INFO/mesDonRef\t%INFO/mesDonAlt\t%INFO/AG_Created\t%INFO/AG_Lost\t%INFO/GT_Created\t%INFO/GT_Lost\t%INFO/Branchpointer_Prob\t%INFO/Branchpointer_U2_Binding_Energy\t%INFO/Branchpointer_options\t%INFO/Branchpointer_max_Prob\t%INFO/Branchpointer_max_U2_Binding_Energy\t%INFO/SpliceAI_Acceptor_Gain\t%INFO/SpliceAI_Acceptor_Loss\t%INFO/SpliceAI_Donor_Gain\t%INFO/SpliceAI_Donor_Loss\t%INFO/DP_AG\t%INFO/DP_AL\t%INFO/DP_DG\t%INFO/DP_DL\t%INFO/AccGainP\t%INFO/AccLossP\t%INFO/DonGainP\t%INFO/DonLossP\t%INFO/MMSplice_alt_acceptor\t%INFO/MMSplice_alt_acceptor_intron\t%INFO/MMSplice_alt_donor\t%INFO/MMSplice_alt_donor_intron\t%INFO/MMSplice_alt_exon\t%INFO/MMSplice_delta_logit_PSI\t%INFO/MMSplice_pathogenicity\t%INFO/MMSplice_ref_acceptor\t%INFO/MMSplice_ref_acceptor_intron\t%INFO/MMSplice_ref_donor\t%INFO/MMSplice_ref_donor_intron\t%INFO/MMSplice_ref_exon\t%INFO/SRSF1_ref\t%INFO/SRSF1_alt\t%INFO/SRSF1_igM_ref\t%INFO/SRSF1_igM_alt\t%INFO/SRSF2_ref\t%INFO/SRSF2_alt\t%INFO/SRSF5_ref\t%INFO/SRSF5_alt\t%INFO/SRSF6_ref\t%INFO/SRSF6_alt\t%INFO/hnRNPA1_ref\t%INFO/hnRNPA1_alt\t%INFO/ESEmaxRef\t%INFO/ESEmaxAlt\t%INFO/ESEminRef\t%INFO/ESEminAlt[\t%GT][\t%DP][\t%AD][\t%GQ]\n' $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz > $out_dir/working_files/$prefix.annotated.tsv
 else
-    bcftools query -H -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%INFO/Variant_Type\t%INFO/gene\t%INFO/strand\t%INFO/Gene_Location\t%INFO/Intron_Type\t%INFO/U12_score\t%INFO/Gene_Regions\t%INFO/CADD_Phred\t%INFO/SPIDEX_dPSI_Max_Tissue\t%INFO/SPIDEX_dPSI_Zscore\t%INFO/dbscSNV_AdaBoost_Score\t%INFO/dbscSNV_RandomForest_Score\t%INFO/mesAccRef\t%INFO/mesAccAlt\t%INFO/mesDonRef\t%INFO/mesDonAlt\t%INFO/AG_Created\t%INFO/AG_Lost\t%INFO/GT_Lost\t%INFO/GT_Created\t%INFO/Branchpointer_Prob\t%INFO/Branchpointer_U2_Binding_Energy\t%INFO/SpliceAI_Acceptor_Gain\t%INFO/SpliceAI_Acceptor_Loss\t%INFO/SpliceAI_Donor_Gain\t%INFO/SpliceAI_Donor_Loss\t%INFO/DP_AG\t%INFO/DP_AL\t%INFO/DP_DG\t%INFO/DP_DL\t%INFO/AccGainP\t%INFO/AccLossP\t%INFO/DonGainP\t%INFO/DonLossP\t%INFO/MMSplice_alt_acceptor\t%INFO/MMSplice_alt_acceptor_intron\t%INFO/MMSplice_alt_donor\t%INFO/MMSplice_alt_donor_intron\t%INFO/MMSplice_alt_exon\t%INFO/MMSplice_delta_logit_PSI\t%INFO/MMSplice_pathogenicity\t%INFO/MMSplice_ref_acceptor\t%INFO/MMSplice_ref_acceptor_intron\t%INFO/MMSplice_ref_donor\t%INFO/MMSplice_ref_donor_intron\t%INFO/MMSplice_ref_exon\t%INFO/SRSF1_ref\t%INFO/SRSF1_alt\t%INFO/SRSF1_igM_ref\t%INFO/SRSF1_igM_alt\t%INFO/SRSF2_ref\t%INFO/SRSF2_alt\t%INFO/SRSF5_ref\t%INFO/SRSF5_alt\t%INFO/SRSF6_ref\t%INFO/SRSF6_alt\t%INFO/hnRNPA1_ref\t%INFO/hnRNPA1_alt\t%INFO/ESEmaxRef\t%INFO/ESEmaxAlt\t%INFO/ESEminRef\t%INFO/ESEminAlt[\t%GT][\t%DP][\t%AD][\t%GQ]\n' $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz > $out_dir/working_files/$prefix.annotated.tsv
+    bcftools query -H -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%INFO/Variant_Type\t%INFO/gene\t%INFO/strand\t%INFO/Gene_Location\t%INFO/Intron_Type\t%INFO/U12_score\t%INFO/Gene_Regions\t%INFO/CADD_Phred\t%INFO/SPIDEX_dPSI_Max_Tissue\t%INFO/SPIDEX_dPSI_Zscore\t%INFO/dbscSNV_AdaBoost_Score\t%INFO/dbscSNV_RandomForest_Score\t%INFO/mesAccRef\t%INFO/mesAccAlt\t%INFO/mesDonRef\t%INFO/mesDonAlt\t%INFO/AG_Created\t%INFO/AG_Lost\t%INFO/GT_Created\t%INFO/GT_Lost\t%INFO/Branchpointer_Prob\t%INFO/Branchpointer_U2_Binding_Energy\t%INFO/Branchpointer_options\t%INFO/Branchpointer_max_Prob\t%INFO/Branchpointer_max_U2_Binding_Energy\t%INFO/SpliceAI_Acceptor_Gain\t%INFO/SpliceAI_Acceptor_Loss\t%INFO/SpliceAI_Donor_Gain\t%INFO/SpliceAI_Donor_Loss\t%INFO/DP_AG\t%INFO/DP_AL\t%INFO/DP_DG\t%INFO/DP_DL\t%INFO/AccGainP\t%INFO/AccLossP\t%INFO/DonGainP\t%INFO/DonLossP\t%INFO/MMSplice_alt_acceptor\t%INFO/MMSplice_alt_acceptor_intron\t%INFO/MMSplice_alt_donor\t%INFO/MMSplice_alt_donor_intron\t%INFO/MMSplice_alt_exon\t%INFO/MMSplice_delta_logit_PSI\t%INFO/MMSplice_pathogenicity\t%INFO/MMSplice_ref_acceptor\t%INFO/MMSplice_ref_acceptor_intron\t%INFO/MMSplice_ref_donor\t%INFO/MMSplice_ref_donor_intron\t%INFO/MMSplice_ref_exon\t%INFO/SRSF1_ref\t%INFO/SRSF1_alt\t%INFO/SRSF1_igM_ref\t%INFO/SRSF1_igM_alt\t%INFO/SRSF2_ref\t%INFO/SRSF2_alt\t%INFO/SRSF5_ref\t%INFO/SRSF5_alt\t%INFO/SRSF6_ref\t%INFO/SRSF6_alt\t%INFO/hnRNPA1_ref\t%INFO/hnRNPA1_alt\t%INFO/ESEmaxRef\t%INFO/ESEmaxAlt\t%INFO/ESEminRef\t%INFO/ESEminAlt[\t%GT][\t%DP][\t%AD][\t%GQ]\n' $out_dir/working_files/$prefix.subset.highquality.annotated.scored.vcf.gz > $out_dir/working_files/$prefix.annotated.tsv
 fi
 
 # Remove the '[<number]' column numbers added by bcftools query to column names
@@ -304,7 +306,7 @@ rm $out_dir/working_files/$prefix.annotated.format.tsv
 
 echo $(date +%x_%r) 'Beginning Introme consensus score generation'
 
-#Run the appropriate machine learning model based off the method of score generation
+# Run the appropriate machine learning model based off the method of score generation
 if [ $mode == "full" ]; then
      Rscript --vanilla consensus_scoring.R full $out_dir/working_files/$prefix.annotated.tsv $out_dir/$prefix.introme.tsv
      echo "Your file can be found at $out_dir/$prefix.introme.predictions.tsv"

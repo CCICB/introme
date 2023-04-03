@@ -17,11 +17,6 @@ args = commandArgs(trailingOnly=TRUE)
 Introme_file <- read.csv(args[2], header=T, sep="\t", na.strings = '.')
 Introme_model <- readRDS("models/C50_210826.rds")
 
-Introme_file$AG_Created <- NA
-Introme_file$GT_Created <- NA
-Introme_file$AG_Lost <- NA
-Introme_file$GT_Lost <- NA
-
 # Ensure all columns are in the right format (for when there are missing values)
 Introme_file$SPIDEX_dPSI_Zscore <- as.numeric(Introme_file$SPIDEX_dPSI_Zscore)
 Introme_file$SPIDEX_dPSI_Max_Tissue <- as.numeric(Introme_file$SPIDEX_dPSI_Max_Tissue)
@@ -55,7 +50,7 @@ Introme_file$MMSplice_ref_exon <- as.numeric(Introme_file$MMSplice_ref_exon)
 
 # Calculate Introme scores
 Predict_scores <- predict(Introme_model, newdata = Introme_file, type = "prob", na.action = na.pass)
-Introme_file$Introme <- Predict_scores$SAV
+Introme_file$Introme <- round(Predict_scores$SAV, digits = 2)
 
 # Remove false positives caused by no scores (caused by lack of non-scores in the negative training data set)
 Introme_file[apply(Introme_file[17:56], 1, function(x) all(is.na(x)) == "TRUE"),"Introme"] <- 0
