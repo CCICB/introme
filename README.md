@@ -25,7 +25,7 @@ Introme source code is provided under the [GPLv3](https://github.com/CCICB/intro
 ### Variant Annotation file requirements
 Introme requires the following files to be downloaded and placed in the annotations folder in addition to the files present in this repository.
 
-- CADD v1.3 VCF created using the instructions at: https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md
+- CADD v1.3 VCF created using the following [instructions](https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md)
 - [SPIDEX v1.0](https://www.openbioinformatics.org/annovar/spidex_download_form.php)
 - [dbscSNV v1.1](http://www.liulab.science/dbscsnv.html)
 
