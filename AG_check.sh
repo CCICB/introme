@@ -26,8 +26,11 @@ while read line; do
         variant_type="INSDEL"
     fi
 
+    # 1-based
     ref_seq=$(samtools faidx $reference_genome "$chr:$(($pos-1))-$(($pos+${#ref}))" | grep -v "^>" | tr -d '\n')
     alt_seq=${ref_seq:0:1}$alt${ref_seq:$((${#ref}+1)):1}
+
+    # echo "$pos, $ref_seq, $alt_seq, $ref, $alt"
 
     pos_strand=$(echo $strand | grep -c "+")
     neg_strand=$(echo $strand | grep -c "-")
@@ -69,6 +72,6 @@ while read line; do
     echo "$chr"$'\t'"$pos"$'\t'"."$'\t'"$ref"$'\t'"$alt"$'\t'"."$'\t'"PASS"$'\t'"variant_type=$variant_type;$append" >> introme_annotate.functions.vcf
 done < <(bcftools view -H $input_file)
 
-bcftools sort introme_annotate.functions.vcf | uniq | bgzip > introme_annotate.functions.vcf.gz
-rm introme_annotate.functions.vcf
-tabix -f introme_annotate.functions.vcf.gz
+# bcftools sort introme_annotate.functions.vcf | uniq | bgzip > introme_annotate.functions.vcf.gz
+# rm introme_annotate.functions.vcf
+# tabix -f introme_annotate.functions.vcf.gz
