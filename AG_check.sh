@@ -52,8 +52,6 @@ while read line; do
     if (( "$neg_strand" > 0 )); then
         ref_seq_rev=$(echo "$ref_seq" | tr "[ACGT]" "[TGCA]" | rev)
         alt_seq_rev=$(echo "$alt_seq" | tr "[ACGT]" "[TGCA]" | rev)
-        # echo $ref_seq $alt_seq
-        # echo $ref_seq_rev $alt_seq_rev
         if [[ "$alt_seq_rev" == *"AG"* && "$ref_seq_rev" != *"AG"* ]]; then
             append+="ag_created=-;"
         fi
@@ -71,6 +69,6 @@ while read line; do
     echo "$chr"$'\t'"$pos"$'\t'"."$'\t'"$ref"$'\t'"$alt"$'\t'"."$'\t'"PASS"$'\t'"variant_type=$variant_type;$append" >> introme_annotate.functions.vcf
 done < <(bcftools view -H $input_file)
 
-# bcftools sort introme_annotate.functions.vcf | uniq | bgzip > introme_annotate.functions.vcf.gz
-# rm introme_annotate.functions.vcf
-# tabix -f introme_annotate.functions.vcf.gz
+bcftools sort introme_annotate.functions.vcf | uniq | bgzip > introme_annotate.functions.vcf.gz
+rm introme_annotate.functions.vcf
+tabix -f introme_annotate.functions.vcf.gz
