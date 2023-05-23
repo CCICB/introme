@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Randomly adds strand direction to INFO column
 
 import pysam
 import random
@@ -14,9 +15,9 @@ for record in vcf_in.fetch():
     random_number2 = random.random()
 
     strands = []
-    if random_number1 <= 0.25:
+    if random_number1 <= 0.35:
         strands.append("+1")
-    if random_number2 <= 0.25:
+    if random_number2 <= 0.35:
         strands.append("-1")
 
     if strands:

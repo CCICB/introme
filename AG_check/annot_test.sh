@@ -10,13 +10,13 @@ end=$'\e[0m'
 
 # for i in {1..2}; do
     for f in $basedir/files/pedcbioportal_strand_*; do
-        echo -n "starting test on $f w/ python"
+        echo -n "starting test on $f w/ python..."
         time python3 $basedir/AG_check.py $f $basedir/files/hg38_.fa;
-        echo -n "starting test on $f w/ bash"
+        echo -n "starting test on $f w/ bash..."
         time bash $basedir/../AG_check.sh -i $f -r $basedir/files/hg38_.fa;
 
-        bashresult="$basedir/../introme_annotate.functions.vcf"
-        pyresult="$basedir/../introme_annotate.functions2.vcf"
+        bashresult="$basedir/../introme_annotate.functions.vcf.gz.tbi"
+        pyresult="$basedir/../introme_annotate.functions2.vcf.gz.tbi"
         
         echo
         
@@ -26,9 +26,9 @@ end=$'\e[0m'
         if [ $error -eq 0 ]; then
             printf "%s\n" "${grn}Output vcfs are the same file${end}"
         elif [ $error -eq 1 ]; then
-            echo "%s\n" "${red}Output vcfs differ${end}"
+            printf "%s\n" "${red}Output vcfs differ${end}"
         else
-            echo "%s\n" "${red}There was something wrong with the diff command${end}"
+            printf "%s\n" "${red}There was something wrong with the diff command${end}"
         fi
 
         echo "========================================="
