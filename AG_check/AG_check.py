@@ -20,6 +20,8 @@ def main(input_file, reference_genome):
         alt = record.alts[0]
         strand = record.info.get("strand")
 
+        # print(chrom, pos, ref, alt, strand)
+
         if len(ref) == 1 and len(alt) == 1:
             variant_type = "SNV"
         elif len(ref) > 1 and len(alt) == 1:
@@ -35,8 +37,8 @@ def main(input_file, reference_genome):
 
         # print(pos, ref_seq, alt_seq)
 
-        pos_strand = strand.count("+") if strand is not None else 0
-        neg_strand = strand.count("-") if strand is not None else 0
+        pos_strand = 0 if strand is None else sum(value.count("+") for value in strand)
+        neg_strand = 0 if strand is None else sum(value.count("-") for value in strand)
 
         append = ""
 
@@ -53,6 +55,8 @@ def main(input_file, reference_genome):
         if neg_strand > 0:
             ref_seq_rev = ref_seq.translate(str.maketrans("ACGT", "TGCA"))[::-1]
             alt_seq_rev = alt_seq.translate(str.maketrans("ACGT", "TGCA"))[::-1]
+            # print(ref_seq, alt_seq)
+            # print(ref_seq_rev, alt_seq_rev)
             if "AG" in alt_seq_rev and "AG" not in ref_seq_rev:
                 append += "ag_created=-;"
             if "AG" not in alt_seq_rev and "AG" in ref_seq_rev:

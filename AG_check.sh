@@ -26,11 +26,8 @@ while read line; do
         variant_type="INSDEL"
     fi
 
-    # 1-based
     ref_seq=$(samtools faidx $reference_genome "$chr:$(($pos-1))-$(($pos+${#ref}))" | grep -v "^>" | tr -d '\n')
     alt_seq=${ref_seq:0:1}$alt${ref_seq:$((${#ref}+1)):1}
-
-    # echo "$pos, $ref_seq, $alt_seq, $ref, $alt"
 
     pos_strand=$(echo $strand | grep -c "+")
     neg_strand=$(echo $strand | grep -c "-")
@@ -55,6 +52,8 @@ while read line; do
     if (( "$neg_strand" > 0 )); then
         ref_seq_rev=$(echo "$ref_seq" | tr "[ACGT]" "[TGCA]" | rev)
         alt_seq_rev=$(echo "$alt_seq" | tr "[ACGT]" "[TGCA]" | rev)
+        # echo $ref_seq $alt_seq
+        # echo $ref_seq_rev $alt_seq_rev
         if [[ "$alt_seq_rev" == *"AG"* && "$ref_seq_rev" != *"AG"* ]]; then
             append+="ag_created=-;"
         fi

@@ -1,0 +1,52 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+##contig=<ID=4,length=191154276>
+##contig=<ID=5,length=180915260>
+##contig=<ID=6,length=171115067>
+##contig=<ID=7,length=159138663>
+##contig=<ID=8,length=146364022>
+##contig=<ID=9,length=141213431>
+##contig=<ID=10,length=135534747>
+##contig=<ID=11,length=135006516>
+##contig=<ID=12,length=133851895>
+##contig=<ID=13,length=115169878>
+##contig=<ID=14,length=107349540>
+##contig=<ID=15,length=102531392>
+##contig=<ID=16,length=90354753>
+##contig=<ID=17,length=81195210>
+##contig=<ID=18,length=78077248>
+##contig=<ID=19,length=59128983>
+##contig=<ID=20,length=63025520>
+##contig=<ID=21,length=48129895>
+##contig=<ID=22,length=51304566>
+##contig=<ID=X,length=155270560>
+##contig=<ID=Y,length=59373566>
+##contig=<ID=MT,length=16569>
+##INFO=<ID=Gene_Location,Number=.,Type=String,Description="calculated field: Gene_Location">
+##INFO=<ID=gencode,Number=1,Type=String,Description="calculated by self of overlapping values in column 9 from annotations/gencode.v43.annotation.gtf.gz">
+##INFO=<ID=gencode_types,Number=1,Type=String,Description="calculated by self of overlapping values in column 3 from annotations/gencode.v43.annotation.gtf.gz">
+##INFO=<ID=gene,Number=.,Type=String,Description="calculated field: gene">
+##INFO=<ID=gene_type,Number=.,Type=String,Description="calculated field: gene_type">
+##INFO=<ID=gnomAD_AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=gnomAD_AF,Number=A,Type=Float,Description="Allele Frequency among genotypes, for each ALT allele, in the same order as listed (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=gnomAD_AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=gnomAD_PM_AC,Number=A,Type=Integer,Description="AC in the population with the max AF (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=gnomAD_PM_AF,Number=A,Type=Float,Description="Maximum Allele Frequency across populations (excluding OTH) (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=gnomAD_PM_AN,Number=A,Type=Integer,Description="AN in the population with the max AF (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=gnomAD_PopMax,Number=A,Type=String,Description="Population with max AF (from annotations/gnomad.zero.hg38.vcf.gz)">
+##INFO=<ID=strand,Number=.,Type=String,Description="calculated by uniq of overlapping values in column 7 from annotations/gencode.v43.annotation.gtf.gz">
+##bcftools_normVersion=1.9+htslib-1.9
+##bcftools_normCommand=norm -m-both ./output/working_files/pedcbioportal_230327.zero.sorted.vcf.gz; Date=Fri Mar 17 18:03:37 2023
+##bcftools_filterVersion=1.9+htslib-1.9
+##bcftools_filterCommand=filter --threads 8 '-i(FILTER='PASS' || FILTER='.') && (QUAL>=200 || QUAL='.')' ./output/working_files/pedcbioportal_230327.zero.subset.vcf.gz; Date=Fri Mar 17 18:03:42 2023
+##bcftools_filterCommand=filter --threads 8 '-i(gnomAD_PM_AF<=0.01 || gnomAD_PM_AF='.')' ./output/working_files/pedcbioportal_230327.zero.subset.highquality.annotated.vcf.gz; Date=Fri Mar 17 18:09:38 2023
+##bcftools_viewVersion=1.9+htslib-1.9
+##bcftools_viewCommand=view -h ./output/working_files/pedcbioportal_230327.zero.subset.highquality.annotated.filtered.vcf.gz; Date=Fri Mar 17 18:09:38 2023
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	1072101	os_sd_zxjffmef_2015|GMKF-40-UC0021-01A-01E-WGS|226197	C	T	.	PASS	.
+2	32442343	os_sd_zxjffmef_2015|GMKF-40-UC0046-08A-01E-WGS|273117	AA	TG	.	PASS	.
+5	145764952	os_sd_zxjffmef_2015|GMKF-40-SW9-02A-01E-WGS|296412	A	AG	.	PASS	.
+8	144462367	os_sd_zxjffmef_2015|GMKF-40-UC0029-01A-01E-WGS|281513	GGCC	G	.	PASS	.
