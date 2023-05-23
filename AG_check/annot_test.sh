@@ -13,10 +13,10 @@ end=$'\e[0m'
         echo -n "starting test on $f w/ python..."
         time python3 $basedir/AG_check.py $f $basedir/files/hg38_.fa;
         echo -n "starting test on $f w/ bash..."
-        time bash $basedir/../AG_check.sh -i $f -r $basedir/files/hg38_.fa;
+        time bash $basedir/AG_check.sh -i $f -r $basedir/files/hg38_.fa;
 
-        bashresult="$basedir/../introme_annotate.functions.vcf.gz.tbi"
-        pyresult="$basedir/../introme_annotate.functions2.vcf.gz.tbi"
+        bashresult="$basedir/../introme_annotate.functions.vcf"
+        pyresult="$basedir/../introme_annotate.functions2.vcf"
         
         echo
         
