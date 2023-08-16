@@ -1,0 +1,91 @@
+06/28/23_04:21:57 PM Beginning filtering by annotation values
+06/28/23_04:21:57 PM Frequency filtering complete - 44004 variants remaining
+06/28/23_04:21:58 PM Running ESE Scoring
+         921722503 function calls (904670299 primitive calls) in 527.780 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  527.780  527.780 <string>:1(<module>)
+ 15909024   14.760    0.000   57.527    0.000 ESE_ESS_scoring.py:121(seq_split)
+  9929376   68.388    0.000  338.983    0.000 ESE_ESS_scoring.py:126(score_seq)
+ 79435008   52.120    0.000   62.210    0.000 ESE_ESS_scoring.py:159(seq_to_array)
+        1    3.501    3.501  527.780  527.780 ESE_ESS_scoring.py:172(main)
+  1055232   20.496    0.000  440.626    0.000 ESE_ESS_scoring.py:58(seq_scan)
+   520272    2.086    0.000    3.468    0.000 Seq.py:1594(reverse_complement)
+ 10874018    7.506    0.000    9.576    0.000 Seq.py:1961(__init__)
+  9929376    7.489    0.000   19.240    0.000 Seq.py:384(__eq__)
+ 17052192    5.576    0.000    7.947    0.000 Seq.py:462(__len__)
+ 89540256   66.268    0.000  238.641    0.000 Seq.py:470(__getitem__)
+   160562    0.285    0.000    0.646    0.000 Seq.py:495(__add__)
+        3    0.000    0.000    0.000    0.000 _collections_abc.py:816(get)
+100326338   28.093    0.000  128.577    0.000 abc.py:117(__instancecheck__)
+79435020/79435014   23.581    0.000   56.149    0.000 abc.py:121(__subclasscheck__)
+        1    0.000    0.000    0.000    0.000 codecs.py:186(__init__)
+   175873    0.165    0.000    0.165    0.000 codecs.py:260(__init__)
+   175873    0.360    0.000    0.524    0.000 codecs.py:309(__init__)
+   176875    0.406    0.000    0.646    0.000 codecs.py:319(decode)
+        3    0.000    0.000    0.000    0.000 os.py:674(__getitem__)
+        3    0.000    0.000    0.000    0.000 os.py:754(encode)
+        3    0.000    0.000    0.000    0.000 os.py:771(getenv)
+   175872    0.160    0.000    0.265    0.000 os.py:816(fsdecode)
+   175873    1.015    0.000    1.390    0.000 posixpath.py:337(normpath)
+   175873    0.347    0.000    2.340    0.000 posixpath.py:376(abspath)
+   351746    0.189    0.000    0.266    0.000 posixpath.py:41(_get_sep)
+   175873    0.270    0.000    0.575    0.000 posixpath.py:60(isabs)
+   175873    0.645    0.000    0.925    0.000 posixpath.py:71(join)
+        2    0.000    0.000    0.001    0.001 random.py:119(__init__)
+        2    0.000    0.000    0.001    0.001 random.py:128(seed)
+   175873    0.744    0.000    2.264    0.000 random.py:506(choices)
+   175873    1.016    0.000    1.482    0.000 random.py:519(<listcomp>)
+   175872    0.277    0.000    0.314    0.000 tempfile.py:224(_infer_return_type)
+   175872    0.412    0.000    1.418    0.000 tempfile.py:253(_sanitize_params)
+   175873    0.274    0.000    0.562    0.000 tempfile.py:281(rng)
+   175873    0.695    0.000    3.611    0.000 tempfile.py:292(__next__)
+        1    0.000    0.000    0.000    0.000 tempfile.py:295(_candidate_tempdir_list)
+        1    0.000    0.000    0.002    0.002 tempfile.py:322(_get_default_tempdir)
+   175872    0.078    0.000    0.078    0.000 tempfile.py:368(_get_candidate_names)
+   175872    1.188    0.000   13.928    0.000 tempfile.py:382(_mkstemp_inner)
+   175872    0.091    0.000    0.093    0.000 tempfile.py:424(_gettempdir)
+   175872    0.333    0.000    0.691    0.000 tempfile.py:436(gettempdir)
+   175872    0.389    0.000   15.735    0.000 tempfile.py:444(mkstemp)
+    87936    0.532    0.000   79.669    0.001 utils.py:58(__call__)
+100326338   44.335    0.000  100.484    0.000 {built-in method _abc._abc_instancecheck}
+79435020/79435014   32.568    0.000   32.568    0.000 {built-in method _abc._abc_subclasscheck}
+   176875    0.240    0.000    0.240    0.000 {built-in method _codecs.utf_8_decode}
+        1    0.000    0.000    0.000    0.000 {built-in method _csv.reader}
+        1    0.000    0.000    0.000    0.000 {built-in method _csv.writer}
+ 79435008   10.841    0.000   10.841    0.000 {built-in method builtins.chr}
+        1    0.000    0.000  527.780  527.780 {built-in method builtins.exec}
+   175873    0.065    0.000    0.065    0.000 {built-in method builtins.getattr}
+122601999   39.769    0.000  168.346    0.000 {built-in method builtins.isinstance}
+34471511/17419319    8.757    0.000   14.332    0.000 {built-in method builtins.len}
+   175873    0.195    0.000    3.806    0.000 {built-in method builtins.next}
+        2    0.000    0.000    0.000    0.000 {built-in method io.open}
+  1406984    0.229    0.000    0.229    0.000 {built-in method math.floor}
+        1    0.000    0.000    0.000    0.000 {built-in method posix.close}
+   879364    0.155    0.000    0.155    0.000 {built-in method posix.fspath}
+        1    0.000    0.000    0.000    0.000 {built-in method posix.getcwd}
+   175873    0.222    0.000    0.222    0.000 {built-in method posix.getpid}
+   175873    5.539    0.000    5.539    0.000 {built-in method posix.open}
+        1    0.000    0.000    0.000    0.000 {built-in method posix.unlink}
+        1    0.000    0.000    0.000    0.000 {built-in method posix.write}
+   175872    0.055    0.000    0.055    0.000 {built-in method sys.audit}
+        2    0.001    0.001    0.001    0.001 {function Random.seed at 0x7ff0b2939090}
+        2    0.000    0.000    0.000    0.000 {method '__exit__' of '_io._IOBase' objects}
+        2    0.000    0.000    0.000    0.000 {method 'acquire' of '_thread.lock' objects}
+   703490    0.187    0.000    0.187    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+    72629    0.037    0.000    0.037    0.000 {method 'encode' of 'str' objects}
+   175873    0.058    0.000    0.058    0.000 {method 'endswith' of 'str' objects}
+       73    0.000    0.000    0.000    0.000 {method 'extend' of 'list' objects}
+   351744    0.108    0.000    0.108    0.000 {method 'get' of 'dict' objects}
+   351746    0.150    0.000    0.150    0.000 {method 'join' of 'str' objects}
+  1406984    0.237    0.000    0.237    0.000 {method 'random' of '_random.Random' objects}
+        2    0.000    0.000    0.000    0.000 {method 'release' of '_thread.lock' objects}
+   263809    0.225    0.000    0.225    0.000 {method 'split' of 'str' objects}
+   703492    0.303    0.000    0.303    0.000 {method 'startswith' of 'str' objects}
+   520272    0.187    0.000    0.187    0.000 {method 'translate' of 'bytes' objects}
+ 79435008   10.089    0.000   10.089    0.000 {method 'upper' of 'str' objects}
+    88008    1.362    0.000    1.362    0.000 {method 'writerow' of '_csv.writer' objects}
+    87936   62.129    0.001   79.028    0.001 {pysam.libcutils._pysam_dispatch}
