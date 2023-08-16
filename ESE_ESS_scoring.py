@@ -2,6 +2,7 @@ import sys
 import pysam
 import csv
 from Bio.Seq import Seq
+import cProfile
 
 ## Bring in arguments
 file = sys.argv[1]
@@ -10,26 +11,31 @@ reference_genome = sys.argv[3]
 
 
 ## Define ESE PWM arrays (Source: ESEFinder)
+# SF2/ASF
 SRSF1 = [[-1.14,1.37,-0.21,-1.58],[0.62,-1.1,0.17,-0.5],
 		[-1.58,0.73,0.48,-1.58],[1.32,0.33,-1.58,-1.13],
 		[-1.58,0.94,0.33,-1.58],[-1.58,-1.58,0.99,-1.13],
 		[0.62,-1.58,-0.11,0.27]]
 
+# SF2/ASF (IgM-BRCA1)
 SRSF1_igM = [[-1.58,1.55,-1.35,-1.55],[0.15,-0.53,0.44,-0.28],
 			[-0.97,0.79,0.41,-1.28],[0.74,0.33,-0.98,-0.92],
 			[-1.19,0.72,0.51,-1.09],[-0.75,-0.62,1.03,-0.52],
 			[0.43,-0.99,0,0.2]]
 
+# SC35
 SRSF2 = [[-0.88,-1.16,0.87,-1.18],[0.09,-1.58,0.45,-0.2],
 		[-0.06,0.95,-1.36,0.38],[-1.58,1.11,-1.58,0.88],
 		[0.09,0.56,-0.33,-0.2],[-0.41,0.86,-0.05,-0.86],
 		[-0.06,0.32,-1.36,0.96],[0.23,-1.58,0.68,-1.58]]
 
+# SRp40
 SRSF5 = [[-0.13,0.56,-1.58,0.92],[-1.58,0.68,-0.14,0.37],
 		[1.28,-1.12,-1.33,0.23],[-0.33,1.24,-0.48,-1.14],
 		[0.97,-0.77,-1.58,0.72],[-0.13,0.13,0.44,-1.58],
 		[-1.58,-0.05,0.8,-1.58]]
 
+# SRp55
 SRSF6 = [[-0.66,0.39,-1.58,1.22],[0.11,-1.58,0.72,-1.58],
 		[-0.66,1.48,-1.58,0.07],[0.11,-1.58,0.72,-1.58],
 		[-1.58,-1.58,0.21,1.02],[0.61,0.98,-0.79,-1.58]]
@@ -104,6 +110,7 @@ def seq_scan(seq, motif, strand):
 		elif motif == "hnRNPA1":
 			for i in range(2,len(seq)-2):
 				split = seq_split(seq,6,i)
+				print(split, i, seq)
 				if split != None:
 					score = score_seq(split,"hnRNPA1")
 					if score > highest_score:
@@ -121,31 +128,37 @@ def score_seq(seq, motif):
 	strength = 0
 	if motif == "SRSF1":
 		for pos in range(0,7):
-	 		strength += SRSF1[pos][seq_to_array(seq[pos])]
-	 	return strength
+			try:
+				assert(seq_to_array(seq[pos])) is not None
+			except AssertionError:
+				print(seq, pos)
+				exit()
+			strength += SRSF1[pos][seq_to_array(seq[pos])]
+		return strength
 	elif motif == "SRSF1_igM":
 		for pos in range(0,7):
-	 		strength += SRSF1_igM[pos][seq_to_array(seq[pos])]
-	 	return strength
+			strength += SRSF1_igM[pos][seq_to_array(seq[pos])]
+		return strength
 	elif motif == "SRSF2":
 		for pos in range(0,8):
-	 		strength += SRSF2[pos][seq_to_array(seq[pos])]
-	 	return strength
+			strength += SRSF2[pos][seq_to_array(seq[pos])]
+		return strength
 	elif motif == "SRSF5":
 		for pos in range(0,7):
-	 		strength += SRSF5[pos][seq_to_array(seq[pos])]
-	 	return strength
+			strength += SRSF5[pos][seq_to_array(seq[pos])]
+		return strength
 	elif motif == "SRSF6":
 		for pos in range(0,6):
-	 		strength += SRSF6[pos][seq_to_array(seq[pos])]
+			strength += SRSF6[pos][seq_to_array(seq[pos])]
 		return strength
 	elif motif == "hnRNPA1":
 		for pos in range(0,6):
-	 		strength += hnRNPA1[pos][seq_to_array(seq[pos])]
+			strength += hnRNPA1[pos][seq_to_array(seq[pos])]
 		return strength
 
 # Convert the base to the corresponding position in the array
 def seq_to_array(base):
+	base = base.upper()
 	if base == "A":
 		return int(0)
 	elif base == "C":
@@ -157,52 +170,70 @@ def seq_to_array(base):
 
 ################################
 
-with open(file) as read:
-	with open(output, 'w') as write:
-		writer = csv.writer(write, delimiter='\t')
-	  	reader = csv.reader(read, delimiter='\t')
+def main():
+	with open(file) as read:
+		with open(output, 'w') as write:
+			writer = csv.writer(write, delimiter='\t')
+			reader = csv.reader(read, delimiter='\t')
 
-	  	# Loop through each entry
-	  	for row in reader:
-	  		# Extract necessary variables from file
-	  		chromosome = str(row[0])
+			# Loop through each entry
+			i = 0
+			for row in reader:
+				# print(row)
+				# i += 1
+				# if i > 5:
+				# 	exit()
+				# else:
+				# 	continue
+				# Extract necessary variables from file
+				chromosome = str(row[0])
 
-			# Write header line
-			if chromosome[0] == "#":
-				row.extend(['SRSF1','SRSF1_igM','SRSF2','SRSF5','SRSF6', 'hnRNPA1'])
+				# Write header line
+				if chromosome[0] == "#":
+					row.extend(['SRSF1','SRSF1_igM','SRSF2','SRSF5','SRSF6', 'hnRNPA1'])
+					writer.writerow(row)
+					continue
+
+				# Extract relevant information from annotated tsv
+				position = int(row[1])
+				ref = str(row[3])
+				alt = str(row[4])
+				try:
+					strand = str(row[8])
+				except IndexError:
+					strand = "+"
+
+				# Extract reference sequence
+				# Skip insertions longer than 30bp
+				if len(alt) > 30:
+					row.extend(['.','.','.','.','.','.'])
+					writer.writerow(row)
+					continue
+				# If SNV, extract 7bp either side of reference base
+				elif len(ref) == 1:
+					genome_ref8 = pysam.faidx(reference_genome, chromosome + ":" + str(position-7) + "-" + str(position+7)).split()
+					ref8 = Seq(genome_ref8[1])
+					alt8 = ref8[:7] + alt + ref8[len(ref8)-7:]
+				# If indel, extract 7bp either side of the reference sequence
+				else:
+					genome_ref8 = pysam.faidx(reference_genome, chromosome + ":" + str(position-7) + "-" + str(position+len(ref)+6)).split()
+					ref8 = Seq(genome_ref8[1])
+					alt8 = ref8[:8] + ref8[len(ref8)-7:]
+				
+				print(genome_ref8, ref8, alt8)
+
+				# Score each ref and alt sequence, find the difference and append to the original row
+				row.append(seq_scan(ref8, "SRSF1", strand) - seq_scan(alt8, "SRSF1", strand))
+				row.append(seq_scan(ref8, "SRSF1_igM", strand) - seq_scan(alt8, "SRSF1_igM", strand))
+				row.append(seq_scan(ref8, "SRSF2", strand) - seq_scan(alt8, "SRSF2", strand))
+				row.append(seq_scan(ref8, "SRSF5", strand) - seq_scan(alt8, "SRSF5", strand))
+				row.append(seq_scan(ref8, "SRSF6", strand) - seq_scan(alt8, "SRSF6", strand))
+				row.append(seq_scan(ref8, "hnRNPA1", strand) - seq_scan(alt8, "hnRNPA1", strand))
+
+				# Write the new row to file
 				writer.writerow(row)
-				continue
 
-			# Extract relevant information from annotated tsv
-	  		position = int(row[1])
-	  		ref = str(row[3])
-	  		alt = str(row[4])
-	  		strand = str(row[8])
 
-	  		# Extract reference sequence
-	  		# Skip insertions longer than 30bp
-	  		if len(alt) > 30:
-	  			row.extend(['.','.','.','.','.','.'])
-	  			writer.writerow(row)
-	  			continue
-	  		# If SNV, extract 7bp either side of reference base
-			elif len(ref) == 1:
-				genome_ref8 = pysam.faidx(reference_genome, chromosome + ":" + str(position-7) + "-" + str(position+7)).split()
-				ref8 = Seq(genome_ref8[1])
-				alt8 = ref8[:7] + alt + ref8[len(ref8)-7:]
-			# If indel, extract 7bp either side of the reference sequence
-			else:
-				genome_ref8 = pysam.faidx(reference_genome, chromosome + ":" + str(position-7) + "-" + str(position+len(ref)+6)).split()
-				ref8 = Seq(genome_ref8[1])
-				alt8 = ref8[:8] + ref8[len(ref8)-7:]
-
-			# Score each ref and alt sequence, find the difference and append to the original row
-			row.append(seq_scan(ref8, "SRSF1", strand) - seq_scan(alt8, "SRSF1", strand))
-			row.append(seq_scan(ref8, "SRSF1_igM", strand) - seq_scan(alt8, "SRSF1_igM", strand))
-			row.append(seq_scan(ref8, "SRSF2", strand) - seq_scan(alt8, "SRSF2", strand))
-			row.append(seq_scan(ref8, "SRSF5", strand) - seq_scan(alt8, "SRSF5", strand))
-			row.append(seq_scan(ref8, "SRSF6", strand) - seq_scan(alt8, "SRSF6", strand))
-			row.append(seq_scan(ref8, "hnRNPA1", strand) - seq_scan(alt8, "hnRNPA1", strand))
-
-			# Write the new row to file
-			writer.writerow(row)
+if __name__ == "__main__":
+	# cProfile.run('print("hi")')
+	cProfile.run('main()')
