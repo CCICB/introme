@@ -5,7 +5,7 @@ prefix='ese'
 max_AF='0.01' # Minimum gnomAD allele frequency in the population with the highest allele frequency in gnomAD
 reference_genome='AG_check/files/hg38_.fa'
 # input="AG_check/files/pedcbioportal_long_44k.vcf"
-input=$1
+input="AG_check/files/SpliceVarDB.hg38.strand.vcf"
 
 rm -rf $out_dir/working_files/
 mkdir -p $out_dir/working_files/
@@ -33,5 +33,5 @@ gunzip -k $out_dir/working_files/$prefix.subset.highquality.annotated.filtered.r
 
 echo $(date +%x_%r) 'Running ESE Scoring'
 python3 ESE_ESS_scoring.py $out_dir/working_files/$prefix.subset.highquality.annotated.filtered.rmanno.vcf $out_dir/working_files/$prefix.subset.highquality.ESE.vcf $reference_genome
-cat annotations/introme_annotate.vcf $out_dir/working_files/$prefix.subset.highquality.ESE.vcf | bgzip > introme_annotate.ESE.vcf
+cat annotations/introme_annotate.vcf $out_dir/working_files/$prefix.subset.highquality.ESE.vcf | bgzip > introme_annotate.ESE.vcf.gz
 
