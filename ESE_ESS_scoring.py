@@ -67,7 +67,7 @@ def seq_scan(seq, motif, strand):
         start = 0
         limit = 2
 
-    print(motif)
+    # print(motif)
 
     for n in range(start,limit):
         # Swap to reverse strand if strand is negative or both
@@ -77,63 +77,63 @@ def seq_scan(seq, motif, strand):
         if motif == "SRSF1":
             for i in range(1,len(seq)-1):
                 split = seq_split(seq,7,i)
-                print(split, i, seq, end=" ")
+                # print(split, i, seq, end=" ")
                 if split != None:
                     score = score_seq(split,"SRSF1")
                     if score > highest_score and score > SRSF1_threshold:
                         highest_score = score
-                    print(round(score, 2), end="")
-                print()
+                    # print(round(score, 2), end="")
+                # print()
         elif motif == "SRSF1_igM":
             for i in range(1,len(seq)-1):
                 split = seq_split(seq,7,i)
-                print(split, i, seq, end=" ")
+                # print(split, i, seq, end=" ")
                 if split != None:
                     score = score_seq(split,"SRSF1_igM")
                     if score > highest_score and score > SRSF1_igM_threshold:
                         highest_score = score
-                    print(round(score, 2), end="")
-                print()
+                    # print(round(score, 2), end="")
+                # print()
         elif motif == "SRSF2":
             for i in range(0,len(seq)):
                 split = seq_split(seq,8,i)
-                print(split, i, seq, end=" ")
+                # print(split, i, seq, end=" ")
                 if split != None:
                     score = score_seq(split,"SRSF2")
                     if score > highest_score and score > SRSF2_threshold:
                         highest_score = score
-                    print(round(score, 2), end="")
-                print()
+                    # print(round(score, 2), end="")
+                # print()
         elif motif == "SRSF5":
             for i in range(1,len(seq)-1):
                 split = seq_split(seq,7,i)
-                print(split, i, seq, end=" ")
+                # print(split, i, seq, end=" ")
                 if split != None:
                     score = score_seq(split,"SRSF5")
                     if score > highest_score and score > SRSF5_threshold:
                         highest_score = score
-                    print(round(score, 2), end="")
-                print()
+                    # print(round(score, 2), end="")
+                # print()
         elif motif == "SRSF6":
             for i in range(2,len(seq)-2):
                 split = seq_split(seq,6,i)
-                print(split, i, seq, end=" ")
+                # print(split, i, seq, end=" ")
                 if split != None:
                     score = score_seq(split,"SRSF6")
                     if score > highest_score and score > SRSF6_threshold:
                         highest_score = score
-                    print(round(score, 2), end="")
-                print()
+                    # print(round(score, 2), end="")
+                # print()
         elif motif == "hnRNPA1":
             for i in range(2,len(seq)-2):
                 split = seq_split(seq,6,i)
-                print(split, i, seq, end=" ")
+                # print(split, i, seq, end=" ")
                 if split != None:
                     score = score_seq(split,"hnRNPA1")
                     if score > highest_score:
                         highest_score = score
-                    print(round(score, 2), end="")
-                print()
+                    # print(round(score, 2), end="")
+                # print()
 
     return highest_score
 
@@ -217,7 +217,7 @@ def main():
                 chromosome = "chr" + chromosome
 
             # Extract relevant information from annotated tsv
-            print(row)
+            # print(row)
             position = int(row[1])
             ref = str(row[3])
             alt = str(row[4])
@@ -247,7 +247,7 @@ def main():
                 ref8 = Seq(genome_ref8[1])
                 alt8 = ref8[:8] + ref8[len(ref8)-7:]
             
-            print(genome_ref8, ref8, alt8)
+            # print(genome_ref8, ref8, alt8)
 
             # Score each ref and alt sequence, find the difference and append to the original row
             row.append(round(seq_scan(ref8, "SRSF1", strand) - seq_scan(alt8, "SRSF1", strand), 2))
