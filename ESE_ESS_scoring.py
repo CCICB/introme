@@ -190,7 +190,7 @@ def seq_to_array(base):
 ################################
 
 def main():
-    with open(file) as read, open(output, 'w') as write:
+    with open(file) as read, open(output, 'w+') as write:
         writer = csv.writer(write, delimiter='\t')
         reader = csv.reader(read, delimiter='\t')
 
@@ -263,4 +263,5 @@ def main():
 
 if __name__ == "__main__":
     # cProfile.run('print("hi")')
-    cProfile.run('main()')
+    # cProfile.run('main()')
+    main()

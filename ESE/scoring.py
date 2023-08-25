@@ -113,7 +113,7 @@ def find_pssm_matches_with_numpy(pssm_matrix, sequence, threshold):
 
 def motif_hits(motif: list, threshold: float, window: str):
     # print(f"{window=}")
-    hits_above_threshold = find_pssm_matches_with_numpy([list(i) for i in zip(*motif)], window, threshold)
+    hits_above_threshold = find_pssm_matches_with_numpy([list(i) for i in motif], window, threshold)
     # print([(i, i + len(motif), 1, ref[i:i+len(motif)], score) for i, score in hits_above_threshold])
     # https://stackoverflow.com/questions/13145368/how-to-find-the-maximum-value-in-a-list-of-tuples
     highest = max(hits_above_threshold, key=itemgetter(1)) if hits_above_threshold else (None, 0)
@@ -128,9 +128,10 @@ def main():
     output = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
 
-    CONTEXT_LENGTH = 20
-    motifs = [(SRSF1, SRSF1_threshold), (SRSF1_igM, SRSF1_igM_threshold),
-                (SRSF2, SRSF2_threshold), (SRSF5, SRSF5_threshold), (SRSF6, SRSF6_threshold)]
+    CONTEXT_LENGTH = 7
+    motifs = [(list(zip(*mot)), thr) for mot, thr in [(SRSF1, SRSF1_threshold), (SRSF1_igM, SRSF1_igM_threshold),
+                (SRSF2, SRSF2_threshold), (SRSF5, SRSF5_threshold), (SRSF6, SRSF6_threshold)]]
+    print(motifs)
 
     # test_seq0 = 'cttgttataggtggtcc'
     # test_seq0 = 'cttgttataggc'
@@ -146,14 +147,14 @@ def main():
     for motif, threshold in motifs:
         # print()
         # print(motif)
-        a = make_window(*res0, len(motif))
+        a = make_window(*res0, len(motif[0]))
         ref = a[0] + a[1] + a[2]
         alt = a[0] + a[3] + a[2]
 
         
         motif_hits(motif, threshold, alt) - motif_hits(motif, threshold, ref)
 
-    with open(file) as read, open(output, 'w') as write:
+    with open(file) as read, open(output, 'w+') as write:
         writer = csv.writer(write, delimiter='\t')
         reader = csv.reader(read, delimiter='\t')
 
@@ -198,12 +199,12 @@ def main():
             for motif, threshold in motifs:
                 # print()
                 # print(motif)
-                a = make_window(*res0, len(motif))
+                a = make_window(*res0, len(motif[0]))
                 ref = a[0] + a[1] + a[2]
                 alt = a[0] + a[3] + a[2]
 
-                
-                row.append(round(motif_hits(motif, threshold, alt) - motif_hits(motif, threshold, ref), 2))
+                a = round(motif_hits(motif, threshold, alt) - motif_hits(motif, threshold, ref), 2)
+                row.append("0" if a == 0 else a )
 
             # Write the new row to file
             writer.writerow(row)

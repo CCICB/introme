@@ -1,4 +1,5 @@
 import pysam
+from dataclasses import dataclass
 
 def faidx_context(ref_genome: pysam.FastaFile, chrom: str, pos: int,
                   ref_allele: str, context_len: int, prepend_chr=False):
@@ -17,9 +18,10 @@ def faidx_context(ref_genome: pysam.FastaFile, chrom: str, pos: int,
     try:
         assert(ref_allele == sequence[context_len:context_len + ref_len].upper())
     except AssertionError:
-        print(f"reference allele ({ref_allele}) did not match the provided reference genome "
-              f"({sequence[context_len:context_len + ref_len]}) at {chrom}:{pos}")
+        # print(f"reference allele ({ref_allele}) did not match the provided reference genome "
+        #       f"({sequence[context_len:context_len + ref_len]}) at {chrom}:{pos}")
         # exit(1)
+        pass
     after = sequence[context_len + ref_len:]
 
     return (before, ref_allele, after)
