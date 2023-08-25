@@ -6,3 +6,6 @@ main
 - special case for SNV (or maybe case is not unique)
 - get score for each of 6 splicing enhancers by diffing SEQ_SCAN of ref vs alt.
     - for fwd and/or rev, for whole length of seq (bar first and last)
+
+
+    26 mid.large.strand
