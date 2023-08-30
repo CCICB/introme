@@ -1,11 +1,15 @@
 from collections import defaultdict
 from collections import namedtuple
+from decimal import *
+from typing import List
 import sys, pprint
+
+getcontext().prec = 6
 
 # Define the named tuple
 SeqScore = namedtuple('SeqScore', ['sequence', 'score'])
 
-def read_input(file_path):
+def read_input(file_path) -> List[SeqScore]:
     with open(file_path, 'r') as f:
         lines = f.readlines()
     
@@ -15,10 +19,19 @@ def read_input(file_path):
     data = []
     for line in lines:
         fields = line.strip().split('\t')
-        seqscore = SeqScore(fields[3], float(fields[4]))
+        seqscore = SeqScore(fields[3], Decimal(fields[4]))
         data.append(seqscore)
     
     return data
+
+def get_motif_name(file_path) -> str:
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+    
+    # Skip the header line
+    fields = lines[1].strip().split('\t')
+    
+    return fields[1]
 
 def differ_by_one(str1, str2):
     # Check if two strings differ by exactly one character
@@ -38,29 +51,7 @@ def differ_by_one(str1, str2):
         return diff_index
     else:
         return None
-
-def calculate_pssm(data):
-    pssm = defaultdict(lambda: defaultdict(float))
     
-    for i in range(len(data) - 1):
-        seq1, score1 = data[i]
-        print(tuple([seq1, score1]))
-        seq2, score2 = data[i + 1]
-        
-        # Find the position where the sequences differ
-        for pos in range(len(seq1)):
-            if seq1[pos] != seq2[pos]:
-                diff_pos = pos
-                break
-        
-        # Calculate the score difference
-        score_diff = score2 - score1
-        
-        # Update the PSSM
-        pssm[diff_pos][seq2[diff_pos]] = score_diff
-    
-    return pssm
-
 def differences_by_index(tuple_list: list):    
     # Your list of tuples
     # tuple_list = [
@@ -88,8 +79,9 @@ def differences_by_index(tuple_list: list):
                 d[diff_index].add(tuple(i for i in (
                     tuple_list[i].sequence[diff_index],
                     tuple_list[j].sequence[diff_index],
-                    round(tuple_list[i].score - tuple_list[j].score, 3)
+                    tuple_list[i].score - tuple_list[j].score
                     )))
+                print(repr([tuple_list[i].score - tuple_list[j].score, tuple_list[i].score, tuple_list[j].score]))
                 
     return d
 
@@ -98,7 +90,7 @@ def convert_dict_to_list(d: dict):
 
     for key, values in d.items():
         for value in values:
-            concat_str = f"{value[0]}_{key}-{value[1]}_{key}={value[2]}"
+            concat_str = f"{value[0]}_{key}-{value[1]}_{key}={Decimal(value[2])}"
             converted_data.append(concat_str)
 
     return converted_data
@@ -120,8 +112,8 @@ def main():
     pprint.pprint(diff_by_index)
 
     equations = convert_dict_to_list(diff_by_index)
-    for seq_score in data:
-        equations.append(make_equation_from_seqscore(seq_score))
+    # for seq_score in data:
+    #     equations.append(make_equation_from_seqscore(seq_score))
 
     print()
     pprint.pprint(equations)
@@ -140,6 +132,8 @@ def main():
     equations.append('N_3 = 0')
     equations.append('N_4 = 0')
     equations.append('N_5 = 0')
+    equations.append('N_6 = 0')
+    equations.append('N_7 = 0')
 
     transformations=(standard_transformations + (implicit_multiplication_application,))
     eqs_sympy = [Eq(parse_expr(e.split('=')[0], transformations=transformations),
@@ -147,8 +141,8 @@ def main():
                 for e in eqs]
     sol = solve(eqs_sympy)
     # if not dict (list instead), then no solutions
-    for k, v in sol.items():
-        sol[k] = round(v, 3)
+    # for k, v in sol.items():
+    #     sol[k] = round(v, DECIMAL_POINTS + 1)
     print(sol)
 
     # Initialize empty lists for 'A', 'C', 'G', and 'U'
@@ -180,10 +174,10 @@ def main():
     list_U.sort(key=lambda x: x[0])
 
     # Extract the values from the sorted lists
-    list_A_values = [x[1] for x in list_A]
-    list_C_values = [x[1] for x in list_C]
-    list_G_values = [x[1] for x in list_G]
-    list_U_values = [x[1] for x in list_U]
+    list_A_values = [round(x[1], 5) for x in list_A]
+    list_C_values = [round(x[1], 5) for x in list_C]
+    list_G_values = [round(x[1], 5) for x in list_G]
+    list_U_values = [round(x[1], 5) for x in list_U]
 
     PSSM = [list_A_values, list_C_values, list_G_values, list_U_values]
     pprint.pprint(PSSM)
@@ -192,7 +186,6 @@ def main():
     import motifs
     import math
 
-
     mot = motifs.RBPsplice.from_2D_list(PSSM, "A1_neuBG")
     for seq_score in data:
         if 'N' in seq_score.sequence:
@@ -200,6 +193,10 @@ def main():
         recovered_score = mot.calculate(seq_score.sequence.replace('U', 'T'))
         assert math.isclose(recovered_score, seq_score.score, abs_tol=0.0001), [seq_score.sequence, recovered_score, seq_score.score]
     print("Sanity tests worked!")
+
+    with open("motifs.txt", "a+") as g:
+        g.write(get_motif_name(sys.argv[1])+"=")
+        pprint.pprint(PSSM, g)
 
 if __name__ == "__main__":
     main()

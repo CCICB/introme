@@ -91,4 +91,6 @@ if __name__ == "__main__":
         print(i)
 
     print(RBPmotifs)
+    print(a.__str__())
+
 
