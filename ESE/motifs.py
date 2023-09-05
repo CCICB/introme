@@ -1,5 +1,6 @@
 from Bio.motifs.matrix import PositionSpecificScoringMatrix
 import numpy as np
+import math
 
 class RBPsplice(PositionSpecificScoringMatrix):
     def __init__(self, alphabet, values, name, *, threshold: float=None):
@@ -15,21 +16,60 @@ class RBPsplice(PositionSpecificScoringMatrix):
             return l
 
     @classmethod
-    def from_2D_list(cls, arr: list[list[float]], name: str, *, arr_in_row_form=True, threshold: float=None):
+    def from_2D_list(cls, arr: list[list[float]], name: str, *, arr_by_base=True, threshold: float=None):
         """
         Convert PSSM in 2D list form into a Bio.motifs.matrix.PSSM compatible format and instantiate it
-
-        "row form" means list of 4 lists eg [[0.1, 0.6], [-0.4, 2.3], [0.4, 0.1], [-0.9, 1.2]]
-        "column form" is the transpose of row form eg [[0.1, -0.4, 0.4, -0.9], [0.6, 2.3, 0.1, 1.2]]
+        For an exemplary 2bp motif:
+        "by base" means 1 list per base letter, ie 4 lists total: [[0.1, 0.6], [-0.4, 2.3], [0.4, 0.1], [-0.9, 1.2]]
+        "by position" means 1 list of len 4 per base pair postion, ie [[0.1, -0.4, 0.4, -0.9], [0.6, 2.3, 0.1, 1.2]]
         """
-
-        if not arr_in_row_form:
+        if not arr_by_base:
             # Transpose
             arr = [list(i) for i in zip(*arr)]
-        # return cls(["A", "C", "G", "T"], {"A": [0, 1, 0], "C": [0, 0, 1], "G": [1, 0, 0], "T": [0, 0, 0]})
-        assert len(arr) == 4, "Is arr in row form?"
+        assert len(arr) == 4, "Check whether you really gave arr by base letter?"
 
         return cls(["A", "C", "G", "T"], {"A": arr[0], "C": arr[1], "G": arr[2], "T": arr[3]}, name, threshold=threshold)
+    
+    @classmethod
+    def from_RCRUNCH(cls, arr: list[list[float]], name: str, *, arr_by_base=True, threshold: float=None):
+        """
+        Convert IC matrix in 2D list from into a Bio.motifs.matrix.PSSM compatible format and instantiate it.
+        For an exemplary 2bp motif:
+        "by base" means 1 list per base letter, ie 4 lists total: [[0.1, 0.6], [-0.4, 2.3], [0.4, 0.1], [-0.9, 1.2]]
+        "by position" means 1 list of len 4 per base pair postion, ie [[0.1, -0.4, 0.4, -0.9], [0.6, 2.3, 0.1, 1.2]]
+        """
+        if arr_by_base:
+            # Transpose
+            arr = [list(i) for i in zip(*arr)]
+        assert len(arr[0]) == 4, "Check whether you really gave arr by postion?"
+
+        # IC matrix is just frequency * information content of that position
+        ic_matrix = arr
+        freq_matrix = []
+        # Iterate through each position
+        for ic_by_basepair in ic_matrix:
+            ic_by_basepair = [x + (0/100 * sum(ic_by_basepair)) for x in ic_by_basepair]
+            total_ic_in_position = sum(ic_by_basepair)
+            freq_matrix.append([base_letter_ic / total_ic_in_position for base_letter_ic in ic_by_basepair])
+
+        print(np.round(np.array(freq_matrix), 5))
+        # TODO: add functionality to have non-uniform background
+        bg = [0.25, 0.25, 0.25, 0.25]
+        log_odds = []
+        # Iterate through each position
+        for freq_by_basepair in freq_matrix:
+            log_odds.append([math.log(base_letter_freq / bg[i], 2) for i, base_letter_freq in enumerate(freq_by_basepair)])
+
+        # for row in arr:
+        #     print([round(x, 2) for x in row])
+        # print()
+        # for row in log_odds:
+        #     print([round(x, 2) for x in row])
+
+        # Transpose into by base form
+        log_odds = [list(i) for i in zip(*log_odds)]
+        return cls(["A", "C", "G", "T"], {"A": log_odds[0], "C": log_odds[1], "G": log_odds[2], "T": log_odds[3]}, name, threshold=threshold)
+    
 
 ## Define ESE PWM arrays (Source: ESEFinder)
 # SF2/ASF
@@ -75,7 +115,8 @@ SRSF2_threshold = 2.383
 SRSF5_threshold = 2.670
 SRSF6_threshold = 2.676
 
-RBPmotifs = [(RBPsplice.from_2D_list(mot, name, arr_in_row_form=False, threshold=thr))
+#TODO: obsolete
+_RBPmotifs = [(RBPsplice.from_2D_list(mot, name, arr_by_base=False, threshold=thr))
              for mot, name, thr in [
                  (SRSF1, "SRSF1", SRSF1_threshold), (SRSF1_igM, "SRSF1_igM", SRSF1_igM_threshold),
                 (SRSF2, "SRSF2", SRSF2_threshold), (SRSF5, "SRSF5", SRSF5_threshold), (SRSF6, "SRSF6", SRSF6_threshold)]#,
@@ -83,14 +124,52 @@ RBPmotifs = [(RBPsplice.from_2D_list(mot, name, arr_in_row_form=False, threshold
             ]
 
 if __name__ == "__main__":
-    a = RBPsplice.from_2D_list(SRSF1, "SRSF1", arr_in_row_form=False, threshold=SRSF1_threshold)
-    print(a.length)
-    print(type(x:=a.calculate("GACTACACACTAC")))
+    # a = RBPsplice.from_2D_list(SRSF1, "SRSF1", arr_by_base=False, threshold=SRSF1_threshold)
+    # print(a.length)
+    # print(type(scores:=a.calculate("GACTACACACTAC")))
 
-    for i in x:
-        print(i)
+    # for i in scores:
+    #     print(i)
 
-    print(RBPmotifs)
-    print(a.__str__())
+    # print("SRSF1 motif:")
+    # print(RBPmotifs)
+    # print(a.__str__())
 
+    NIPBL = [
+        [0.0001994784622723167, 1.9949841011854392, 0.0001994784622723167, 0.0001994784622723167],
+        [0.06152484191379193, 0.2458965607924698, 0.36880427981616504, 6.760228756597289e-05],
+        [0.029382570353052955, 0.11743342643906694, 0.14678371180107158, 0.029382570353052955],
+        [0.00011513443947882394, 0.3141212912300754, 0.8374533724371217, 0.00011513443947882394],
+        [0.00010511383648029525, 0.382341068813426, 0.6690075236624872, 0.00010511383648029525],
+        [0.0001994784622723167, 1.9949841011854392, 0.0001994784622723167, 0.0001994784622723167],
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673]
+    ]
 
+    DROSHA = [
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673],
+        [0.00010923782761831944, 0.00010923782761831944, 0.7429264656321906, 0.3496702862062405],
+        [0.08157492728835188, 0.2069908224272406, 0.2602968302705404, 5.4869797059495445e-05],
+        [0.00011412587954497888, 0.31966658860548586, 0.00011412587954497888, 0.8218204586033929],
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673],
+        [6.943975177383666e-05, 0.05165623134455708, 0.3452822217202254, 0.29766738392890557],
+        [0.00019447860498534043, 0.011299206949648281, 1.9338758001137266, 0.00019447860498534043]
+    ]
+
+    NKRF = [
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673],
+        [0.0001994784622723167, 1.9949841011854392, 0.0001994784622723167, 0.0001994784622723167],
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673],
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673],
+        [0.00010019614960339405, 0.458938443643386, 0.5432234446897611, 0.00010019614960339405],
+        [0.00019947846227231673, 0.00019947846227231673, 1.9949841011854395, 0.00019947846227231673]
+    ]
+
+    # b = RBPsplice.from_RCRUNCH(NIPBL, "NIPBL", arr_by_base=False)
+    # c = RBPsplice.from_RCRUNCH(DROSHA, "DROSHA", arr_by_base=False)
+    d = RBPsplice.from_RCRUNCH(NKRF, "NKRF", arr_by_base=False)
+
+    # print(b.__str__())
+    # print(c.__str__())
+    print(d.__str__())
+    print(res:=d.calculate("ACCGCGCACCTGGCTTGTTTGTTGCATTTCATAGCAAGTGTCTGATTGCTTCTTTTTTCAGATGTTCACTGCCTTCTTCGGCAGTTCTGTTTTATTGTTATTTATGTTCTCAGTGTTTATTCTTCTTTTCCTTTTGAATGCTATGGCCTTTTAGATACACAGTGACTTTTTCCTTTGTGGCT", use_threshold=False))
+    print(sorted(res)[-5:])
