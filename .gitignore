@@ -1,4 +1,6 @@
 AG_check/files/*.fa
 AG_check/files/*.fai
 ESE/__pycache__
-ESE/working_files
+ESE/working_files/*
+!ESE/working_files/.correct*
+!ESE/working_files/new*
