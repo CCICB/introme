@@ -35,14 +35,14 @@ def test_ref_alt_sequence(ref_genome: pysam.FastaFile):
     def test_forward(variant: Variant, context_length: int, expected: Expected):
         variant_context = variant.faidx_context(ref_genome, context_length)
         try:
-            assert(variant_context.ref_sequence() == expected.ref_seq_fwd)
+            assert(variant_context.ref_sequence_fwd() == expected.ref_seq_fwd)
         except AssertionError:
-            print(f"Assertion that {variant_context.ref_sequence()} == {expected.ref_seq_fwd} failed for {variant}")
+            print(f"Assertion that {variant_context.ref_sequence_fwd()} == {expected.ref_seq_fwd} failed for {variant}")
 
         try:
-            assert(variant_context.alt_sequence() == expected.alt_seq_fwd)
+            assert(variant_context.alt_sequence_fwd() == expected.alt_seq_fwd)
         except AssertionError:
-            print(f"Assertion that {variant_context.alt_sequence()} == {expected.alt_seq_fwd} failed for {variant}")
+            print(f"Assertion that {variant_context.alt_sequence_fwd()} == {expected.alt_seq_fwd} failed for {variant}")
 
     def test_reverse(variant: Variant, context_length: int, expected: Expected):
         variant_context = variant.faidx_context(ref_genome, context_length)

@@ -1,55 +1,110 @@
 from motifs import RBPsplice
-from variants import Variant, VariantContext
+from variants import Variant, StrandDirection
 from ESEfinder_motif_source import ESEfinder_motifs
 
 import pysam
 import csv
 import sys
+import os
+from enum import Enum, auto
 import numpy as np
+import pandas as pd
 
-CONTEXT_LENGTH = 7
+CONTEXT_LENGTH = 14
 
-def read_vcf(reader: csv.reader, writer: csv.writer, reference_genome: pysam.FastaFile, RBPmotifs: list[RBPsplice]):
-    for row in reader:
-        chromosome = str(row[0])
+strand_d = {
+    'strand=+': StrandDirection.FORWARD,
+    'strand=-': StrandDirection.REVERSE,
+    'strand=+,-': StrandDirection.BOTH,
+    '.': StrandDirection.UNKNOWN
+}
 
-        # Write header line
-        if chromosome[:2] == "##":
-            continue
-        elif chromosome == "#CHROM":
-            row.extend([motif.name for motif in RBPmotifs])
-            writer.writerow(row)
-            continue
+def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: list[RBPsplice]) -> pd.DataFrame:
+    data: list[list] = []
 
-        position = int(row[1])
-        ref = str(row[3])
-        alt = str(row[4])
-        strand = "+" #TODO: get strand; deal with double strand variants
+    for record in vcf:
+        chromosome = record.chrom
+        position = record.pos
+        id_ = record.id
+        ref = record.ref
+        # alt
+        quality = record.qual
+        filter_ = record.filter
+        info = record.info
+
+        assert(record.alts is not None and len(record.alts) == 1), (
+            f"{chromosome}:{position}-{ref}>{record.alts}. Records should be left normalised"
+        )
+
+        alt = record.alts[0]
+        strand = ';'.join(str(s) for s in record.info['strand'])
+
+        if not "+" in strand and not "-" in strand:
+            strand_dir = StrandDirection.UNKNOWN
+        elif "+" in strand:
+            strand_dir = StrandDirection.FORWARD
+        elif "-" in strand:
+            strand_dir = StrandDirection.REVERSE
+        else:
+            strand_dir = StrandDirection.BOTH
+
+
+        # TODO pandas df or something
+        # # Write header line
+        # if chromosome[:2] == "##":
+        #     continue
+        # elif chromosome == "#CHROM":
+        #     row.extend([motif.name for motif in RBPmotifs])
+        #     writer.writerow(row)
+        #     continue
 
         # Extract reference sequence
-        # Skip insertions longer than 30bp
-        if len(alt) > 30:
-            row.extend(['.','.','.','.','.','.'])
-            writer.writerow(row)
-            continue
+        # Skip insertions longer than 50bp
+        # if len(alt) > 50:
+        #     row.extend(['.','.','.','.','.','.'])
+        #     writer.writerow(row)
+        #     continue
         
-        variant = Variant("chr" + chromosome, position, ref, alt)
-        variant_context = variant.faidx_context(reference_genome, CONTEXT_LENGTH)
+        variant = Variant("chr" + chromosome, position, "." if ref is None else ref, alt, strand_dir)
+        variant_context = variant.faidx_context(ref_genome, CONTEXT_LENGTH)
 
+        motif_scores = []
         for motif in RBPmotifs:
             # print(motif.name)
             # print(motif.calculate(variant_context.ref_sequence(motif.length)))
             # print(motif.calculate(variant_context.alt_sequence(motif.length)))
 
-             a = round(
-                np.max(motif.calculate(variant_context.alt_sequence(motif.length)))
-                - np.max(motif.calculate(variant_context.ref_sequence(motif.length)))
-            , 2)
-             
-             a = "0" if a == 0 else a
-             row.append(a)
+            a = motif.calculate_variant(variant_context)
+            a = "0" if a == 0 else a
+            motif_scores.append(a)
+            # append motif score to row
+            # row.append(a)
+        
+        df_row = [chromosome, position, id_, ref, alt, quality, filter_, info] + motif_scores
+        data.append(df_row)
 
-        writer.writerow(row)
+    columns = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"] + [motif.name for motif in RBPmotifs]
+    df = pd.DataFrame(data, columns=columns)
+    return df
+
+def is_path_writable(path: str) -> bool:
+    """Check if a file path is writable."""
+    
+    # Check if directory exists
+    if not os.path.isdir(os.path.dirname(path)):
+        return False
+    
+    # If file exists, check if it's writable
+    if os.path.exists(path):
+        return os.access(path, os.W_OK)
+    
+    # If file doesn't exist, try to create it to check writability
+    try:
+        open(path, 'a').close()   # open in append mode and immediately close
+        os.remove(path)           # remove the file after the test
+        return True
+    except Exception:
+        return False
 
 def main():
     CONTEXT_LENGTH = 14
@@ -57,18 +112,16 @@ def main():
     for _, motif in ESEfinder_motifs.motifs.items():
         motifs.append(RBPsplice.from_2D_list(motif['matrix'], motif['name'], threshold=motif['threshold']))
 
-    file = sys.argv[1]
-    output = sys.argv[2]
+    vcf_file =  pysam.VariantFile(sys.argv[1])
+    output_path = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
 
-    with (
-        pysam.FastaFile(sys.argv[3]) as reference_genome,
-        open(file) as read, open(output, 'w+') as write
-    ):
-        reader = csv.reader(read, delimiter='\t')
-        writer = csv.writer(write, delimiter='\t')
+    if not is_path_writable(output_path):
+        raise ValueError(f"File path '{output_path}' is not writable!")
 
-        read_vcf(reader, writer, reference_genome, motifs)
+    df = read_vcf(vcf_file, reference_genome, motifs)
+
+    df.to_csv(output_path, encoding='utf-8', index=False)
 
 if __name__ == "__main__":
     main()
