@@ -1,14 +1,28 @@
 from Bio.motifs.matrix import PositionSpecificScoringMatrix
 import numpy as np
+from variants import VariantContext, StrandDirection
+from typing import Optional
 import math
 
 class RBPsplice(PositionSpecificScoringMatrix):
-    def __init__(self, alphabet, values, name, *, threshold: float=None):
+    def __init__(self, alphabet, values, name, *, threshold: Optional[float]=None):
         super().__init__(alphabet, values)
         self.threshold = threshold
         self.name = name
 
-    def calculate(self, sequence, *, use_threshold=True):
+    def calculate_variant(self, variant: VariantContext):
+        if variant.strand_direction == StrandDirection.FORWARD:
+            return round(
+                np.max(self._calculate(variant.alt_sequence_fwd(self.length)))
+                - np.max(self._calculate(variant.ref_sequence_fwd(self.length)))
+            , 3)
+        elif variant.strand_direction == StrandDirection.REVERSE:
+            return round(
+                np.max(self._calculate(variant.alt_sequence_rev(self.length)))
+                - np.max(self._calculate(variant.ref_sequence_rev(self.length)))
+            , 3)
+
+    def _calculate(self, sequence, *, use_threshold=True):
         l = super().calculate(sequence)
         if use_threshold and self.threshold is not None:
             return np.where(l >= self.threshold, l, 0.0)
@@ -16,7 +30,7 @@ class RBPsplice(PositionSpecificScoringMatrix):
             return l
 
     @classmethod
-    def from_2D_list(cls, arr: list[list[float]], name: str, *, arr_by_base=True, threshold: float=None):
+    def from_2D_list(cls, arr: list[list[float]], name: str, *, arr_by_base=True, threshold: Optional[float]=None):
         """
         Convert PSSM in 2D list form into a Bio.motifs.matrix.PSSM compatible format and instantiate it
         For an exemplary 2bp motif:
@@ -31,7 +45,7 @@ class RBPsplice(PositionSpecificScoringMatrix):
         return cls(["A", "C", "G", "T"], {"A": arr[0], "C": arr[1], "G": arr[2], "T": arr[3]}, name, threshold=threshold)
     
     @classmethod
-    def from_RCRUNCH(cls, arr: list[list[float]], name: str, *, arr_by_base=True, threshold: float=None):
+    def from_RCRUNCH(cls, arr: list[list[float]], name: str, *, arr_by_base=True, threshold: Optional[float]=None):
         """
         Convert IC matrix in 2D list from into a Bio.motifs.matrix.PSSM compatible format and instantiate it.
         For an exemplary 2bp motif:
