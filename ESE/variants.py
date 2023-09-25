@@ -58,7 +58,7 @@ class Variant():
 
     strand_direction: StrandDirection = StrandDirection.UNKNOWN
     
-    def faidx_context(self, ref_genome: pysam.FastaFile, context_len: int) -> VariantContext:
+    def faidx_context(self, ref_genome: pysam.FastaFile, context_len: int) -> VariantContext | None:
         ref_len = len(self.ref_allele)
         start = self.position - context_len
         end = self.position + ref_len + context_len - 1
@@ -69,7 +69,8 @@ class Variant():
             assert(self.ref_allele == sequence[context_len:context_len + ref_len])
         except AssertionError:
             print(f"Variant reference allele ({self.ref_allele}) did not match the provided reference genome "
-                f"({sequence[context_len:context_len + ref_len]}) at {self.chrom}:{self.position}")
+                f"({sequence[context_len:context_len + ref_len]}) at {self.chrom}:{self.position}... skipping or exiting")
+            return None
             # exit(1)
             # pass
         after = sequence[context_len + ref_len:]

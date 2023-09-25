@@ -21,7 +21,9 @@ class RBPsplice(PositionSpecificScoringMatrix):
                 np.max(self._calculate(variant.alt_sequence_rev(self.length)))
                 - np.max(self._calculate(variant.ref_sequence_rev(self.length)))
             , 3)
+        raise NotImplementedError("BOTH/NONE strand not supported currently")
 
+    # Warning i changed use_threshold to False from True
     def _calculate(self, sequence, *, use_threshold=True):
         l = super().calculate(sequence)
         if use_threshold and self.threshold is not None:
