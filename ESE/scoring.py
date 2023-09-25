@@ -1,6 +1,7 @@
 from motifs import RBPsplice
 from variants import Variant, StrandDirection
 from ESEfinder_motif_source import ESEfinder_motifs
+from RCRUNCH_motif_source import RCRUNCH_motifs
 
 import pysam
 import csv
@@ -12,12 +13,12 @@ import pandas as pd
 
 CONTEXT_LENGTH = 14
 
-strand_d = {
-    'strand=+': StrandDirection.FORWARD,
-    'strand=-': StrandDirection.REVERSE,
-    'strand=+,-': StrandDirection.BOTH,
-    '.': StrandDirection.UNKNOWN
-}
+# strand_d = {
+#     'strand=+': StrandDirection.FORWARD,
+#     'strand=-': StrandDirection.REVERSE,
+#     'strand=+,-': StrandDirection.BOTH,
+#     '.': StrandDirection.UNKNOWN
+# }
 
 def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: list[RBPsplice]) -> pd.DataFrame:
     data: list[list] = []
@@ -25,12 +26,12 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
     for record in vcf:
         chromosome = record.chrom
         position = record.pos
-        id_ = record.id
+        id_ = "." if not record.id else record.id
         ref = record.ref
-        # alt
-        quality = record.qual
-        filter_ = record.filter
-        info = record.info
+        # alt handled below
+        quality = "." if not record.qual else record.qual
+        filter_ = "." if not (f:="".join(str(f) for f in record.filter)) else f
+        info = "." if not (i:=";".join(f"{k}={v}" for k, v in record.info.items())) else i
 
         assert(record.alts is not None and len(record.alts) == 1), (
             f"{chromosome}:{position}-{ref}>{record.alts}. Records should be left normalised"
@@ -65,8 +66,9 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
         #     writer.writerow(row)
         #     continue
         
-        variant = Variant("chr" + chromosome, position, "." if ref is None else ref, alt, strand_dir)
+        variant = Variant(chromosome, position, "." if ref is None else ref, alt, strand_dir)
         variant_context = variant.faidx_context(ref_genome, CONTEXT_LENGTH)
+        if variant_context is None: continue
 
         motif_scores = []
         for motif in RBPmotifs:
@@ -112,6 +114,9 @@ def main():
     for _, motif in ESEfinder_motifs.motifs.items():
         motifs.append(RBPsplice.from_2D_list(motif['matrix'], motif['name'], threshold=motif['threshold']))
 
+    for name, motif in RCRUNCH_motifs.motifs.items():
+        motifs.append(RBPsplice.from_RCRUNCH(motif, name, threshold=0, arr_by_base=False))
+
     vcf_file =  pysam.VariantFile(sys.argv[1])
     output_path = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
@@ -121,7 +126,7 @@ def main():
 
     df = read_vcf(vcf_file, reference_genome, motifs)
 
-    df.to_csv(output_path, encoding='utf-8', index=False)
+    df.to_csv(output_path, encoding='utf-8', index=False, sep='\t')
 
 if __name__ == "__main__":
     main()
