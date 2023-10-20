@@ -1,4 +1,5 @@
 from Bio.motifs.matrix import PositionSpecificScoringMatrix
+from Bio.motifs.thresholds import ScoreDistribution
 import numpy as np
 from variants import VariantContext, StrandDirection
 from typing import Optional
@@ -21,6 +22,19 @@ class RBPsplice(PositionSpecificScoringMatrix):
                 np.max(self._calculate(variant.alt_sequence_rev(self.length)))
                 - np.max(self._calculate(variant.ref_sequence_rev(self.length)))
             , 3)
+        raise NotImplementedError("BOTH/NONE strand not supported currently")
+
+    def calculate_variant_ref_alt(self, variant: VariantContext):
+        if variant.strand_direction == StrandDirection.FORWARD:
+            return (
+                np.max(self._calculate(variant.ref_sequence_fwd(self.length))),
+                np.max(self._calculate(variant.alt_sequence_fwd(self.length))),
+            )
+        elif variant.strand_direction == StrandDirection.REVERSE:
+            return (
+                np.max(self._calculate(variant.ref_sequence_rev(self.length))),
+                np.max(self._calculate(variant.alt_sequence_rev(self.length))),
+            )
         raise NotImplementedError("BOTH/NONE strand not supported currently")
 
     # Warning i changed use_threshold to False from True
@@ -64,7 +78,8 @@ class RBPsplice(PositionSpecificScoringMatrix):
         freq_matrix = []
         # Iterate through each position
         for ic_by_basepair in ic_matrix:
-            ic_by_basepair = [x + (0/100 * sum(ic_by_basepair)) for x in ic_by_basepair]
+            SCALING_FACTOR=0
+            ic_by_basepair = [x + (SCALING_FACTOR/100 * sum(ic_by_basepair)) for x in ic_by_basepair]
             total_ic_in_position = sum(ic_by_basepair)
             freq_matrix.append([base_letter_ic / total_ic_in_position for base_letter_ic in ic_by_basepair])
 
@@ -84,9 +99,13 @@ class RBPsplice(PositionSpecificScoringMatrix):
 
         # Transpose into by base form
         log_odds = [list(i) for i in zip(*log_odds)]
-        return cls(["A", "C", "G", "T"], {"A": log_odds[0], "C": log_odds[1], "G": log_odds[2], "T": log_odds[3]}, name, threshold=threshold)
-    
+        motif = cls(["A", "C", "G", "T"], {"A": log_odds[0], "C": log_odds[1], "G": log_odds[2], "T": log_odds[3]}, name, threshold=threshold)
+        threshold = ScoreDistribution(pssm=motif, background={'A': 0.25, 'C': 0.25, 'G': 0.25, 'T': 0.25}).threshold_patser()
+        print(motif.name, motif.threshold, threshold)
+        motif.threshold = threshold
 
+        return motif
+    
 ## Define ESE PWM arrays (Source: ESEFinder)
 # SF2/ASF
 SRSF1 = [[-1.14,1.37,-0.21,-1.58],[0.62,-1.1,0.17,-0.5],
@@ -187,5 +206,5 @@ if __name__ == "__main__":
     # print(b.__str__())
     # print(c.__str__())
     print(d.__str__())
-    print(res:=d.calculate("ACCGCGCACCTGGCTTGTTTGTTGCATTTCATAGCAAGTGTCTGATTGCTTCTTTTTTCAGATGTTCACTGCCTTCTTCGGCAGTTCTGTTTTATTGTTATTTATGTTCTCAGTGTTTATTCTTCTTTTCCTTTTGAATGCTATGGCCTTTTAGATACACAGTGACTTTTTCCTTTGTGGCT", use_threshold=False))
+    print(res:=d._calculate("ACCGCGCACCTGGCTTGTTTGTTGCATTTCATAGCAAGTGTCTGATTGCTTCTTTTTTCAGATGTTCACTGCCTTCTTCGGCAGTTCTGTTTTATTGTTATTTATGTTCTCAGTGTTTATTCTTCTTTTCCTTTTGAATGCTATGGCCTTTTAGATACACAGTGACTTTTTCCTTTGTGGCT", use_threshold=False))
     print(sorted(res)[-5:])

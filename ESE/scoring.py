@@ -11,7 +11,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 
-CONTEXT_LENGTH = 14
+CONTEXT_LENGTH = 12
 
 # strand_d = {
 #     'strand=+': StrandDirection.FORWARD,
@@ -76,16 +76,31 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
             # print(motif.calculate(variant_context.ref_sequence(motif.length)))
             # print(motif.calculate(variant_context.alt_sequence(motif.length)))
 
-            a = motif.calculate_variant(variant_context)
-            a = "0" if a == 0 else a
-            motif_scores.append(a)
-            # append motif score to row
-            # row.append(a)
+            # diff only version
+                # a = motif.calculate_variant(variant_context)
+                # a = "0" if a == 0 else a
+                # motif_scores.append(a)
+
+            # diff and ref version
+            ref, alt = motif.calculate_variant_ref_alt(variant_context)
+            diff = round(alt - ref, 3)
+            ref = round(ref, 3)
+
+            ref = "0" if ref == 0 else ref
+            diff = "0" if diff == 0 else diff
+
+            motif_scores.extend([ref, diff])
         
         df_row = [chromosome, position, id_, ref, alt, quality, filter_, info] + motif_scores
         data.append(df_row)
 
-    columns = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"] + [motif.name for motif in RBPmotifs]
+    columns = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]
+    expanded_motif_names = []
+    for motif_name in [motif.name for motif in RBPmotifs]:
+        expanded_motif_names.append(f"{motif_name}_ref")
+        expanded_motif_names.append(f"{motif_name}_diff")
+    columns.extend(expanded_motif_names)
+
     df = pd.DataFrame(data, columns=columns)
     return df
 
