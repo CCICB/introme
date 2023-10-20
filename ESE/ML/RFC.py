@@ -62,7 +62,8 @@ if CLASSIFICATION:
     # regressor = Perceptron(n_jobs=-1, class_weight="balanced")
     regressor.fit(X_train, y_train)
 else:
-    regressor = RandomForestRegressor(n_estimators=400, random_state=42, max_depth=171, max_features='sqrt', criterion='squared_error', n_jobs=-1)
+    regressor = RandomForestRegressor(n_estimators=400, random_state=42, max_depth=171, max_features='sqrt',
+                                      criterion='squared_error', n_jobs=-1)
     regressor.fit(X_train, y_train)
 
     y_pred2 = regressor.predict(X_train)
@@ -176,11 +177,11 @@ print("Balanced accuracy score original :" , balanced_accuracy_score(y_test, y_p
 # print("Parameters available : ", rf_classifier.get_params())
 
 # Number of trees in random forest
-n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
+n_estimators = [int(x) for x in np.linspace(start = 200, stop = 200, num = 1)]
 # Number of features to consider at every split
 max_features = [None, 'sqrt'] 
 # Maximum number of levels in tree
-max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
+max_depth = [int(x) for x in np.linspace(50, 180, num = 15)]
 max_depth.append(None)
 # Minimum number of samples required to split a node
 min_samples_split = [2, 5, 10]
@@ -202,7 +203,7 @@ exit(0)
 # Note: Restarting with a blank model
 rfc = regressor
 # Remove one feature each step from the model (cross-validated 10 times)
-rfc = RFECV(rfc, step=1, cv=10)
+rfc = RFECV(rfc, step=1, cv=10, n_jobs=-1)
 rfc = rfc.fit(X_train, y_train)
 y_pred_train = rfc.predict(X_train)
 
@@ -214,11 +215,6 @@ print("Importance of features ranked #1 : ", rfc.estimator_.feature_importances_
 print(f"{regressor.classes_=}")
 exit(0)
 
-# Test the grid of hyperparameters for the best combination
-clf_random = RandomizedSearchCV(estimator = rf_classifier, param_distributions = random_grid,
-            n_iter = 100, cv = 3, verbose=2, random_state=0, n_jobs = -1, error_score='raise')
-clf_grid = clf_random.fit(X_train, y_train)
-print("Best parameters : ", clf_grid.best_params_)
 # Save best hyperparameters model
 best_random_clf = clf_grid.best_estimator_ 
 y_pred_train_random = best_random_clf.predict(X_train) 
