@@ -4,6 +4,8 @@ import pandas as pd
 CLASSIFICATION = True
 if CLASSIFICATION:
     from sklearn.ensemble import RandomForestClassifier
+    from sklearn.neural_network import MLPClassifier
+    from sklearn.linear_model import Perceptron
 else:
     from sklearn.ensemble import RandomForestRegressor
 
@@ -39,6 +41,8 @@ if CLASSIFICATION:
                                 'classification_Normal', 'location_Intronic', 'classification_Splice-altering'])
     target = df['classification_Splice-altering']
 
+    # top_ranking_columns = ['A1_Hazeem', 'A1_Hazeem_july', 'A1_neuBG', 'A1_winBG', 'SRSF1', 'SRSF1_igM', 'SRSF2', 'SRSF5', 'SRSF6', 'METAP2_7', 'XRN2_8', 'DDX52_8', 'EFTUD2_8', 'SLTM_8', 'RPS3_6', 'NONO_6', 'PPIG_8', 'LARP7_8', 'PRPF8_8', 'AQR_8', 'ZRANB2_6', 'GNL3_7', 'SRSF9_6', 'HNRNPU_7', 'UCHL5_8', 'KHDRBS1_7', 'PCBP1_8', 'HNRNPC_6', 'U2AF1_4', 'U2AF2_8', 'TIA1_7', 'DHX30_11', 'BCCIP_11', 'SUPV3L1_12', 'PRPF8_12', 'AQR_8_b', 'ZRANB2_9', 'EFTUD2_12', 'DDX52_10', 'HNRNPU_8', 'HNRNPM_8', 'RPS3_11', 'SRSF9_12', 'EIF3D_11', 'FMR1_10', 'SRSF1_11', 'FXR2_9', 'UCHL5_10', 'TAF15_9', 'DGCR8_9', 'FKBP4_12', 'DDX42_12', 'AKAP8L_12', 'XRN2_12', 'RBFOX2_12', 'FUS_12', 'EWSR1_12', 'FASTKD2_11', 'DDX6_10', 'SLTM_10', 'FTO_11', 'NONO_10', 'METAP2_7_b', 'TRA2A_11', 'HLTF_8_b', 'TIAL1_9', 'TIA1_8', 'FUBP3_11', 'YBX3_5', 'U2AF2_10', 'MATR3_12', 'PCBP2_12', 'PCBP1_12', 'HNRNPK_9', 'DDX59_9', 'location_Exonic']
+    # features = features[top_ranking_columns]
 else:
     df = pd.get_dummies(df, columns=['location'], dtype=int)
     features = df.drop(columns=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'gene_id', 'strand', 'MFASS_delta_index',
@@ -49,11 +53,13 @@ print(features)
 print(target)
 features.to_csv(output, encoding='utf-8', index=False, sep='\t')
 
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.15, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.20, random_state=42)
 
 # Initializing and training the RandomForestRegressor
 if CLASSIFICATION:
-    regressor = RandomForestClassifier(n_estimators=100, random_state=42, max_depth=None, min_samples_split=3, min_samples_leaf=2, criterion='log_loss', class_weight='balanced_subsample', n_jobs=-1)
+    regressor = RandomForestClassifier(n_estimators=50, random_state=42, max_depth=20, min_samples_split=3, min_samples_leaf=3, criterion='gini', class_weight='balanced_subsample', n_jobs=-1)
+    # regressor = MLPClassifier((50, 10,), "relu")
+    # regressor = Perceptron(n_jobs=-1, class_weight="balanced")
     regressor.fit(X_train, y_train)
 else:
     regressor = RandomForestRegressor(n_estimators=400, random_state=42, max_depth=171, max_features='sqrt', criterion='squared_error', n_jobs=-1)
@@ -97,12 +103,25 @@ plt.title('Precision-Recall Curve')
 plt.legend()
 plt.grid(True)
 # plt.show()
-plt.savefig("RCRUNCH_log_e200_d170.png")
+plt.savefig("RCRUNCH_patser_double_log_e1200_s3_l2iuwdaidiwi8wq8.png")
 
+print('Training:')
 # Compute F1 score (at a specific threshold, e.g., 0.5 for binary classification)
+y_pred2 = regressor.predict(X_train)
+f1 = f1_score(y_train, y_pred2)
+print(f'F1 Score: {f1:.4f}')
+## Accuracy
+print("Accuracy score original: ", accuracy_score(y_train, y_pred2))
+print("Balanced accuracy score original :" , balanced_accuracy_score(y_train, y_pred2))
+
+print('Validation:')
 y_pred = regressor.predict(X_test)
 f1 = f1_score(y_test, y_pred)
 print(f'F1 Score: {f1:.4f}')
+## Accuracy
+print("Accuracy score original: ", accuracy_score(y_test, y_pred))
+print("Balanced accuracy score original :" , balanced_accuracy_score(y_test, y_pred))
+
 
 # X = pd.concat([X_pos,X_neg], ignore_index=True)
 
@@ -176,13 +195,9 @@ random_grid = {'n_estimators': n_estimators,
                'min_samples_split': min_samples_split,
                'min_samples_leaf': min_samples_leaf,
                'bootstrap': bootstrap}
-print("Parameter values for testing : ", random_grid)
+# print("Parameter values for testing : ", random_grid)
 
-## Accuracy
-print("Accuracy score original: ", accuracy_score(y_test, y_pred))
-print("Balanced accuracy score original :" , balanced_accuracy_score(y_test, y_pred))
-
-# exit(0)
+exit(0)
 #### RECURSIVE FEATURE ELIMINATION ####
 # Note: Restarting with a blank model
 rfc = regressor

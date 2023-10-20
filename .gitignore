@@ -2,5 +2,8 @@ AG_check/files/*.fa
 AG_check/files/*.fai
 ESE/__pycache__
 ESE/working_files/*
+ESE/ML/*.tsv
+ESE/PR_curves
+ESE/ML/sanity.tsv
 !ESE/working_files/.correct*
 !ESE/working_files/new*
