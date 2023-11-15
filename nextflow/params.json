@@ -3,8 +3,6 @@
     "gtf": "input/gtf",
     "ref_genome": "input/ref_genome",
     "bed": "input/toy.bed.gz",
-
-    "_comment": "can be hg19 or hg38",
     "genome_build" : "hg38",
 
     "spliceai_docker_container" : "gabyou/spliceai:v3.0",
