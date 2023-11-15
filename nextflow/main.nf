@@ -102,7 +102,8 @@ include { spliceogen } from './modules/spliceogen.nf'
 include { pangolin } from './modules/pangolin.nf'
 include { spip } from './modules/spip.nf'
 include { squirl } from './modules/squirl.nf'
-
+include { introme_functions } from './modules/introme_functions.nf'
+include { splicing_anno } from './modules/splicing_anno.nf'
 
 /* 
  * Print summary of supplied parameters
