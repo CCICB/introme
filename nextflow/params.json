@@ -14,7 +14,7 @@
     "spip_docker_container" : "gabyou/spip:v1.0",
     "squirl_docker_container" : "gabyou/squirl:v1.0",
     "data_preprocessing_docker_container" : "gabyou/data_prepocessing:v2.0",
-    "variant_info_docker_container" : "gabyou/variant_info:v3.1",
+    "variant_info_docker_container" : "gabyou/variant_info:v3.2",
     "introme_functions_docker_container" : "gabyou/introme_functions:v1.0",
 
     "quality_filter" : true,
