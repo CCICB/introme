@@ -84,12 +84,12 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
             # diff and ref version
             ref, alt = motif.calculate_variant_ref_alt(variant_context)
             diff = round(alt - ref, 3)
-            ref = round(ref, 3)
+            alt = round(alt, 3)
 
-            ref = "0" if ref == 0 else ref
+            alt = "0" if alt == 0 else alt
             diff = "0" if diff == 0 else diff
 
-            motif_scores.extend([ref, diff])
+            motif_scores.extend([alt, diff])
         
         df_row = [chromosome, position, id_, ref, alt, quality, filter_, info] + motif_scores
         data.append(df_row)
@@ -97,7 +97,7 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
     columns = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]
     expanded_motif_names = []
     for motif_name in [motif.name for motif in RBPmotifs]:
-        expanded_motif_names.append(f"{motif_name}_ref")
+        expanded_motif_names.append(f"{motif_name}_alt")
         expanded_motif_names.append(f"{motif_name}_diff")
     columns.extend(expanded_motif_names)
 
