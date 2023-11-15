@@ -1,5 +1,7 @@
 /*
-  Run using: nextflow run main.nf -params-file params.json -process.echo true
+  Run via the below steps:
+  ./update_params.sh [options] -b <subset.bed.gz> -p <prefix> -r <reference_genome.fa> -v <variants.vcf.gz>"
+  nextflow run https://github.com/CCICB/introme/tree/nextflow/nextflow -params-file params.json -process.echo true
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////                         Progress Log                       ////////////////////////
