@@ -1,0 +1,282 @@
+# File used by VCFanno to define how a VCF file should be annotated
+
+# # MMSplice (computed during Introme)
+# [[annotation]]
+# file = "introme_annotate.mmsplice.vcf.gz"
+# fields = ["alt_acceptor", "alt_acceptor_intron", "alt_donor", "alt_donor_intron", "alt_exon", "delta_logit_PSI", "pathogenicity", "ref_acceptor", "ref_acceptor_intron", "ref_donor", "ref_donor_intron", "ref_exon"]
+# ops = ["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
+# names = ["MMSplice_alt_acceptor", "MMSplice_alt_acceptor_intron", "MMSplice_alt_donor", "MMSplice_alt_donor_intron", "MMSplice_alt_exon", "MMSplice_delta_logit_PSI", "MMSplice_pathogenicity", "MMSplice_ref_acceptor", "MMSplice_ref_acceptor_intron", "MMSplice_ref_donor", "MMSplice_ref_donor_intron", "MMSplice_ref_exon"]
+
+# # Introme AG/GT Computation (computed during Introme)
+# [[annotation]]
+# file = "introme_annotate.functions.vcf.gz"
+# fields = ["variant_type", "ag_created", "ag_lost", "gt_created", "gt_lost"]
+# ops = ["uniq","uniq","uniq", "uniq", "uniq"]
+# names = ["Variant_Type", "AG_Created", "AG_Lost", "GT_Created", "GT_Lost"]
+
+# # ESE Scoring (computed during Introme)
+# [[annotation]]
+# file = "introme_annotate.ESE.vcf.gz"
+# fields = ["SRSF1_ref", "SRSF1_alt", "SRSF1_igM_ref", "SRSF1_igM_alt", "SRSF2_ref", "SRSF2_alt", "SRSF5_ref", "SRSF5_alt", "SRSF6_ref", "SRSF6_alt", "hnRNPA1_ref", "hnRNPA1_alt"]
+# ops = ["max", "max", "max", "max", "max", "max", "max", "max", "max", "max", "max", "max"]
+# names = ["SRSF1_ref", "SRSF1_alt", "SRSF1_igM_ref", "SRSF1_igM_alt", "SRSF2_ref", "SRSF2_alt", "SRSF5_ref", "SRSF5_alt", "SRSF6_ref", "SRSF6_alt", "hnRNPA1_ref", "hnRNPA1_alt"]
+
+# SpliceAI Annotations
+#SpliceAI VCF Processing
+[[annotation]]
+file = "spliceai.vcf.gz"
+fields = ["SpliceAI"]
+names = ["SpliceAI_raw"]
+ops = ["self"]
+
+#SpliceAI VCF Processing
+[[postannotation]]
+fields = ["SpliceAI_raw"]
+op = "lua:spliceai(SpliceAI_raw)"
+type = "String"
+name = "SpliceAI_processed"
+
+# SpliceAI DS_AG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[3]"
+type = "Float"
+name = "DS_AG"
+
+# SpliceAI DS_AL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[4]"
+type = "Float"
+name = "DS_AL"
+
+# SpliceAI DS_DG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[5]"
+type = "Float"
+name = "DS_DG"
+
+# SpliceAI DS_DL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[6]"
+type = "Float"
+name = "DS_DL"
+
+# SpliceAI DP_AG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[7]"
+type = "Float"
+name = "DP_AG"
+
+# SpliceAI DP_AL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[8]"
+type = "Float"
+name = "DP_AL"
+
+# SpliceAI DP_DG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[9]"
+type = "Float"
+name = "DP_DG"
+
+# SpliceAI DP_DL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[10]"
+type = "Float"
+name = "DP_DL"
+
+# SpliceAI delete
+[[postannotation]]
+fields = ["SpliceAI_processed", "SpliceAI_raw"]
+op = "delete"
+
+
+# MMSplice (computed during Introme)
+[[annotation]]
+file = "mmsplice.vcf.gz"
+fields = ["CSQ"]
+ops = ["self"]
+names = ["MMSplice_raw"]
+
+[[postannotation]]
+fields = ["MMSplice_raw"]
+op = "lua:mmsplice(MMSplice_raw)"
+type = "String"
+name = "MMSplice_processed"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[1]"
+type = "Float"
+name = "MMSplice_alt_acceptor"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[2]"
+type = "Float"
+name = "MMSplice_alt_acceptor_intron"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[3]"
+type = "Float"
+name = "MMSplice_alt_donor"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[4]"
+type = "Float"
+name = "MMSplice_alt_donor_intron"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[5]"
+type = "Float"
+name = "MMSplice_alt_exon"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[6]"
+type = "Float"
+name = "MMSplice_delta_logit_PSI"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[7]"
+type = "Float"
+name = "MMSplice_pathogenicity"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[8]"
+type = "Float"
+name = "MMSplice_ref_acceptor"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[9]"
+type = "Float"
+name = "MMSplice_ref_acceptor_intron"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[10]"
+type = "Float"
+name = "MMSplice_ref_donor"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[11]"
+type = "Float"
+name = "MMSplice_ref_donor_intron"
+
+[[postannotation]]
+fields = ["MMSplice_processed"]
+op = "lua:split(MMSplice_processed,'|')[12]"
+type = "Float"
+name = "MMSplice_ref_exon"
+
+# MMSplice delete
+[[postannotation]]
+fields = ["MMSplice_raw", "MMSplice_processed"]
+op = "delete"
+
+# Pangolin Annotations
+# Pangolin VCF Processing
+[[annotation]]
+file = "pangolin.vcf.gz"
+fields = ["Pangolin"]
+names = ["Pangolin_raw"]
+ops = ["self"]
+
+# Pangolin VCF Processing
+[[postannotation]]
+fields = ["Pangolin_raw"]
+op = "lua:pangolin(Pangolin_raw)"
+type = "String"
+name = "Pangolin_processed"
+
+# Pangolin gain
+[[postannotation]]
+fields = ["Pangolin_processed"]
+op = "lua:split(split(Pangolin_processed,'|')[2], ':')[2]"
+type = "Float"
+name = "Pangolin_Gain"
+
+# Pangolin loss
+[[postannotation]]
+fields = ["Pangolin_processed"]
+op = "lua:split(split(Pangolin_processed,'|')[3], ':')[2]"
+type = "Float"
+name = "Pangolin_Loss"
+
+# Pangolin delete
+[[postannotation]]
+fields = ["Pangolin_processed", "Pangolin_raw"]
+op = "delete"
+
+# SPIP Annotations
+# SPIP VCF Processing
+[[annotation]]
+file = "spip.vcf.gz"
+fields = ["SPiP"]
+names = ["SPiP_raw"]
+ops = ["self"]
+
+# SPIP VCF Processing
+[[postannotation]]
+fields = ["SPiP_raw"]
+op = "lua:spip(SPiP_raw)"
+type = "String"
+name = "SPiP_processed"
+
+# SPIP Interconfident score
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:spip_interconfident(SPiP_processed)"
+type = "Float"
+name = "SPIP_Score"
+
+# SPIP Interconfident min range
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:spip_min(SPiP_processed)"
+type = "Float"
+name = "SPIP_Range_Min"
+
+# SPIP Interconfident min range
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:spip_max(SPiP_processed)"
+type = "Float"
+name = "SPIP_Range_Max"
+
+# SPIP SPiCE Probability score
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:split(SPiP_processed,'|')[17]"
+type = "Float"
+name = "SPiCE_Prob"
+
+# SPIP delete
+[[postannotation]]
+fields = ["SPiP_processed", "SPiP_raw"]
+op = "delete"
+
+# Squirl Annotations
+# Squirl VCF Processing
+[[annotation]]
+file = "squirl.vcf.gz"
+fields = ["SQUIRLS_SCORE"]
+names = ["Squirl_processed"]
+ops = ["self"]
+
+
+# names = ["MMSplice_alt_acceptor", "MMSplice_alt_acceptor_intron", "MMSplice_alt_donor", "MMSplice_alt_donor_intron", "MMSplice_alt_exon", "MMSplice_delta_logit_PSI", "MMSplice_pathogenicity", "MMSplice_ref_acceptor", "MMSplice_ref_acceptor_intron", "MMSplice_ref_donor", "MMSplice_ref_donor_intron", "MMSplice_ref_exon"]
