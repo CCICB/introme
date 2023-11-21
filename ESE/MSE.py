@@ -1,4 +1,4 @@
-from variants import Variant, VariantContext
+from varconv.variants import Variant, VariantContext
 import timeit
 import pysam
 import sys
@@ -26,11 +26,10 @@ print(timeit.timeit(lambda: maxent.score3('ttccaaacgaacttttgtAGgga', matrix=matr
 
 variants = [
     Variant("chr1", 77297580, "G", "T"),
-    Variant("chr1", 5873238, "C", "T"),
-
+    # Variant("chr1", 5873238, "C", "T"),
 ]
 
-contexts = [var.faidx_context(pysam.FastaFile(sys.argv[1]), 22) for var in variants]
+contexts = [VariantContext(pysam.FastaFile(sys.argv[1]), var, 22) for var in variants]
 
 def sliding_window(string, n):
     # Ensure the window size is valid
@@ -47,20 +46,63 @@ def sliding_window(string, n):
 THRESHOLD = 3
 
 for variant_context in contexts:
-    print(variant_context.alt_sequence_fwd(), variant_context.ref_sequence_fwd())
-    for ref, alt in zip(sliding_window(variant_context.ref_sequence_fwd(), 23), sliding_window(variant_context.alt_sequence_fwd(), 23)):
+    ref_max = -999
+    alt_at_ref_max = -999
+    ref_max_pos = -999
+    alt_max = -999
+    ref_at_alt_max = -999
+    alt_max_pos = -999
+
+    print("3'", variant_context.alt_sequence_fwd(), variant_context.ref_sequence_fwd())
+    for i, (ref, alt) in enumerate(
+                        zip(sliding_window(variant_context.ref_sequence_fwd(), 23),
+                            sliding_window(variant_context.alt_sequence_fwd(), 23))
+    ):
         ref_score = maxent.score3(ref, matrix=matrix3)
         alt_score = maxent.score3(alt, matrix=matrix3)
-        # print(f"{ref}\n{alt}, {alt_score:.2f} - {ref_score:.2f} = {alt_score - ref_score:.2f}")
+
+        if ref_score > ref_max:
+            ref_max = ref_score
+            alt_at_ref_max = alt_score
+            ref_max_pos = i
+
+        if alt_score > alt_max:
+            alt_max = alt_score
+            ref_at_alt_max = ref_score
+            alt_max_pos = i
+
+        print(f"{ref}\n{alt}, {alt_score:.2f} - {ref_score:.2f} = {alt_score - ref_score:.2f}")
         if ref_score > THRESHOLD or alt_score > THRESHOLD:
             print ("", ref, "\n", alt, ref_score, alt_score)
 
+    print(f'{ref_max=:.2f} {alt_at_ref_max=:.2f} at i={ref_max_pos}  {alt_max=:.2f} {ref_at_alt_max=:.2f} at i={alt_max_pos}')
+
+    ref_max = -999
+    alt_at_ref_max = -999
+    ref_max_pos = -999
+    alt_max = -999
+    ref_at_alt_max = -999
+    alt_max_pos = -999
+
+    print("5'")
     for ref, alt in zip(sliding_window(variant_context.ref_sequence_fwd(9), 9), sliding_window(variant_context.alt_sequence_fwd(9), 9)):
         ref_score = maxent.score5(ref, matrix=matrix5)
         alt_score = maxent.score5(alt, matrix=matrix5)
-        # print(f"{ref}\n{alt}, {alt_score:.2f} - {ref_score:.2f} = {alt_score - ref_score:.2f}")
+        if ref_score > ref_max:
+            ref_max = ref_score
+            alt_at_ref_max = alt_score
+            ref_max_pos = i
+
+        if alt_score > alt_max:
+            alt_max = alt_score
+            ref_at_alt_max = ref_score
+            alt_max_pos = i
+
+        print(f"{ref}\n{alt}, {alt_score:.2f} - {ref_score:.2f} = {alt_score - ref_score:.2f}")
         if ref_score > THRESHOLD or alt_score > THRESHOLD:
             print ("", ref, "\n", alt, ref_score, alt_score)
+
+    print(f'{ref_max=:.2f} {alt_at_ref_max=:.2f} at i={ref_max_pos}  {alt_max=:.2f} {ref_at_alt_max=:.2f} at i={alt_max_pos}')
 
 
 
