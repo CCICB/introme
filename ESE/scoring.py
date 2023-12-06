@@ -1,5 +1,6 @@
 from motifs import RBPsplice
-from variants import Variant, VariantContext, StrandDirection
+# from variants import Variant, VariantContext, StrandDirection
+from varconv.variants import Variant, VariantContext, StrandDirection
 from ESEfinder_motif_source import ESEfinder_motifs
 from dataclasses import dataclass
 from RCRUNCH_motif_source import RCRUNCH_motifs
@@ -23,7 +24,7 @@ CONTEXT_LENGTH = 22
 #     '.': StrandDirection.UNKNOWN
 # }
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class VcfInfo():
     chromosome: any
     position: any
@@ -32,16 +33,22 @@ class VcfInfo():
     alt: any
     quality: any
     filter_: any
-    info: any
+    info: any # ; separated key=value pairs TODO: should be a dictionary
+
+    def addInfo(self, key, value) -> None:
+        self.info += f";{key}={value}"
 
     def toList(self) -> list:
         return [self.chromosome, self.position, self.id_, self.ref, self.alt, self.quality, self.filter_, self.info]
+    
+    def toString(self) -> str:
+        return "\t".join([str(x) for x in self.toList()])
 
 def calculate_variants(variants: Iterator[tuple[Variant, VcfInfo]], ref_genome: pysam.FastaFile, RBPmotifs: list[RBPsplice]) -> pd.DataFrame:
     data: list[list] = []
 
     for variant, vcf_info in variants:      
-        variant_context = variant.faidx_context(ref_genome, CONTEXT_LENGTH)
+        variant_context = VariantContext(ref_genome, variant, CONTEXT_LENGTH)
         if variant_context is None:
             continue
         motif_scores = calculuate_motifs(RBPmotifs, variant_context)
@@ -110,14 +117,15 @@ def read_pandas_to_variant(tsv: TextIO) -> Iterator[tuple[Variant, VcfInfo]]:
             strand_dir = StrandDirection.REVERSE
         else:
             strand_dir = StrandDirection.UNKNOWN
+            print(line)
 
         yield (Variant(chromosome, int(position), ref, alt, strand_dir),
                 VcfInfo(chromosome, int(position), id_, ref, alt, quality, filter_, info))
 
 def calculuate_motifs(RBPmotifs: list[RBPsplice], variant_context: VariantContext) -> Optional[list]:
-    if (doMSE(variant_context, variant_context.strand_direction == StrandDirection.FORWARD, '5')
-        or doMSE(variant_context, variant_context.strand_direction == StrandDirection.FORWARD, '3')):
-            return None
+    # if (doMSE(variant_context, variant_context.strand_direction == StrandDirection.FORWARD, '5')
+    #     or doMSE(variant_context, variant_context.strand_direction == StrandDirection.FORWARD, '3')):
+    #         return None
 
     motif_scores = []
     for motif in RBPmotifs:
@@ -164,9 +172,9 @@ def is_path_writable(path: str) -> bool:
         return False
 
 def main():
-    # vcf_variant_iterator = read_vcf_to_variant(pysam.VariantFile(sys.argv[1]))
-    tsv_variant_iterator = read_pandas_to_variant(open(sys.argv[1]))
-    variant_iterator = tsv_variant_iterator
+    vcf_variant_iterator = read_vcf_to_variant(pysam.VariantFile(sys.argv[1]))
+    # tsv_variant_iterator = read_pandas_to_variant(open(sys.argv[1]))
+    variant_iterator = vcf_variant_iterator
     output_path = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
 

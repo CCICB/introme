@@ -34,13 +34,19 @@ df = pd.read_csv(data, sep='\t', na_values=["."])
 if CLASSIFICATION:
     # Drop "Low-freq" rows
     df = df[df['classification'] != 'Low-freq']
-    print(df.columns.values)
-    df = pd.get_dummies(df, columns=['classification', 'location'], dtype=int)
+    
+    # Drop variants that had effect on splicing per MES
+    df = df[df['5_effect'] != 'True']
+    df = df[df['3_effect'] != 'True']
+    df = pd.get_dummies(df, columns=['classification', 'location', 'region'], dtype=int)
 
+    print(df.columns.values)
 
     # Select features and target
-    features = df.drop(columns=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'gene_id', 'strand', 'MFASS_delta_index',
-                                'classification_Normal', 'location_Intronic', 'classification_Splice-altering'])
+    features = df.drop(columns=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'hgvs_RefSeq', 'strand', 'MFASS_delta_index',
+                                # 'classification_Normal', 'location_Intronic', 'classification_Splice-altering',
+                                '3_ref_max', '3_alt_at_ref_max', '3_ref_max_pos', '3_alt_max', '3_ref_at_alt_max', '3_alt_max_pos',
+                                '5_ref_max', '5_alt_at_ref_max', '5_ref_max_pos', '5_alt_max', '5_ref_at_alt_max', '5_alt_max_pos'])
     target = df['classification_Splice-altering']
 
     # top_ranking_columns = ['A1_Hazeem', 'A1_Hazeem_july', 'A1_neuBG', 'A1_winBG', 'SRSF1', 'SRSF1_igM', 'SRSF2', 'SRSF5', 'SRSF6', 'METAP2_7', 'XRN2_8', 'DDX52_8', 'EFTUD2_8', 'SLTM_8', 'RPS3_6', 'NONO_6', 'PPIG_8', 'LARP7_8', 'PRPF8_8', 'AQR_8', 'ZRANB2_6', 'GNL3_7', 'SRSF9_6', 'HNRNPU_7', 'UCHL5_8', 'KHDRBS1_7', 'PCBP1_8', 'HNRNPC_6', 'U2AF1_4', 'U2AF2_8', 'TIA1_7', 'DHX30_11', 'BCCIP_11', 'SUPV3L1_12', 'PRPF8_12', 'AQR_8_b', 'ZRANB2_9', 'EFTUD2_12', 'DDX52_10', 'HNRNPU_8', 'HNRNPM_8', 'RPS3_11', 'SRSF9_12', 'EIF3D_11', 'FMR1_10', 'SRSF1_11', 'FXR2_9', 'UCHL5_10', 'TAF15_9', 'DGCR8_9', 'FKBP4_12', 'DDX42_12', 'AKAP8L_12', 'XRN2_12', 'RBFOX2_12', 'FUS_12', 'EWSR1_12', 'FASTKD2_11', 'DDX6_10', 'SLTM_10', 'FTO_11', 'NONO_10', 'METAP2_7_b', 'TRA2A_11', 'HLTF_8_b', 'TIAL1_9', 'TIA1_8', 'FUBP3_11', 'YBX3_5', 'U2AF2_10', 'MATR3_12', 'PCBP2_12', 'PCBP1_12', 'HNRNPK_9', 'DDX59_9', 'location_Exonic']

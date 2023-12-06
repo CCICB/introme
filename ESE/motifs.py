@@ -1,7 +1,8 @@
 from Bio.motifs.matrix import PositionSpecificScoringMatrix
 from Bio.motifs.thresholds import ScoreDistribution
 import numpy as np
-from variants import VariantContext, StrandDirection
+# from variants import VariantContext, StrandDirection
+from varconv.variants import VariantContext, StrandDirection
 from typing import Optional
 import math
 

@@ -19,7 +19,7 @@ def sliding_window(string, n):
     # Generate and return the windows
     return [string[i:i+n] for i in range(num_windows)]
 
-def doMSE(variant_context: VariantContext, forward_strand: bool, splicing_end: Literal['3', '5']) -> bool:
+def doMSE(variant_context: VariantContext, forward_strand: bool, splicing_end: Literal['3', '5']) -> list:
     ref_max = -999
     alt_at_ref_max = -999
     ref_max_pos = -999
@@ -66,13 +66,14 @@ def doMSE(variant_context: VariantContext, forward_strand: bool, splicing_end: L
 
         # print(f"{ref}\n{alt}, {alt_score:.2f} - {ref_score:.2f} = {alt_score - ref_score:.2f}")
         # if ref_score > THRESHOLD or alt_score > THRESHOLD:
-        #     print("", ref, "\n", alt, ref_score, alt_score)
+        # print(i, "\n", ref, "\n", alt, ref_score, alt_score)
 
     # print(f'{ref_max=:.2f} {alt_at_ref_max=:.2f} at i={ref_max_pos}  {alt_max=:.2f} {ref_at_alt_max=:.2f} at i={alt_max_pos}')
     if diff_in_scoring(ref_max, alt_max, threshold=1.5, allowable_difference=1):
-        print(f'{ref_max=:.2f} {alt_at_ref_max=:.2f} at i={ref_max_pos}  {alt_max=:.2f} {ref_at_alt_max=:.2f} at i={alt_max_pos}')
-        return True
-    return False
+        # print(f'{ref_max=:.2f} {alt_at_ref_max=:.2f} at i={ref_max_pos}  {alt_max=:.2f} {ref_at_alt_max=:.2f} at i={alt_max_pos}')
+        return [True, ref_max, alt_at_ref_max, ref_max_pos, alt_max, ref_at_alt_max, alt_max_pos]
+    # return False
+    return [False, ref_max, alt_at_ref_max, ref_max_pos, alt_max, ref_at_alt_max, alt_max_pos]
 
 def diff_in_scoring(ref: float, alt: float, threshold: float, allowable_difference: float) -> bool:
     if abs(ref - alt) <= allowable_difference:
