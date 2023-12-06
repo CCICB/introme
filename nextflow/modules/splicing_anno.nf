@@ -22,8 +22,8 @@ process splicing_anno {
         path pangolin_output_tbi
         path spip_output
         path spip_output_tbi
-        path squirl_output
-        path squirl_output_tbi
+        //path squirl_output
+        //path squirl_output_tbi
 		path functions
 		path functions_tbi
 

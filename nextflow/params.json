@@ -1,9 +1,4 @@
 {
-    "vcf": "input/toy.vcf.gz",
-    "gtf": "input/gtf",
-    "ref_genome": "input/ref_genome",
-    "bed": "input/toy.bed.gz",
-    "genome_build" : "hg38",
 
     "spliceai_docker_container" : "gabyou/spliceai:v3.0",
     "mmsplice_docker_container" : "gabyou/mmsplice:v1.0",
@@ -15,16 +10,11 @@
     "variant_info_docker_container" : "gabyou/variant_info:v3.2",
     "introme_functions_docker_container" : "gabyou/introme_functions:v1.0",
 
-    "quality_filter" : true,
     "min_QUAL": ">=200",
     "min_DP" : ">=20",
     "min_AD" : ">=5",
-    "allele_frequency" : 0.01,
 
     "spliceai_db" : "gencode.v44.annotation.txt.gz",
     "pangolin_db" :  "gencode.v44.annotation.db",
 
-    "outdir" : "./output", 
-    "inputroot" : "./input",
-    "prefix" : "splice_test_04_10"
 }

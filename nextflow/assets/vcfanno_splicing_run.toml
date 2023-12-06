@@ -1,0 +1,27 @@
+# File used by VCFanno to define how a VCF file should be annotated
+# File for splicing score annotation (from annotation file)
+
+# [[annotation]]
+# file="cadd_v1.3.vcf.gz"
+# names=["CADD_Phred"]
+# ops=["self"]
+# fields=["phred"]
+# Used process outlined on https://github.com/brentp/vcfanno/blob/master/docs/examples/cadd.md to create CADD vcf file from original download
+
+# [[annotation]]
+# file="dbscSNV1.1.vcf.gz"
+# fields = ["ada_score", "rf_score"]
+# ops=["self", "self"]
+# names=["dbscSNV_AdaBoost_Score", "dbscSNV_RandomForest_Score"]
+
+# [[annotation]]
+# file="gencode_v26_branchpoints.csv.liftedtohg19.collated.bed.gz"
+# columns=[4,5,6,7,8]
+# ops=["self", "self", "self", "self", "self"]
+# names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_U2_Binding_Energy", "Branchpointer_max_Prob"]
+
+[[annotation]]
+file="U12.bed.gz"
+columns = [4]
+ops=["self"]
+names=["Intron_Type"]

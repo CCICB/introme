@@ -1,7 +1,12 @@
 /*
   Run via the below steps:
-  ./update_params.sh [options] -b <subset.bed.gz> -p <prefix> -r <reference_genome.fa> -v <variants.vcf.gz>"
+  ./update_params.sh [options] -b <subset.bed.gz> -p <prefix> -r <reference_genome.fa> -v <variants.vcf.gz> -g <annotations.gtf>
   nextflow run https://github.com/CCICB/introme/tree/nextflow/nextflow -params-file params.json -process.echo true
+  
+  nextflow run https://github.com/CCICB/introme/tree/nextflow/nextflow --vcf './test.vcf' 
+
+  FOR TESTING:
+  nextflow run /Users/gyounes/Desktop/introme/nextflow/ --vcf test.vcf.gz --ref_genome hg38.fa --gtf output/data_preprocessing/sorted.gtf.gz --prefix 6_12_test --quality_filter false -params-file /Users/gyounes/Desktop/introme/nextflow/params.json
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////                         Progress Log                       ////////////////////////
@@ -31,6 +36,7 @@
               Removed slurm {} from nextflow.config.
               TODO:
                   - Consider what needs to go inside the nextflow.config file
+  [next week] SORT OUT temp BED FUNCATIONALITY 
 */
 
 
@@ -72,6 +78,7 @@ Inputs:
   gtf               : ${params.gtf}
   genome build      : ${params.genome_build}
   prefix            : ${params.prefix}
+  bed               : ${params.bed}
 
 Process:
     Dockers:
@@ -117,12 +124,14 @@ log.info paramsSummaryLog(workflow)
  * Main pipeline logic
  */
 workflow {
-
     // Input variables
     vcf = Channel.fromPath(params.vcf) 
     ref_genome = Channel.fromPath(params.ref_genome) 
     gtf = Channel.fromPath(params.gtf) 
-    bed = Channel.fromPath(params.bed)
+    // bed = ""
+    // if (params.bed != "") {
+    //   bed = Channel.fromPath(params.bed)
+    // }
 
     // TODO: workout if we need to grab the below
     // File gnomad
@@ -138,8 +147,10 @@ workflow {
     // File gencode
     // File gencode_tbi
 
+    chrRename = Channel.fromPath(params.chrRename) 
+
     // STEP 1: subsetting the VCF to genomic regions of interest (first because it gets rid of the most variants)
-    data_preprocessing(vcf.first(), bed.first(), ref_genome.first(), gtf.first())
+    data_preprocessing(vcf.first(), ref_genome.first(), gtf.first(), chrRename.first())
 
     // STEP 2: Hard filtering on variant quality (this is here to reduce the number of variants going into the CPU-costly annotation step below)
     if (params.quality_filter == true) {
@@ -155,7 +166,11 @@ workflow {
 
     // STEP 3: annotate the subsetted VCF with useful information, to be used for filtering downstream
     //         and run hard filtering on the values of annotations added in the previous step
-    variant_info(anno_input, gtf.first())
+    assets_path = workflow.projectDir + '/assets/'
+    conf_path =  Channel.fromPath(assets_path + '/conf.lua', type: 'file')
+    toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
+    // assets = Channel.fromPath(path, type: 'any')
+    variant_info(anno_input, data_preprocessing.out.sorted_gtf, conf_path, toml_path)
 
 
     // STEP 4: Run MMSplice, Splice AI, Pangolin, Spliceogen, Squirls and Spip
@@ -178,10 +193,10 @@ workflow {
     // Run Squirl
     // download from patricia server to run squirl??? 
     // TODO fix squirl
-    squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
+    // squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
 
     // Run Splicoegen
-    spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
+    // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
     introme_functions(variant_info.out.variant_info, ref_genome.first())
@@ -197,7 +212,8 @@ workflow {
       pangolin.out.pangolin_output_tbi,
       spip.out.spip_output,
       spip.out.spip_output_tbi,
-      squirl.out.squirl_output_tbi,
+      //squirl.out.squirl_output,
+      //squirl.out.squirl_output_tbi,
       introme_functions.out.annotate_functions,
       introme_functions.out.annotate_functions_tbi
     )

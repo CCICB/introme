@@ -14,6 +14,8 @@ process spip {
 
     script:
         """
+        pwd
+        ls
         Rscript ./SPiP/SPiPv2.1_main.r -I $vcf -O spip.vcf -g ${params.genome_build} --VCF
         bgzip spip.vcf
         tabix spip.vcf.gz

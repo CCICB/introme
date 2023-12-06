@@ -19,7 +19,7 @@ shift $(( $OPTIND - 1 )) # Remove parsed options and args from $@ list
 
 # Run help command
 if [[ $help == 1 ]]; then
-    echo "Usage: ./update_params.sh [options] -b <subset.bed.gz> -p <prefix> -r <reference_genome.fa> -v <variants.vcf.gz>"$'\n'
+    echo "Usage: ./update_params.sh [options] -b <subset.bed.gz> -p <prefix> -r <reference_genome.fa> -v <variants.vcf.gz> -g <annotations.gtf>"$'\n'
 
     echo "Required Commands:"
     echo "-g <annotations.gtf>        Input GTF file (protein-coding only preferred)"
@@ -61,8 +61,8 @@ elif [ -z $genome ]; then
     fi
 fi
 
-# Download the params file
-wget https://github.com/CCICB/introme/blob/nextflow/nextflow/params.json
+# If not in the direcoty download the params file - otherwise unnecessary
+# wget https://raw.githubusercontent.com/CCICB/introme/nextflow/nextflow/params.json
 
 # Make temporary version of params file to make edits to
 cp params.json temp_params.json
@@ -90,22 +90,22 @@ if [ -n $genome ]; then
 fi
 
 # Options
-if [ -n $input_BED ]; then
+if [ ! -z $input_BED ]; then
     sed "s|input/toy.bed.gz|$input_BED|" params.json > temp_params.json
     mv temp_params.json params.json
 fi
 
-if [ -n $max_AF ]; then
+if [ ! -z $max_AF ]; then
     sed "s|0.01|$max_AF|" params.json > temp_params.json
     mv temp_params.json params.json
 fi
 
-if [ -n $prefix ]; then
+if [ ! -z $prefix ]; then
     sed "s|splice_test_04_10|$prefix|" params.json > temp_params.json
     mv temp_params.json params.json
 fi
 
-if [ -n $no_qual_filter ]; then
+if [ ! -z $no_qual_filter ]; then
     sed "s|true|$no_qual_filter|" params.json > temp_params.json
     mv temp_params.json params.json
 fi

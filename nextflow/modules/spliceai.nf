@@ -3,7 +3,7 @@ process spliceai {
     beforeScript 'echo Starting spliceai'
     afterScript  'echo Completed spliceai'
     publishDir (path: "${params.outdir}/spliceai")
-    cpus 32 // On my computer (Gab's) the max available is 8 - should be 32
+    cpus 8 // On my computer (Gab's) the max available is 8 - should be 32
 
     debug  true
 

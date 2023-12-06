@@ -18,6 +18,8 @@ process mmsplice {
 
     script:
         """
+        pwd
+        ls
         cd ../MMSplice_MTSplice
 		python3 run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $gtf --output mmsplice.vcf
         bgzip mmsplice.vcf

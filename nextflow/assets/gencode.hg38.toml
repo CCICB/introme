@@ -1,0 +1,35 @@
+## Gencode annotations
+[[annotation]]
+file = "REPLACE_gencode_file"
+columns = [3,7,9]
+ops = ["self","uniq","self"]
+names = ["gencode_types","strand","gencode"]
+
+[[postannotation]]
+fields = ["gencode_types"]
+op = "lua:location(gencode_types)"
+name = "Gene_Location"
+type = "String"
+
+[[postannotation]]
+fields = ["gencode"]
+op = "lua:find(gencode, 'gene_name')"
+name = "gene"
+type = "String"
+
+[[postannotation]]
+fields = ["gencode"]
+op = "lua:find(gencode, 'gene_type')"
+name = "gene_type"
+type = "String"
+
+[[postannotation]]
+fields = ["gencode_types","gencode"]
+op = "delete"
+
+# Optional Allele frequency annotations using gnomAD
+# [[annotation]]
+# file="annotations/gnomad.zero.hg38.vcf.gz"
+# fields = ["AF", "AC", "AN", "POPMAX", "AF_POPMAX", "AC_POPMAX", "AN_POPMAX"]
+# ops=["self", "self", "self", "self", "self", "self", "self"]
+# names=["gnomAD_AF", "gnomAD_AC", "gnomAD_AN", "gnomAD_PopMax", "gnomAD_PM_AF", "gnomAD_PM_AC", "gnomAD_PM_AN"]

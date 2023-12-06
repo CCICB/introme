@@ -1,0 +1,47 @@
+# File used by VCFanno to define how a VCF file should be annotated
+
+[[annotation]]
+file="annotations/cadd_v1.3.gencode.v28lift37.phred.tsv.gz"
+columns=[5]
+ops=["max"]
+names=["CADD_Phred"]
+
+[[annotation]]
+file = "annotations/regions.hg19.bed.gz"
+columns = [6]
+ops = ["uniq"]
+names = ["region_list"]
+
+[[postannotation]]
+fields = ["region_list"]
+op = "lua:regions(region_list)"
+name = "Gene_Regions"
+type = "String"
+
+[[postannotation]]
+fields = ["region_list"]
+op = "delete"
+
+[[annotation]]
+file = "annotations/dbscSNV1.1.hg19.vcf.gz"
+fields = ["ada_score", "rf_score"]
+ops = ["self", "self"]
+names = ["dbscSNV_AdaBoost_Score", "dbscSNV_RandomForest_Score"]
+
+[[annotation]]
+file="annotations/spidex.hg19.vcf.gz"
+fields=["dpsi_max_tissue", "dpsi_zscore"]
+ops=["self", "self"]
+names=["SPIDEX_dPSI_Max_Tissue", "SPIDEX_dPSI_Zscore"]
+
+[[annotation]]
+file="annotations/branchpointer.hg19.bed.gz"
+columns=[4,5,6,7,8]
+ops=["max", "max", "max", "max", "max"]
+names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_Prob", "Branchpointer_max_U2_Binding_Energy"]
+
+[[annotation]]
+file = "annotations/U12.hg19.bed.gz"
+columns = [4, 5, 6]
+ops = ["self", "self", "self"]
+names = ["Intron_Type", "U12_strand", "U12_score"]
