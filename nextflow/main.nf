@@ -5,7 +5,7 @@
   
   nextflow run https://github.com/CCICB/introme/tree/nextflow/nextflow --vcf './test.vcf' 
 
-  FOR TESTING:
+  FOR TESTING [as of 06/12]:
   nextflow run /Users/gyounes/Desktop/introme/nextflow/ --vcf test.vcf.gz --ref_genome hg38.fa --gtf output/data_preprocessing/sorted.gtf.gz --prefix 6_12_test --quality_filter false -params-file /Users/gyounes/Desktop/introme/nextflow/params.json
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,19 @@
               Removed slurm {} from nextflow.config.
               TODO:
                   - Consider what needs to go inside the nextflow.config file
-  [next week] SORT OUT temp BED FUNCATIONALITY 
+  [06/12/2023] Currently in testing:
+                - data_preprocessing works
+                - variant_info works
+                - currently trying to get spip/spliceai/mmsplice/pangolin/squirl working
+                  - current issue: when spip runs the vcf cannot be found: path[1]="/data/6_12_test.variant_info.filtered.rmanno.vcf": No such file or directory
+                                   This is because the process is running INSIDE the docker container. This means that there we need to mount the directory
+                                   containing the output files of the previous nextflow step into the container, so that SPIP can run on the relevant vcf file.
+                                   The process also has to run inside the docker container, otherwise the spip repo can't be found.
+                                   Attempted fix:
+                                    - Adding "-v ${params.outdir}/variant_info/:/data/" to the containerOptions. The intenion of this is to insert the output vcf
+                                      file into the spip docker container.
+                                    - Currently throws this error: path[1]="/data/6_12_test.variant_info.filtered.rmanno.vcf": No such file or directory
+                - commented out splicing_anno and introme_functions to focus on debugging the parallel programs 
 */
 
 
@@ -199,24 +211,24 @@ workflow {
     // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
-    introme_functions(variant_info.out.variant_info, ref_genome.first())
+    // introme_functions(variant_info.out.variant_info, ref_genome.first())
 
     // STEP 6: Run splicing annotations
-    splicing_anno(
-      variant_info.out.variant_info, 
-      spliceai.out.spliceai_output, 
-      spliceai.out.spliceai_output_tbi,
-      mmsplice.out.mmsplice_output,
-      mmsplice.out.mmsplice_output_tbi,
-      pangolin.out.pangolin_output,
-      pangolin.out.pangolin_output_tbi,
-      spip.out.spip_output,
-      spip.out.spip_output_tbi,
-      //squirl.out.squirl_output,
-      //squirl.out.squirl_output_tbi,
-      introme_functions.out.annotate_functions,
-      introme_functions.out.annotate_functions_tbi
-    )
+    // splicing_anno(
+    //   variant_info.out.variant_info, 
+    //   spliceai.out.spliceai_output, 
+    //   spliceai.out.spliceai_output_tbi,
+    //   mmsplice.out.mmsplice_output,
+    //   mmsplice.out.mmsplice_output_tbi,
+    //   pangolin.out.pangolin_output,
+    //   pangolin.out.pangolin_output_tbi,
+    //   spip.out.spip_output,
+    //   spip.out.spip_output_tbi,
+    //   //squirl.out.squirl_output,
+    //   //squirl.out.squirl_output_tbi,
+    //   introme_functions.out.annotate_functions,
+    //   introme_functions.out.annotate_functions_tbi
+    // )
 
     // STEP 7: Generate consensus scores - ML
 }

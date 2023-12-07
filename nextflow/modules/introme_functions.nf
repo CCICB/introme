@@ -1,5 +1,6 @@
 process introme_functions {
     container "${params.introme_functions_docker_container}"
+    containerOptions '--workdir /'
     beforeScript 'echo Starting introme_functions'
     afterScript  'echo Completed introme_functions'
     publishDir (path: "${params.outdir}/introme_functions")

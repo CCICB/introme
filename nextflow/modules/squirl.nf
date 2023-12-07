@@ -1,5 +1,6 @@
 process squirl {
     container "${params.squirl_docker_container}"
+    containerOptions '--workdir /'
     beforeScript 'echo Starting squirl'
     afterScript  'echo Completed squirl'
     publishDir (path: "${params.outdir}/squirl")

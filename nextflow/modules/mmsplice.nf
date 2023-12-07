@@ -1,5 +1,6 @@
 process mmsplice {
     container "${params.mmsplice_docker_container}"
+    containerOptions '--workdir /'
     beforeScript 'echo Starting mmsplice'
     afterScript  'echo Completed mmsplice'
     publishDir (path: "${params.outdir}/mmsplice")

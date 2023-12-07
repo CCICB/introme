@@ -1,5 +1,6 @@
 process spip {
     container "${params.spip_docker_container}"
+    containerOptions "--workdir / -v ${params.outdir}/variant_info/:/data/"
     beforeScript 'echo Starting spip'
     afterScript  'echo Completed spip'
     publishDir (path: "${params.outdir}/spip")
@@ -14,9 +15,9 @@ process spip {
 
     script:
         """
-        pwd
         ls
-        Rscript ./SPiP/SPiPv2.1_main.r -I $vcf -O spip.vcf -g ${params.genome_build} --VCF
+        pwd
+        Rscript ./SPiP/SPiPv2.1_main.r -I /data/${vcf} -O spip.vcf -g ${params.genome_build} --VCF
         bgzip spip.vcf
         tabix spip.vcf.gz
         """

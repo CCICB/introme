@@ -1,5 +1,6 @@
 process spliceai {
     container "${params.spliceai_docker_container}"
+    containerOptions '--workdir /'
     beforeScript 'echo Starting spliceai'
     afterScript  'echo Completed spliceai'
     publishDir (path: "${params.outdir}/spliceai")

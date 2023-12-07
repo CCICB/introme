@@ -34,10 +34,9 @@ process data_preprocessing {
         if [ "\$gtf_sorted" -eq "0" ]; then
             gunzip -c $input_gtf | awk '(NR>5)' | sort -k1,1 -k4,4n -k5,5n -s | bgzip > sorted.gtf.gz
             tabix -f sorted.gtf.gz
-            gtf_path="sorted.gtf.gz"            
+            gtf_path="sorted.gtf.gz"   
+            echo $input_gtf         
         fi
-
-        echo \$gtf_path
 
         if [ -z ${params.bed} ]; then
             echo \$(date +%x_%r) 'No BED file provided - Beginning subsetting to GTF regions'

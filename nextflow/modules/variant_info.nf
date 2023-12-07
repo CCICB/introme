@@ -16,7 +16,7 @@ process variant_info {
         path "${params.prefix}.variant_info.vcf.gz", emit: variant_info
         path "${params.prefix}.variant_info.vcf.gz.tbi", emit: variant_info_tbi
         
-        path "${params.prefix}.variant_info.filtered.rmanno.vcf.gz", emit: variant_info_rmanno
+        path "${params.prefix}.variant_info.filtered.rmanno.vcf", emit: variant_info_rmanno
 
     script:
     """
@@ -41,7 +41,5 @@ process variant_info {
     # grep -v "^#" ${params.prefix}.variant_info.filtered.vcf | awk '{\$8="."; print }' OFS='\t' >> ${params.prefix}.variant_info.filtered.rmanno.vcf
     grep -v "^#" ${params.prefix}.variant_info.vcf | awk '{\$8="."; print }' OFS='\t' >> ${params.prefix}.variant_info.filtered.rmanno.vcf
 
-    bgzip ${params.prefix}.variant_info.filtered.rmanno.vcf
-    #tabix ${params.prefix}.variant_info.filtered.vcf.gz
     """
 }

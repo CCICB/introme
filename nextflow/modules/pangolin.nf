@@ -1,5 +1,6 @@
 process pangolin {
     container "${params.pangolin_docker_container}"
+    containerOptions '--workdir /'
     beforeScript 'echo Starting pangolin'
     afterScript  'echo Completed pangolin'
     publishDir (path: "${params.outdir}/pangolin")
