@@ -1,7 +1,7 @@
 # A Random Forest Classifier determining Splice Altering or Normal
 # Import modules
 import pandas as pd
-CLASSIFICATION = True
+CLASSIFICATION = False
 if CLASSIFICATION:
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.neural_network import MLPClassifier
@@ -33,31 +33,80 @@ output = open(sys.argv[2], 'w+')
 df = pd.read_csv(data, sep='\t', na_values=["."])
 if CLASSIFICATION:
     # Drop "Low-freq" rows
-    df = df[df['classification'] != 'Low-freq']
+    df = df[df['classification'] != 'Low-frequency']
+    df = df[df['classification'] != 'Conflicting']
+    print(f"{len(df[df['classification'] == 'Splice-altering'])=}")
     
     # Drop variants that had effect on splicing per MES
-    df = df[df['5_effect'] != 'True']
-    df = df[df['3_effect'] != 'True']
+    df = df[df['5_effect'] != True]
+    df = df[df['3_effect'] != True]
+
+    print(f"{len(df[df['classification'] == 'Splice-altering'])=}")
+
     df = pd.get_dummies(df, columns=['classification', 'location', 'region'], dtype=int)
 
-    print(df.columns.values)
 
     # Select features and target
     features = df.drop(columns=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'hgvs_RefSeq', 'strand', 'MFASS_delta_index',
-                                # 'classification_Normal', 'location_Intronic', 'classification_Splice-altering',
-                                '3_ref_max', '3_alt_at_ref_max', '3_ref_max_pos', '3_alt_max', '3_ref_at_alt_max', '3_alt_max_pos',
-                                '5_ref_max', '5_alt_at_ref_max', '5_ref_max_pos', '5_alt_max', '5_ref_at_alt_max', '5_alt_max_pos'])
+                                'classification_Normal', 'classification_Splice-altering',
+                                # 'region_Acceptor Canonical', 'region_Acceptor Exonic',
+                                # 'region_Acceptor Region', 'region_Branchpoint',
+                                # # 'region_Donor Canonical',
+                                # 'region_Donor Exonic', 'region_Donor Region', 'region_PPT',
+                                # '5_effect', '3_effect',
+                                # '3_ref_max', '3_alt_at_ref_max', '3_ref_max_pos', '3_alt_max', '3_ref_at_alt_max', '3_alt_max_pos',
+                                # '5_ref_max', '5_alt_at_ref_max', '5_ref_max_pos', '5_alt_max', '5_ref_at_alt_max', '5_alt_max_pos',
+                                'location_Acceptor Canonical', 'location_Acceptor Exonic',
+                                'location_Acceptor Region', 'location_Branchpoint',
+                                #  'location_Donor Canonical',
+                                'location_Donor Exonic',
+                                'location_Donor Region', 'location_Exonic', 'location_Intronic',
+                                'location_PPT'
+ ])
+    # print(df.columns.values)
+    # features = features.drop(features.filter(regex='.*_ref$').columns, axis=1)
     target = df['classification_Splice-altering']
 
     # top_ranking_columns = ['A1_Hazeem', 'A1_Hazeem_july', 'A1_neuBG', 'A1_winBG', 'SRSF1', 'SRSF1_igM', 'SRSF2', 'SRSF5', 'SRSF6', 'METAP2_7', 'XRN2_8', 'DDX52_8', 'EFTUD2_8', 'SLTM_8', 'RPS3_6', 'NONO_6', 'PPIG_8', 'LARP7_8', 'PRPF8_8', 'AQR_8', 'ZRANB2_6', 'GNL3_7', 'SRSF9_6', 'HNRNPU_7', 'UCHL5_8', 'KHDRBS1_7', 'PCBP1_8', 'HNRNPC_6', 'U2AF1_4', 'U2AF2_8', 'TIA1_7', 'DHX30_11', 'BCCIP_11', 'SUPV3L1_12', 'PRPF8_12', 'AQR_8_b', 'ZRANB2_9', 'EFTUD2_12', 'DDX52_10', 'HNRNPU_8', 'HNRNPM_8', 'RPS3_11', 'SRSF9_12', 'EIF3D_11', 'FMR1_10', 'SRSF1_11', 'FXR2_9', 'UCHL5_10', 'TAF15_9', 'DGCR8_9', 'FKBP4_12', 'DDX42_12', 'AKAP8L_12', 'XRN2_12', 'RBFOX2_12', 'FUS_12', 'EWSR1_12', 'FASTKD2_11', 'DDX6_10', 'SLTM_10', 'FTO_11', 'NONO_10', 'METAP2_7_b', 'TRA2A_11', 'HLTF_8_b', 'TIAL1_9', 'TIA1_8', 'FUBP3_11', 'YBX3_5', 'U2AF2_10', 'MATR3_12', 'PCBP2_12', 'PCBP1_12', 'HNRNPK_9', 'DDX59_9', 'location_Exonic']
     # features = features[top_ranking_columns]
 else:
-    df = pd.get_dummies(df, columns=['location'], dtype=int)
-    features = df.drop(columns=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'gene_id', 'strand', 'MFASS_delta_index',
-                                'classification', 'location_Intronic'])
-    target = df['MFASS_delta_index']
+    df = df[df['classification'] != 'Conflicting']
+    print(f"{len(df[df['classification'] == 'Splice-altering'])=}")
+    
+    # Drop variants that had effect on splicing per MES
+    df = df[df['5_effect'] != False]
+    df = df[df['3_effect'] != True]
+
+    print(f"{len(df[df['classification'] == 'Splice-altering'])=}")
+
+    df = pd.get_dummies(df, columns=['classification', 'location', 'region'], dtype=int)
+
+
+    # Select features and target
+    features = df.drop(columns=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'hgvs_RefSeq', 'strand', 'MFASS_delta_index',
+                                'classification_Normal', 'classification_Splice-altering', 'classification_Low-frequency',
+                                # 'region_Acceptor Canonical', 'region_Acceptor Exonic',
+                                'region_Acceptor Region', 'region_Branchpoint',
+                                'region_Donor Canonical',
+                                'region_Donor Exonic', 'region_Donor Region', 'region_PPT',
+                                '5_effect', '3_effect',
+                                '3_ref_max', '3_alt_at_ref_max', '3_ref_max_pos', '3_alt_max', '3_ref_at_alt_max', '3_alt_max_pos',
+                                '5_ref_max', '5_alt_at_ref_max', '5_ref_max_pos', '5_alt_max', '5_ref_at_alt_max', '5_alt_max_pos',
+                                # 'location_Acceptor Canonical', 'location_Acceptor Exonic',
+                                'location_Acceptor Region', 'location_Branchpoint',
+                                 'location_Donor Canonical',
+                                'location_Donor Exonic',
+                                'location_Donor Region', 'location_Exonic', 'location_Intronic',
+                                'location_PPT'
+ ])
+    # print(df.columns.values)
+    # features = features.drop(features.filter(regex='.*_ref$').columns, axis=1)
+
+    features = features.drop(features.filter(regex='.*_ref$').columns, axis=1)
+    target = (-df['MFASS_delta_index'] + 1) ** 2
 
 print(features)
+print(features.columns.values)
 print(target)
 features.to_csv(output, encoding='utf-8', index=False, sep='\t')
 
@@ -65,13 +114,13 @@ X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=
 
 # Initializing and training the RandomForestRegressor
 if CLASSIFICATION:
-    regressor = RandomForestClassifier(n_estimators=50, random_state=42, max_depth=20, min_samples_split=3, min_samples_leaf=3, criterion='gini', class_weight='balanced_subsample', n_jobs=-1)
+    regressor = RandomForestClassifier(n_estimators=600, random_state=42, max_depth=100, min_samples_split=5, min_samples_leaf=3, criterion='log_loss', class_weight='balanced_subsample', n_jobs=-1)
     # regressor = MLPClassifier((50, 10,), "relu")
     # regressor = Perceptron(n_jobs=-1, class_weight="balanced")
     regressor.fit(X_train, y_train)
 else:
-    regressor = RandomForestRegressor(n_estimators=400, random_state=42, max_depth=171, max_features='sqrt',
-                                      criterion='squared_error', n_jobs=-1)
+    regressor = RandomForestRegressor(n_estimators=1000, random_state=42, max_depth=15, max_features='sqrt', min_samples_leaf=3, min_samples_split=3,
+                                      criterion='squared_error',  n_jobs=-1)
     regressor.fit(X_train, y_train)
 
     y_pred2 = regressor.predict(X_train)
@@ -92,6 +141,24 @@ else:
 
 
     print(f"{mae=}, {mse=}, {r2=}, {rmse=}")
+
+    # Plot for Training Data
+    plt.figure(figsize=(10, 6))
+    plt.plot([min(y_train), max(y_train)], [min(y_train), max(y_train)], color='red')  # Diagonal line
+    plt.scatter(y_train, y_pred2, alpha=0.3)
+    plt.xlabel('Actual')
+    plt.ylabel('Predicted')
+    plt.title('Training Data: Actual vs Predicted')
+    plt.savefig('training.png')
+
+    # Plot for Test Data
+    plt.figure(figsize=(10, 6))
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red')  # Diagonal line
+    plt.scatter(y_test, y_pred, alpha=0.3)
+    plt.xlabel('Actual')
+    plt.ylabel('Predicted')
+    plt.title('Test Data: Actual vs Predicted')
+    plt.savefig('test.png')
     exit(0)
 
 # Predict probabilities
@@ -211,7 +278,7 @@ exit(0)
 # Note: Restarting with a blank model
 rfc = regressor
 # Remove one feature each step from the model (cross-validated 10 times)
-rfc = RFECV(rfc, step=1, cv=10, n_jobs=-1)
+rfc = RFECV(rfc, step=10, cv=10, n_jobs=-1)
 rfc = rfc.fit(X_train, y_train)
 y_pred_train = rfc.predict(X_train)
 

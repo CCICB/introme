@@ -101,7 +101,7 @@ class RBPsplice(PositionSpecificScoringMatrix):
         # Transpose into by base form
         log_odds = [list(i) for i in zip(*log_odds)]
         motif = cls(["A", "C", "G", "T"], {"A": log_odds[0], "C": log_odds[1], "G": log_odds[2], "T": log_odds[3]}, name, threshold=threshold)
-        threshold = ScoreDistribution(pssm=motif, background={'A': 0.25, 'C': 0.25, 'G': 0.25, 'T': 0.25}).threshold_patser()
+        threshold = ScoreDistribution(pssm=motif, background={'A': 0.25, 'C': 0.25, 'G': 0.25, 'T': 0.25}).threshold_patser() if threshold is None else threshold
         print(motif.name, motif.threshold, threshold)
         motif.threshold = threshold
 

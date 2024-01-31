@@ -172,9 +172,10 @@ def is_path_writable(path: str) -> bool:
         return False
 
 def main():
-    vcf_variant_iterator = read_vcf_to_variant(pysam.VariantFile(sys.argv[1]))
-    # tsv_variant_iterator = read_pandas_to_variant(open(sys.argv[1]))
-    variant_iterator = vcf_variant_iterator
+    # vcf_variant_iterator = read_vcf_to_variant(pysam.VariantFile(sys.argv[1]))
+    tsv_variant_iterator = read_pandas_to_variant(open(sys.argv[1]))
+    # variant_iterator = vcf_variant_iterator
+    variant_iterator = tsv_variant_iterator
     output_path = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
 
