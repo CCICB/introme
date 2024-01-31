@@ -188,19 +188,19 @@ workflow {
     // STEP 4: Run MMSplice, Splice AI, Pangolin, Spliceogen, Squirls and Spip
 
     // Define paramaters for SpliceAI
-    distance = 1000
-    mask = 0
-    // Run SplicAI
-    spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
+    // distance = 1000
+    // mask = 0
+    // // Run SplicAI
+    // spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
 
-    // Run MMSplice
-    mmsplice(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
+    // // Run MMSplice
+    // mmsplice(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
-    // Run Pangolin
-    pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
+    // // Run Pangolin
+    // pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
 
-    // Run Spip
-    spip(variant_info.out.variant_info_rmanno)
+    // // Run Spip
+    // spip(variant_info.out.variant_info_rmanno)
 
     // Run Squirl
     // download from patricia server to run squirl??? 
@@ -211,7 +211,7 @@ workflow {
     // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
-    // introme_functions(variant_info.out.variant_info, ref_genome.first())
+    introme_functions(variant_info.out.variant_info, ref_genome.first())
 
     // STEP 6: Run splicing annotations
     // splicing_anno(

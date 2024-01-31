@@ -65,6 +65,7 @@ fi
 # wget https://raw.githubusercontent.com/CCICB/introme/nextflow/nextflow/params.json
 
 # Make temporary version of params file to make edits to
+set -x
 cp params.json temp_params.json
 
 # Make changes to params file based on the arguments and options provided
@@ -75,7 +76,7 @@ if [ -n $input_gtf ]; then
 fi
 
 if [ -n $input_VCF ]; then
-    sed "s|input/toy.vcf.gz|$input_VCF|" params.json > temp_params.json
+    sed "s|input/toy.vcf.gzls|$input_VCF|" params.json > temp_params.json
     mv temp_params.json params.json
 fi
 

@@ -14,6 +14,7 @@ process data_preprocessing {
         path "${params.prefix}.subset.vcf.gz", emit: preprocessed_output
         path "${params.prefix}.subset.vcf.gz.tbi", emit: preprocessed_output_tbi
         path "sorted.gtf.gz", emit: sorted_gtf
+        // path "${gtf_path}", emit: sorted_gtf
 
     script:
         """
@@ -30,12 +31,14 @@ process data_preprocessing {
 
         tabix -f $input_gtf && gtf_sorted=1 || gtf_sorted=0
 
-        gtf_path=$input_gtf
+        # gtf_path=$input_gtf
+        gtf_path="sorted.gtf.gz"   
         if [ "\$gtf_sorted" -eq "0" ]; then
             gunzip -c $input_gtf | awk '(NR>5)' | sort -k1,1 -k4,4n -k5,5n -s | bgzip > sorted.gtf.gz
             tabix -f sorted.gtf.gz
-            gtf_path="sorted.gtf.gz"   
-            echo $input_gtf         
+            echo $input_gtf
+        else
+            mv $input_gtf sorted.gtf.gz
         fi
 
         if [ -z ${params.bed} ]; then

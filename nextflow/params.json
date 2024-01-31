@@ -14,7 +14,15 @@
     "min_DP" : ">=20",
     "min_AD" : ">=5",
 
+    "quality_filter": false,
+
     "spliceai_db" : "gencode.v44.annotation.txt.gz",
     "pangolin_db" :  "gencode.v44.annotation.db",
 
+    "vcf" : "../AG_check/files/pedcbioportal_long_11k.vcf.gz",
+    "ref_genome" :  "../AG_check/files/hg38_.fa", 
+    "gtf" : "../AG_check/files/gencode.v43.annotation.gtf.gz",
+    "genome_build" :  "hg38",
+    "prefix" :  "test",
+    "bed" : ""
 }
