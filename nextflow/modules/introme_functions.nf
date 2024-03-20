@@ -15,7 +15,7 @@ process introme_functions {
 
     script:
     """
-    python AG_check ${annotated_vcf} ${ref_genome}
+    python ../../AG_check ${annotated_vcf} ${ref_genome}
     bgzip introme_annotate.functions2.vcf
     tabix introme_annotate.functions2.vcf.gz
     """

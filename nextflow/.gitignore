@@ -1,0 +1,5 @@
+.nextflow/
+.nextflow.log*
+output/
+work/
+params.json

@@ -2,7 +2,7 @@
 # So that the introme nextflow pipeline can run on user provided files
 
 # Introme Arguments
-while getopts "a:b:f:g:h:p:qr:sv:" opt; do
+while getopts "a:b:f:g:h:p:qr:v:" opt; do
     case $opt in
         a) genome="$OPTARG";; # Genome assembly (hg19 or hg38)
         b) input_BED="$OPTARG";; # Input BED file (i.e. regions of interest)
@@ -33,7 +33,7 @@ if [[ $help == 1 ]]; then
     echo "-f <allele_frequency>       Maximum allele frequency to include"
     echo "-h                          Print Introme usage instructions"
     echo "-q                          Remove variant quality filtering"
-    echo "-s                          Turn off Introme single score check"$'\n'
+    echo "-s                          [Removed] Turn off Introme single score check"$'\n'
     exit 1
 fi
 
@@ -76,7 +76,7 @@ if [ -n $input_gtf ]; then
 fi
 
 if [ -n $input_VCF ]; then
-    sed "s|input/toy.vcf.gzls|$input_VCF|" params.json > temp_params.json
+    sed "s|input/toy.vcf.gz|$input_VCF|" params.json > temp_params.json
     mv temp_params.json params.json
 fi
 
@@ -107,7 +107,12 @@ if [ ! -z $prefix ]; then
 fi
 
 if [ ! -z $no_qual_filter ]; then
-    sed "s|true|$no_qual_filter|" params.json > temp_params.json
-    mv temp_params.json params.json
+    if [ "$no_qual_filter" = "1" ]; then
+        sed 's|"quality_filter": true|"quality_filter": false|' params.json > temp_params.json
+        mv temp_params.json params.json
+    else
+        sed 's|"quality_filter": false|"quality_filter": true|' params.json > temp_params.json
+        mv temp_params.json params.json
+    fi
 fi
 
