@@ -20,7 +20,7 @@
     "pangolin_db" :  "gencode.v44.annotation.db",
 
     "vcf" : "",
-    "ref_genome" :  "", 
+    "ref_genome" :  "",
     "gtf" : "",
     "genome_build" :  "hg38",
     "prefix" :  "test",
