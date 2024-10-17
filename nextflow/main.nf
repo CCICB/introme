@@ -211,7 +211,9 @@ workflow {
     // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
-    introme_functions(variant_info.out.variant_info, ref_genome.first())
+    ag_script_path = file('../AG_check/AG_check.py')
+    template_header_vcf = Channel.fromPath(assets_path + '/introme_annotate.vcf', type: 'file')
+    introme_functions(ag_script_path, variant_info.out.variant_info_stripped, ref_genome.first(), template_header_vcf)
 
     // STEP 6: Run splicing annotations
     // splicing_anno(

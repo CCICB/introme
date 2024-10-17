@@ -49,7 +49,7 @@ def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile):
     # Make copy of introme annotation VCF header
     # TODO: use tmp files
     tempfile.TemporaryFile()
-    shutil.copyfile("annotations/introme_annotate.vcf", "introme_annotate.functions2.vcf")
+    # shutil.copyfile("annotations/introme_annotate.vcf", "introme_annotate.functions2.vcf")
     # vcf_out = pysam.VariantFile("introme_annotate.functions2.vcf", 'w', header=pysam.VariantFile("annotations/introme_annotate.vcf").header)
 
     with open('introme_annotate.functions2.vcf', 'a') as f:
@@ -97,7 +97,10 @@ def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile):
 
 
 if __name__ == "__main__":
-    input_vcf = pysam.VariantFile(sys.argv[1])
+    assert(len(sys.argv) == 4)
+    input_vcf = pysam.VariantFile(sys.argv[1], 'r')
     reference_genome = pysam.FastaFile(sys.argv[2])
+    header_file_path = sys.argv[3]
 
+    shutil.copyfile(header_file_path, "introme_annotate.functions2.vcf")
     main(input_vcf, reference_genome)

@@ -14,6 +14,7 @@ process variant_info {
         // path "${params.prefix}.variant_info.filtered.vcf.gz", emit: variant_info
         // path "${params.prefix}.variant_info.filtered.vcf.gz.tbi", emit: variant_info_tbi
         path "${params.prefix}.variant_info.vcf.gz", emit: variant_info
+        path "${params.prefix}.variant_info.vcf.stripped", emit: variant_info_stripped
         path "${params.prefix}.variant_info.vcf.gz.tbi", emit: variant_info_tbi
         
         path "${params.prefix}.variant_info.filtered.rmanno.vcf", emit: variant_info_rmanno
@@ -41,5 +42,7 @@ process variant_info {
     # grep -v "^#" ${params.prefix}.variant_info.filtered.vcf | awk '{\$8="."; print }' OFS='\t' >> ${params.prefix}.variant_info.filtered.rmanno.vcf
     grep -v "^#" ${params.prefix}.variant_info.vcf | awk '{\$8="."; print }' OFS='\t' >> ${params.prefix}.variant_info.filtered.rmanno.vcf
 
+    # remove FORMAT column
+    bcftools view -G ${params.prefix}.variant_info.vcf > ${params.prefix}.variant_info.vcf.stripped
     """
 }
