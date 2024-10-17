@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import subprocess, sys, shutil
+import subprocess, sys, shutil, tempfile
 import pysam
 from Bio.Seq import Seq
 
-def variant_type(ref, alt):
+def variant_type(ref, alt) -> str:
     if len(ref) == 1 and len(alt) == 1:
         return "SNV"
     elif len(ref) > 1 and len(alt) == 1:
@@ -14,7 +14,7 @@ def variant_type(ref, alt):
     elif len(ref) > 1 and len(alt) > 1:
         return "INSDEL"
 
-def ag_gt_check(strand, alt_seq, ref_seq):
+def ag_gt_check(strand, alt_seq, ref_seq) -> str:
     pos_strand = 0 if strand is None else sum(value.count("+") for value in strand)
     neg_strand = 0 if strand is None else sum(value.count("-") for value in strand)
 
@@ -48,6 +48,7 @@ def ag_gt_check(strand, alt_seq, ref_seq):
 def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile):
     # Make copy of introme annotation VCF header
     # TODO: use tmp files
+    tempfile.TemporaryFile()
     shutil.copyfile("annotations/introme_annotate.vcf", "introme_annotate.functions2.vcf")
     # vcf_out = pysam.VariantFile("introme_annotate.functions2.vcf", 'w', header=pysam.VariantFile("annotations/introme_annotate.vcf").header)
 

@@ -68,6 +68,8 @@ fi
 set -x
 cp params.json temp_params.json
 
+# TODO: use jq for more robust way to edit params.json
+
 # Make changes to params file based on the arguments and options provided
 # Required Arguments
 if [ -n $input_gtf ]; then
