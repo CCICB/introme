@@ -52,7 +52,7 @@ def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile):
     # shutil.copyfile("annotations/introme_annotate.vcf", "introme_annotate.functions2.vcf")
     # vcf_out = pysam.VariantFile("introme_annotate.functions2.vcf", 'w', header=pysam.VariantFile("annotations/introme_annotate.vcf").header)
 
-    with open('introme_annotate.functions2.vcf', 'a') as f:
+    with open('introme_annotate.ag_check.vcf', 'a') as f:
         for record in input_vcf:
             chrom = record.chrom
             pos = record.pos # VCF files are 1-based
@@ -102,5 +102,5 @@ if __name__ == "__main__":
     reference_genome = pysam.FastaFile(sys.argv[2])
     header_file_path = sys.argv[3]
 
-    shutil.copyfile(header_file_path, "introme_annotate.functions2.vcf")
+    shutil.copyfile(header_file_path, "introme_annotate.ag_check.vcf")
     main(input_vcf, reference_genome)

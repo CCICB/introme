@@ -1,10 +1,6 @@
 FROM python:3.10-slim
 WORKDIR /app
 
-RUN pip install --upgrade pip
-RUN pip install pysam Biopython
-
-
 # Update package lists and install necessary dependencies
 RUN apt-get update && \
     apt-get install -y \
@@ -28,3 +24,6 @@ RUN curl -L https://github.com/samtools/htslib/releases/download/1.17/htslib-1.1
 
 # Clean up unnecessary files after installation
 RUN rm -rf /var/lib/apt/lists/* htslib-1.17 htslib.tar.bz2
+
+RUN pip install --upgrade pip
+RUN pip install pysam Biopython pandas
