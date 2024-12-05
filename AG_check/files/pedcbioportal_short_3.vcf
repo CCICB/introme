@@ -46,7 +46,7 @@
 ##bcftools_viewVersion=1.9+htslib-1.9
 ##bcftools_viewCommand=view -h ./output/working_files/pedcbioportal_230327.zero.subset.highquality.annotated.filtered.vcf.gz; Date=Fri Mar 17 18:09:38 2023
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
-1	1072101	os_sd_zxjffmef_2015|GMKF-40-UC0021-01A-01E-WGS|226197	C	T	.	PASS	.
-2	32442343	os_sd_zxjffmef_2015|GMKF-40-UC0046-08A-01E-WGS|273117	AA	TG	.	PASS	.
-5	145764952	os_sd_zxjffmef_2015|GMKF-40-SW9-02A-01E-WGS|296412	A	AG	.	PASS	.
-8	144462367	os_sd_zxjffmef_2015|GMKF-40-UC0029-01A-01E-WGS|281513	GGCC	G	.	PASS	.
+1	1072101	os_sd_zxjffmef_2015|GMKF-40-UC0021-01A-01E-WGS|226197	c	t	.	PASS	.
+2	32442343	os_sd_zxjffmef_2015|GMKF-40-UC0046-08A-01E-WGS|273117	aa	tg	.	PASS	.
+5	145764952	os_sd_zxjffmef_2015|GMKF-40-SW9-02A-01E-WGS|296412	a	ag	.	PASS	.
+8	144462367	os_sd_zxjffmef_2015|GMKF-40-UC0029-01A-01E-WGS|281513	ggcc	g	.	PASS	.
