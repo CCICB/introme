@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import subprocess, sys, shutil, tempfile
+import subprocess, sys, shutil, tempfile, os
 import pysam
 from Bio.Seq import Seq
 
@@ -97,10 +97,16 @@ def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile):
 
 
 if __name__ == "__main__":
-    assert(len(sys.argv) == 4)
+    assert(len(sys.argv) == 5)
     input_vcf = pysam.VariantFile(sys.argv[1], 'r')
     reference_genome = pysam.FastaFile(sys.argv[2])
     header_file_path = sys.argv[3]
+    output_path = sys.argv[4]
 
-    shutil.copyfile(header_file_path, "introme_annotate.ag_check.vcf")
+    # Check if the output path already exists
+    if os.path.exists(output_path):
+        print(f"Error: Output path '{output_path}' already exists. Please specify a different path.")
+        sys.exit(1)
+
+    shutil.copyfile(header_file_path, output_path)
     main(input_vcf, reference_genome)
