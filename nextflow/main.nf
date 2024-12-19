@@ -215,7 +215,11 @@ workflow {
     ese_script_path = file('../ESE/scoring.py')
     template_header_vcf = Channel.fromPath(assets_path + '/introme_annotate.vcf', type: 'file')
     introme_functions(ag_script_path, ese_script_path,
-                      variant_info.out.variant_info_stripped, variant_info.out.variant_info_rmanno, ref_genome.first(), template_header_vcf)
+                      variant_info.out.variant_info,
+                      variant_info.out.variant_info_stripped,
+                      variant_info.out.variant_info_rmanno,
+                      ref_genome.first(),
+                      template_header_vcf)
 
     // STEP 6: Run splicing annotations
     // splicing_anno(
