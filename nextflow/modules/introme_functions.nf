@@ -8,6 +8,9 @@ process introme_functions {
     input:
         path ag_script_path
         path ese_script_path
+        path annotate_toml_path
+        path gencode_toml_path
+        path assets
 
         path variant_info
         path variant_info_stripped
@@ -26,10 +29,12 @@ process introme_functions {
     """
     #####
     # run_introme.sh (step 6)
-    echo executing pwd
-    pwd
+    echo "Current directory: \$(pwd)"
     echo executing ls
     ls
+    echo "./assets/ Contents:"
+    ls -lahL ${assets}
+
 
     ### AG_check ###
 
@@ -55,19 +60,25 @@ process introme_functions {
     # just the equiv of subset.highquality.annotated.vcf.gz,
     # ==> which is in nextflow as ${params.prefix}.variant_info.vcf.gz / emitted as variant_info.out.variant_info
     # MNVs=\$(bcftools filter -i"TYPE!='snp' && TYPE!='indel'" \$out_dir/working_files/\$prefix.subset.highquality.annotated.filtered.vcf.gz | grep -v "^#" | wc -l | tr -d ' ')
-    MNVs=\$(bcftools filter -i"TYPE!='snp' && TYPE!='indel'" ${variant_info} | grep -v "^#" | wc -l | tr -d ' ')
+    # MNVs=\$(bcftools filter -i"TYPE!='snp' && TYPE!='indel'" ${variant_info_stripped} | grep -v "^#" | wc -l | tr -d ' ')
     
-    if [[ \$MNVs > 0 ]]; then
-        # Untested as of Dec 18 2024
-        echo \$MNVs 'MNV/insdel variants to score'
-        ./MNV.sh -a ${params.genome_build} -r ${ref_genome} -p ${params.prefix} -f ${variant_info} 2>/dev/null
-    else
-        echo 'No MNV/insdel variants to score'
-    fi
+    # echo \$MNVs
+
+    # if [[ \$MNVs > 0 ]]; then
+    #     # Untested as of Dec 18 2024
+    #     echo \$MNVs 'MNV/insdel variants to score'
+    #     echo \${mnv_script_path}
+    #     ls -lah \${mnv_script_path}
+    #     bash \${mnv_script_path} -a ${params.genome_build} -r ${ref_genome} -p ${params.prefix} -f ${variant_info_stripped} #2>/dev/null
+    # else
+    #     echo 'No MNV/insdel variants to score'
+    # fi
 
     ### vcfanno ###
 
-    vcfanno -p \$(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/annotate.${params.genome_build}.toml $variant_info 2>/dev/null \
+    # vcfanno -p \$(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/annotate.${params.genome_build}.toml $variant_info 2>/dev/null \
+    #     | bgzip > ${params.prefix}.splicing_anno.vcf.gz
+    vcfanno -p \$(getconf _NPROCESSORS_ONLN) -lua conf.lua ${annotate_toml_path} $variant_info \
         | bgzip > ${params.prefix}.splicing_anno.vcf.gz
     tabix -f ${params.prefix}.splicing_anno.vcf.gz
 

@@ -10,6 +10,7 @@ while getopts "a:f:p:r:" opt; do
     esac
 done
 
+mkdir -p ./output/working_files
 bcftools filter -i"TYPE!='snp' && TYPE!='indel'" $file | grep -v "^#" > output/working_files/$prefix.mnv.vars.vcf
 
 if [[ $genome == "hg19" ]]; then
@@ -18,6 +19,7 @@ elif [[ $genome == "hg38" ]]; then
     assembly="grch38"
 fi
 
+echo start loop
 while read line; do
     bcftools view -h $file > output/working_files/$prefix.mnv.vcf
     chr=$(echo "$line" | cut -f1)
@@ -32,6 +34,8 @@ while read line; do
 
     spliceAI=$(spliceai -I output/working_files/$prefix.mnv.vcf -A $assembly -R $reference_genome -D 1000 | grep -v "^#" | cut -f 8)
 
+    echo $spliceAI
+
     AG=$(echo "$spliceAI" | cut -f3 -d'|' | sort -nr | head -1)
     AL=$(echo "$spliceAI" | cut -f4 -d'|' | sort -nr | head -1)
     DG=$(echo "$spliceAI" | cut -f5 -d'|' | sort -nr | head -1)
@@ -42,8 +46,17 @@ while read line; do
 
 done < output/working_files/$prefix.mnv.vars.vcf
 
-rm output/working_files/$prefix.mnv.vcf
+echo done loop
+echo ls
+ls
+echo pwd
+pwd
+
+
+# rm output/working_files/$prefix.mnv.vcf
 
 bcftools sort introme_annotate.spliceai.vcf -Oz -o introme_annotate.spliceai.vcf.gz
-rm introme_annotate.spliceai.vcf
+# rm introme_annotate.spliceai.vcf
 tabix -f introme_annotate.spliceai.vcf.gz
+
+echo done $0

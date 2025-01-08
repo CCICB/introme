@@ -213,8 +213,14 @@ workflow {
     // STEP 5: Execute introme functions such as AG_check
     ag_script_path = file('../AG_check/AG_check.py')
     ese_script_path = file('../ESE/scoring.py')
+    // mnv_script_path = file('../MNV.sh')
+    annotate_toml_path = Channel.fromPath(assets_path + '/annotate.' + params.genome_build + '.toml', type: 'file')
+    gencode_toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
     template_header_vcf = Channel.fromPath(assets_path + '/introme_annotate.vcf', type: 'file')
-    introme_functions(ag_script_path, ese_script_path,
+    assets_channel = Channel.fromPath(assets_path)
+
+    introme_functions(ag_script_path, ese_script_path, annotate_toml_path, gencode_toml_path,
+                      assets_channel,
                       variant_info.out.variant_info,
                       variant_info.out.variant_info_stripped,
                       variant_info.out.variant_info_rmanno,
