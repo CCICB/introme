@@ -34,11 +34,11 @@ fields = ["CLNSIG"]
 ops = ["uniq"]
 names = ["clinvar_clinicalSignificance"]
 
-[[annotation]]
-file = "assets/dbscSNV1.1.hg.combined_annotations.tsv"
-fields = ["ada_score", "rf_score"]
-ops = ["self", "self"]
-names = ["dbscSNV_AdaBoost", "dbscSNV_RandomForest"]
+# [[annotation]]
+# file = "assets/dbscSNV1.1.hg.combined_annotations.tsv"
+# fields = ["ada_score", "rf_score"]
+# ops = ["self", "self"]
+# names = ["dbscSNV_AdaBoost", "dbscSNV_RandomForest"]
 
 # [[annotation]]
 # file="assets/spidex.hg38.vcf.gz"

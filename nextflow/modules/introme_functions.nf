@@ -10,6 +10,7 @@ process introme_functions {
         path ese_script_path
         path annotate_toml_path
         path gencode_toml_path
+        path conf_lua_path
         path assets
 
         path variant_info
@@ -78,9 +79,9 @@ process introme_functions {
 
     # vcfanno -p \$(getconf _NPROCESSORS_ONLN) -lua conf.lua annotations/annotate.${params.genome_build}.toml $variant_info 2>/dev/null \
     #     | bgzip > ${params.prefix}.splicing_anno.vcf.gz
-    vcfanno -p \$(getconf _NPROCESSORS_ONLN) -lua conf.lua ${annotate_toml_path} $variant_info \
-        | bgzip > ${params.prefix}.splicing_anno.vcf.gz
-    tabix -f ${params.prefix}.splicing_anno.vcf.gz
+    vcfanno -base-path ./ -p \$(getconf _NPROCESSORS_ONLN) -lua ${conf_lua_path} ${annotate_toml_path} $variant_info \
+        | bgzip > ${params.prefix}.introme_annotate.splicing_anno.vcf.gz
+    tabix -f ${params.prefix}.introme_annotate.splicing_anno.vcf.gz
 
     ####
     """

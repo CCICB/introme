@@ -114,17 +114,17 @@ Output:
  * Import modules 
  */
 include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet } from 'plugin/nf-validation'
-include { data_preprocessing } from './modules/data_preprocessing.nf'
-include { quality_filter } from './modules/quality_filter.nf'
-include { variant_info } from './modules/variant_info.nf'
-include { spliceai } from './modules/spliceai.nf'
-include { mmsplice } from './modules/mmsplice.nf'
-include { spliceogen } from './modules/spliceogen.nf'
-include { pangolin } from './modules/pangolin.nf'
-include { spip } from './modules/spip.nf'
-include { squirl } from './modules/squirl.nf'
-include { introme_functions } from './modules/introme_functions.nf'
-include { splicing_anno } from './modules/splicing_anno.nf'
+include { data_preprocessing }  from './modules/data_preprocessing.nf'
+include { quality_filter }      from './modules/quality_filter.nf'
+include { variant_info }        from './modules/variant_info.nf'
+include { spliceai }            from './modules/spliceai/spliceai.nf'
+include { mmsplice }            from './modules/mmsplice.nf'
+include { spliceogen }          from './modules/spliceogen.nf'
+include { pangolin }            from './modules/pangolin/pangolin.nf'
+include { spip }                from './modules/spip/spip.nf'
+include { squirl }              from './modules/squirl.nf'
+include { introme_functions }   from './modules/introme_functions.nf'
+include { splicing_anno }       from './modules/splicing_anno.nf'
 
 /* 
  * Print summary of supplied parameters
@@ -188,19 +188,19 @@ workflow {
     // STEP 4: Run MMSplice, Splice AI, Pangolin, Spliceogen, Squirls and Spip
 
     // Define paramaters for SpliceAI
-    // distance = 1000
-    // mask = 0
-    // // Run SplicAI
-    // spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
+    distance = 1000
+    mask = 0
+    // Run SplicAI
+    spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
 
     // // Run MMSplice
     // mmsplice(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
-    // // Run Pangolin
-    // pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
+    // Run Pangolin
+    pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
 
-    // // Run Spip
-    // spip(variant_info.out.variant_info_rmanno)
+    // Run Spip
+    spip(variant_info.out.variant_info_rmanno)
 
     // Run Squirl
     // download from patricia server to run squirl??? 
@@ -208,7 +208,7 @@ workflow {
     // squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
 
     // Run Splicoegen
-    // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
+    spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
     ag_script_path = file('../AG_check/AG_check.py')
@@ -216,10 +216,11 @@ workflow {
     // mnv_script_path = file('../MNV.sh')
     annotate_toml_path = Channel.fromPath(assets_path + '/annotate.' + params.genome_build + '.toml', type: 'file')
     gencode_toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
+    conf_lua_path = Channel.fromPath(assets_path + '/conf.lua', type: 'file')
     template_header_vcf = Channel.fromPath(assets_path + '/introme_annotate.vcf', type: 'file')
     assets_channel = Channel.fromPath(assets_path)
 
-    introme_functions(ag_script_path, ese_script_path, annotate_toml_path, gencode_toml_path,
+    introme_functions(ag_script_path, ese_script_path, annotate_toml_path, gencode_toml_path, conf_lua_path,
                       assets_channel,
                       variant_info.out.variant_info,
                       variant_info.out.variant_info_stripped,

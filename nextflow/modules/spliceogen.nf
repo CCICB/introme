@@ -1,5 +1,6 @@
 process spliceogen {
     container "${params.spliceogen_docker_container}"
+    containerOptions = '--entrypoint ""'
     beforeScript 'echo Starting spliceogen'
     afterScript  'echo Completed spliceogen'
     publishDir (path: "${params.outdir}/spliceogen")
@@ -15,9 +16,23 @@ process spliceogen {
     
     script:
         """
-        cd ../Spliceogen
-		gunzip -c $vcf > ${params.prefix}.spliceogen_input.vcf
-		./RUN.sh -input ${params.prefix}.spliceogen_input.vcf -fasta $ref_genome -gtf $gtf
-        """
+        echo pwd
+        pwd
+        echo ls
+        ls
 
+        ORIG_DIR=\$(pwd)
+
+        # cd ../Spliceogen
+		# gunzip -c $vcf > ${params.prefix}.spliceogen_input.vcf
+		
+        cd /Spliceogen
+        ./RUN.sh -input \$(realpath "\$ORIG_DIR/${vcf}") \
+                 -fasta \$(realpath "\$ORIG_DIR/${ref_genome}") \
+                 -gtf \$(realpath "\$ORIG_DIR/${gtf}")
+
+        ls output
+
+        mv output/*_out.txt \$ORIG_DIR/${params.prefix}.spliceogen.txt
+        """
 }   
