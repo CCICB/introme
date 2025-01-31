@@ -138,8 +138,8 @@ log.info paramsSummaryLog(workflow)
 workflow {
     // Input variables
     vcf = Channel.fromPath(params.vcf) 
-    ref_genome = Channel.fromPath(params.ref_genome) 
-    gtf = Channel.fromPath(params.gtf) 
+    ref_genome = Channel.fromPath(params.ref_genome, type: 'file') 
+    gtf = Channel.fromPath(params.gtf, type: 'file') 
     // bed = ""
     // if (params.bed != "") {
     //   bed = Channel.fromPath(params.bed)
@@ -194,56 +194,59 @@ workflow {
     spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
 
     // // Run MMSplice
-    // mmsplice(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
+    // mmsplice(variant_info.out.variant_info_rmanno, ref_genome, gtf)
 
     // Run Pangolin
-    pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
+    // pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
 
     // Run Spip
-    spip(variant_info.out.variant_info_rmanno)
+    // spip(variant_info.out.variant_info_rmanno)
 
     // Run Squirl
     // download from patricia server to run squirl??? 
     // TODO fix squirl
+    SQUIRLS_DATA = Channel.fromPath(assets_path + '/squirls', type: 'dir')
     // squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
 
     // Run Splicoegen
-    spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
+    // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
     ag_script_path = file('../AG_check/AG_check.py')
     ese_script_path = file('../ESE/scoring.py')
     // mnv_script_path = file('../MNV.sh')
-    annotate_toml_path = Channel.fromPath(assets_path + '/annotate.' + params.genome_build + '.toml', type: 'file')
-    gencode_toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
-    conf_lua_path = Channel.fromPath(assets_path + '/conf.lua', type: 'file')
     template_header_vcf = Channel.fromPath(assets_path + '/introme_annotate.vcf', type: 'file')
-    assets_channel = Channel.fromPath(assets_path)
 
-    introme_functions(ag_script_path, ese_script_path, annotate_toml_path, gencode_toml_path, conf_lua_path,
-                      assets_channel,
+    introme_functions(ag_script_path, ese_script_path,
                       variant_info.out.variant_info,
                       variant_info.out.variant_info_stripped,
                       variant_info.out.variant_info_rmanno,
                       ref_genome.first(),
                       template_header_vcf)
 
+    conf_lua = Channel.fromPath(assets_path + '/conf.lua', type: 'file')
+    ensemble_anno_toml = Channel.fromPath(assets_path + '/vcfanno_splicing.toml', type: 'file')
+    // gencode_toml = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
+    
     // STEP 6: Run splicing annotations
-    // splicing_anno(
-    //   variant_info.out.variant_info, 
-    //   spliceai.out.spliceai_output, 
-    //   spliceai.out.spliceai_output_tbi,
-    //   mmsplice.out.mmsplice_output,
-    //   mmsplice.out.mmsplice_output_tbi,
-    //   pangolin.out.pangolin_output,
-    //   pangolin.out.pangolin_output_tbi,
-    //   spip.out.spip_output,
-    //   spip.out.spip_output_tbi,
-    //   //squirl.out.squirl_output,
-    //   //squirl.out.squirl_output_tbi,
-    //   introme_functions.out.annotate_functions,
-    //   introme_functions.out.annotate_functions_tbi
-    // )
+    splicing_anno(
+      variant_info.out.variant_info, // vcf
+      conf_lua,
+      ensemble_anno_toml,
+
+      spliceai.out.spliceai_output, 
+
+      // mmsplice.out.mmsplice_output,
+      // mmsplice.out.mmsplice_output_tbi,
+      // pangolin.out.pangolin_output,
+      // pangolin.out.pangolin_output_tbi,
+      // spip.out.spip_output,
+      // spip.out.spip_output_tbi,
+      //squirl.out.squirl_output,
+      //squirl.out.squirl_output_tbi,
+      introme_functions.out.ese_score,
+      introme_functions.out.ese_score_tbi
+    )
 
     // STEP 7: Generate consensus scores - ML
 }

@@ -1,11 +1,15 @@
 process splicing_anno {
-    container "${params.variant_info_docker_container}"
+    container "${params.introme_functions_docker_container}"
     beforeScript 'echo Starting splicing_anno'
     afterScript  'echo Completed splicing_anno'
     publishDir (path: "${params.outdir}/splicing_anno")
 
+    debug true
+
     input:
         path vcf
+        path conf_lua
+        path ensemble_anno_toml
 
 		// path cadd
 		// path cadd_tbi
@@ -15,34 +19,54 @@ process splicing_anno {
 		// path branchpointer_tbi
 
         path spliceai_output
-		path spliceai_output_tbi
-        path mmsplice_output
-		path mmsplice_output_tbi
-        path pangolin_output
-        path pangolin_output_tbi
-        path spip_output
-        path spip_output_tbi
+		// path spliceai_output_tbi
+        // path mmsplice_output
+		// path mmsplice_output_tbi
+        // path pangolin_output
+        // path pangolin_output_tbi
+        // path spip_output
+        // path spip_output_tbi
         //path squirl_output
         //path squirl_output_tbi
-		path functions
-		path functions_tbi
+		path ese_score
+		path ese_score_tbi
 
     output:
-		path "${params.prefix}.highquality.annotated.filtered.scored.vcf.gz", emit: splicing_anno_output
-        path "${params.prefix}.annotated.tsv", emit: annotated_tsv
+		path "${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf.gz", emit: splicing_anno_output
+        // path "${params.prefix}.annotated.tsv", emit: annotated_tsv
 
     script:
     """
-    vcfanno -lua /introme/annotations/conf.lua /introme/annotations/vcfanno_splicing.toml ${vcf} | bgzip > ${params.prefix}.highquality.annotated.filtered.scored_anno.vcf.gz    
-    
-    wget https://github.com/CCICB/introme/blob/master/annotations/U12.${params.genome_build}.bed.gz
-    wget https://github.com/CCICB/introme/blob/master/annotations/U12.${params.genome_build}.bed.gz.tbi
+    echo splicing_anno
+    bgzip -c ${spliceai_output} > spliceai.vcf.gz
+    tabix -p vcf spliceai.vcf.gz
 
-    vcfanno -lua /introme/annotations/conf.lua /introme/annotations/vcfanno_splicing_run.toml ${params.prefix}.highquality.annotated.filtered.scored_anno.vcf.gz | bgzip > ${params.prefix}.highquality.annotated.filtered.scored.vcf.gz
+    ln -s ${ese_score} introme_annotate.ESE.tsv.gz
+    ln -s ${ese_score_tbi} introme_annotate.ESE.tsv.gz.tbi
     
-    java -jar vcftotsv-assembly-0.1.jar --inputFile ${params.prefix}.highquality.annotated.filtered.scored.vcf.gz --outputFile ${params.prefix}.annotated.tsv
+    pwd
+    ls
 
-    # Sort by chromosome and coordinate
-    sort -k1,1n -k2,2n ${params.prefix}.annotated.tsv
+
+    vcfanno \
+        -base-path ./ \
+        -p \$(getconf _NPROCESSORS_ONLN) \
+        -lua ${conf_lua} \
+        ${ensemble_anno_toml} \
+        ${vcf} > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
+    
+    bgzip -k ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     """
+    // # vcfanno -lua /introme/annotations/conf.lua /introme/annotations/vcfanno_splicing.toml ${vcf} \
+    // #    | bgzip > ${params.prefix}.highquality.annotated.filtered.scored_anno.vcf.gz    
+    
+    // # wget https://github.com/CCICB/introme/blob/master/annotations/U12.${params.genome_build}.bed.gz
+    // # wget https://github.com/CCICB/introme/blob/master/annotations/U12.${params.genome_build}.bed.gz.tbi
+
+    // # vcfanno -lua /introme/annotations/conf.lua /introme/annotations/vcfanno_splicing_run.toml ${params.prefix}.highquality.annotated.filtered.scored_anno.vcf.gz | bgzip > ${params.prefix}.highquality.annotated.filtered.scored.vcf.gz
+    
+    // # java -jar vcftotsv-assembly-0.1.jar --inputFile ${params.prefix}.highquality.annotated.filtered.scored.vcf.gz --outputFile ${params.prefix}.annotated.tsv
+
+    // # Sort by chromosome and coordinate
+    // # sort -k1,1n -k2,2n ${params.prefix}.annotated.tsv
 }

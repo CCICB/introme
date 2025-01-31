@@ -1,6 +1,6 @@
 process mmsplice {
     container "${params.mmsplice_docker_container}"
-    containerOptions '--workdir /'
+    // containerOptions '--workdir /MMSplice_MTSplice'
     beforeScript 'echo Starting mmsplice'
     afterScript  'echo Completed mmsplice'
     publishDir (path: "${params.outdir}/mmsplice")
@@ -14,17 +14,17 @@ process mmsplice {
         path gtf
     
     output:
-        path "mmsplice.vcf.gz", emit:  mmsplice_output
-        path "mmsplice.vcf.gz.tbi", emit: mmsplice_output_tbi
+        path "mmsplice.vcf", emit:  mmsplice_output
+        // path "mmsplice.vcf.gz.tbi", emit: mmsplice_output_tbi
 
     script:
         """
         pwd
         ls
-        cd ../MMSplice_MTSplice
-		python3 run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $gtf --output mmsplice.vcf
-        bgzip mmsplice.vcf
-        tabix mmsplice.vcf.gz
+
+		python3 /MMSplice_MTSplice/run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $gtf --output mmsplice.vcf
+        # bgzip mmsplice.vcf
+        # tabix mmsplice.vcf.gz
         """
 
 }

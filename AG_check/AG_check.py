@@ -45,14 +45,14 @@ def ag_gt_check(strand, alt_seq, ref_seq) -> str:
 
     return append
 
-def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile):
+def main(input_vcf: pysam.VariantFile, reference_genome: pysam.FastaFile, output_path: str):
     # Make copy of introme annotation VCF header
     # TODO: use tmp files
     tempfile.TemporaryFile()
     # shutil.copyfile("annotations/introme_annotate.vcf", "introme_annotate.functions2.vcf")
     # vcf_out = pysam.VariantFile("introme_annotate.functions2.vcf", 'w', header=pysam.VariantFile("annotations/introme_annotate.vcf").header)
 
-    with open('introme_annotate.ag_check.vcf', 'a') as f:
+    with open(output_path, 'a') as f:
         for record in input_vcf:
             chrom = record.chrom
             pos = record.pos # VCF files are 1-based
@@ -109,4 +109,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     shutil.copyfile(header_file_path, output_path)
-    main(input_vcf, reference_genome)
+    main(input_vcf, reference_genome, output_path)

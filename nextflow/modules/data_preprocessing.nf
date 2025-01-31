@@ -22,7 +22,7 @@ process data_preprocessing {
 
         bcftools annotate --rename-chrs $chrRename $input_vcf | bgzip > ${params.prefix}.chr.vcf.gz
         bcftools sort ${params.prefix}.chr.vcf.gz | bgzip > ${params.prefix}.chr.sort.vcf.gz
-        tabix ${params.prefix}.chr.sort.vcf.gz
+        tabix -p vcf ${params.prefix}.chr.sort.vcf.gz
         bcftools filter -r chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY ${params.prefix}.chr.sort.vcf.gz | bgzip > ${params.prefix}.chr_filtered.vcf.gz
 
         bcftools sort ${params.prefix}.chr_filtered.vcf.gz | uniq | bgzip > ${params.prefix}.sorted.vcf.gz  # Ensures the file is sorted correctly prior to subsetting

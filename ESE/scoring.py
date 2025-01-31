@@ -82,19 +82,19 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
                 # motif_scores.append(a)
 
             # diff and ref version
-            ref, alt = motif.calculate_variant_ref_alt(variant_context)
-            diff = round(alt - ref, 3)
-            alt = round(alt, 3)
+            ref_score, alt_score = motif.calculate_variant_ref_alt(variant_context)
+            diff_score = round(alt_score - ref_score, 3)
+            alt_score = round(alt_score, 3)
 
-            alt = "0" if alt == 0 else alt
-            diff = "0" if diff == 0 else diff
+            alt_score = "0" if alt_score == 0 else alt_score
+            diff_score = "0" if diff_score == 0 else diff_score
 
-            motif_scores.extend([alt, diff])
+            motif_scores.extend([alt_score, diff_score])
         
         df_row = [chromosome, position, id_, ref, alt, quality, filter_, info] + motif_scores
         data.append(df_row)
 
-    columns = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]
+    columns = ["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]
     expanded_motif_names = []
     for motif_name in [motif.name for motif in RBPmotifs]:
         expanded_motif_names.append(f"{motif_name}_alt")
@@ -135,13 +135,23 @@ def main():
     vcf_file =  pysam.VariantFile(sys.argv[1])
     output_path = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
+    header_vcf_path = sys.argv[4]
 
     if not is_path_writable(output_path):
         raise ValueError(f"File path '{output_path}' is not writable!")
 
+    # 1) Read all lines from the header file
+    with open(header_vcf_path, 'r') as hf:
+        header_lines = hf.readlines()
+        header_lines = [line for line in header_lines if not line.startswith("#CHROM")]
+
+    # 2) Write those lines to the output first
+    with open(output_path, 'w') as outf:
+        outf.writelines(header_lines)
+
     df = read_vcf(vcf_file, reference_genome, motifs)
 
-    df.to_csv(output_path, encoding='utf-8', index=False, sep='\t')
+    df.to_csv(output_path, mode='a', encoding='utf-8', index=False, sep='\t')
 
 if __name__ == "__main__":
     main()

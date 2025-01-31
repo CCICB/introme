@@ -1,23 +1,29 @@
 process squirl {
     container "${params.squirl_docker_container}"
-    containerOptions '--workdir /'
+    // containerOptions '--workdir /Squirls'
     beforeScript 'echo Starting squirl'
     afterScript  'echo Completed squirl'
     publishDir (path: "${params.outdir}/squirl")
     debug  true
 
     input:
-        path SQUIRLS_DATA // This needs to be downloaded - update dockerfile to accomadate for this
+        path SQUIRLS_DATA // This needs to be downloaded on the computer that runs main.nf
         path vcf
 
     output:
-        path "squirl.vcf.gz", emit:  squirl_output
-        path "squirl.vcf.gz.tbi", emit: squirl_output_tbi
+        path "squirl.tsv", emit:  squirl_tsv_output
 
     script:
         """
-        java -jar squirls-cli/target/squirls-cli-2.0.1.jar annotate-vcf -d $SQUIRLS_DATA $vcf squirl.vcf -f vcf  
-        bgzip squirl.vcf
-        tabix squirl.vcf.gz
+        pwd
+        ls
+        echo $SQUIRLS_DATA
+        ORIG_DIR=\$(pwd)
+
+        # cd /Squirls
+
+        # java -jar squirls-cli/target/squirls-cli-2.0.1.jar --help
+        java -jar /Squirls/squirls-cli/target/squirls-cli-2.0.1.jar annotate-vcf \
+            --report-features -d ${SQUIRLS_DATA} -f tsv ${vcf} squirl 
         """
 }

@@ -28,7 +28,7 @@ process variant_info {
 
     # \${params.prefix}.variant_info.vcf.gz is equivalent to \$prefix.subset.highquality.annotated.vcf.gz
     vcfanno -p \$(getconf _NPROCESSORS_ONLN) -lua $conf temp.toml $input_vcf | bgzip > ${params.prefix}.variant_info.vcf.gz
-    tabix ${params.prefix}.variant_info.vcf.gz
+    tabix -p vcf ${params.prefix}.variant_info.vcf.gz
 
     # parts of old "fast" mode code
     # bcftools filter --threads \$(getconf _NPROCESSORS_ONLN) -i"(gnomAD_PM_AF<=${params.allele_frequency} || gnomAD_PM_AF='.')" ${params.prefix}.variant_info.vcf.gz | bgzip > ${params.prefix}.variant_info.filtered.vcf.gz

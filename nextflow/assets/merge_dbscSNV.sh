@@ -1,4 +1,5 @@
 # /bin/sh
+# In case you download dbscSNV and it comes separately per chromosome
 
 # Initialize the combined file with the header from chr1
 head -n 1 dbscSNV1.1.chr1 > combined_annotations.tsv
