@@ -44,7 +44,7 @@ process introme_functions {
     ## NOTE here, the previous version of ESE scoring removed the header lines, so next step is to prepend it back
     # cat annotations/introme_annotate.vcf \$out_dir/working_files/\$prefix.subset.highquality.ESE.vcf | bgzip > introme_annotate.ESE.vcf
 
-    python3 ${ese_script_path} ${variant_info_stripped} ./${params.prefix}.introme_annotate.ESE.vcf ${ref_genome} ${template_header_vcf}
+    python3 ${ese_script_path} ${variant_info_stripped} ./${params.prefix}.introme_annotate.ESE.vcf ${ref_genome}
     mv ${params.prefix}.introme_annotate.ESE.vcf ${params.prefix}.introme_annotate.ESE.tsv
     bgzip -k ${params.prefix}.introme_annotate.ESE.tsv
     tabix -s1 -b2 -e2 ${params.prefix}.introme_annotate.ESE.tsv.gz

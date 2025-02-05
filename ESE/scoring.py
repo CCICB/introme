@@ -135,23 +135,13 @@ def main():
     vcf_file =  pysam.VariantFile(sys.argv[1])
     output_path = sys.argv[2]
     reference_genome = pysam.FastaFile(sys.argv[3])
-    header_vcf_path = sys.argv[4]
 
     if not is_path_writable(output_path):
         raise ValueError(f"File path '{output_path}' is not writable!")
 
-    # 1) Read all lines from the header file
-    with open(header_vcf_path, 'r') as hf:
-        header_lines = hf.readlines()
-        header_lines = [line for line in header_lines if not line.startswith("#CHROM")]
-
-    # 2) Write those lines to the output first
-    with open(output_path, 'w') as outf:
-        outf.writelines(header_lines)
-
     df = read_vcf(vcf_file, reference_genome, motifs)
 
-    df.to_csv(output_path, mode='a', encoding='utf-8', index=False, sep='\t')
+    df.to_csv(output_path, mode='w', encoding='utf-8', index=False, sep='\t')
 
 if __name__ == "__main__":
     main()

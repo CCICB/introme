@@ -20,7 +20,7 @@ process splicing_anno {
 
         path spliceai_output
 		// path spliceai_output_tbi
-        // path mmsplice_output
+        path mmsplice_output
 		// path mmsplice_output_tbi
         // path pangolin_output
         // path pangolin_output_tbi
@@ -28,6 +28,8 @@ process splicing_anno {
         // path spip_output_tbi
         //path squirl_output
         //path squirl_output_tbi
+		path ag_check
+		path ag_check_tbi
 		path ese_score
 		path ese_score_tbi
 
@@ -38,8 +40,15 @@ process splicing_anno {
     script:
     """
     echo splicing_anno
+    sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1\\&\\2/g' ${spliceai_output} #
     bgzip -c ${spliceai_output} > spliceai.vcf.gz
     tabix -p vcf spliceai.vcf.gz
+
+    bgzip -c ${mmsplice_output} > mmsplice.vcf.gz
+    tabix -p vcf mmsplice.vcf.gz
+
+    ln -s ${ag_check} introme_annotate.ag_check.vcf.gz
+    ln -s ${ag_check_tbi} introme_annotate.ag_check.vcf.gz.tbi
 
     ln -s ${ese_score} introme_annotate.ESE.tsv.gz
     ln -s ${ese_score_tbi} introme_annotate.ESE.tsv.gz.tbi

@@ -7,100 +7,100 @@
 # ops = ["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
 # names = ["MMSplice_alt_acceptor", "MMSplice_alt_acceptor_intron", "MMSplice_alt_donor", "MMSplice_alt_donor_intron", "MMSplice_alt_exon", "MMSplice_delta_logit_PSI", "MMSplice_pathogenicity", "MMSplice_ref_acceptor", "MMSplice_ref_acceptor_intron", "MMSplice_ref_donor", "MMSplice_ref_donor_intron", "MMSplice_ref_exon"]
 
-# # Introme AG/GT Computation (computed during Introme)
-# [[annotation]]
-# file = "introme_annotate.functions.vcf.gz"
-# fields = ["variant_type", "ag_created", "ag_lost", "gt_created", "gt_lost"]
-# ops = ["uniq","uniq","uniq", "uniq", "uniq"]
-# names = ["Variant_Type", "AG_Created", "AG_Lost", "GT_Created", "GT_Lost"]
+# Introme AG/GT Computation (computed during Introme)
+[[annotation]]
+file = "introme_annotate.ag_check.vcf.gz"
+fields = ["variant_type", "ag_created", "ag_lost", "gt_created", "gt_lost"]
+ops = ["uniq","uniq","uniq", "uniq", "uniq"]
+names = ["Variant_Type", "AG_Created", "AG_Lost", "GT_Created", "GT_Lost"]
 
 # ESE Scoring (computed during Introme)
 [[annotation]]
 # file = "introme_annotate.ESE.vcf.gz"
-file = "JAN_24__test.introme_annotate.ESE.tsv.gz"
+file = "introme_annotate.ESE.tsv.gz"
 columns = [9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]
 # names =  ["A1_Hazeem_alt"]
 # ops = ["self"]
 # columns = [3]
 # fields =  ["A1_Hazeem_alt", "A1_Hazeem_diff", "A1_Hazeem_july_alt", "A1_Hazeem_july_diff", "A1_neuBG_alt", "A1_neuBG_diff", "A1_winBG_alt", "A1_winBG_diff", "SRSF1_alt", "SRSF1_diff", "SRSF1_igM_alt", "SRSF1_igM_diff", "SRSF2_alt", "SRSF2_diff", "SRSF5_alt", "SRSF5_diff", "SRSF6_alt", "SRSF6_diff"]
 ops = ["mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean"]
-names =  ["A1_Hazeem_alt", "A1_Hazeem_diff", "A1_Hazeem_july_alt", "A1_Hazeem_july_diff", "A1_neuBG_alt", "A1_neuBG_diff", "A1_winBG_alt", "A1_winBG_diff", "SRSF1_alt", "SRSF1_diff", "SRSF1_igM_alt", "SRSF1_igM_diff", "SRSF2_alt", "SRSF2_diff", "SRSF5_alt", "SRSF5_diff", "SRSF6_alt", "SRSF6_diff"]
+names =  ["ESE_A1_Hazeem_alt", "ESE_A1_Hazeem_diff", "ESE_A1_Hazeem_july_alt", "ESE_A1_Hazeem_july_diff", "ESE_A1_neuBG_alt", "ESE_A1_neuBG_diff", "ESE_A1_winBG_alt", "ESE_A1_winBG_diff", "ESE_SRSF1_alt", "ESE_SRSF1_diff", "ESE_SRSF1_igM_alt", "ESE_SRSF1_igM_diff", "ESE_SRSF2_alt", "ESE_SRSF2_diff", "ESE_SRSF5_alt", "ESE_SRSF5_diff", "ESE_SRSF6_alt", "ESE_SRSF6_diff"]
 
-# # SpliceAI Annotations
-# #SpliceAI VCF Processing
-# [[annotation]]
-# file = "spliceai.vcf.gz"
-# fields = ["SpliceAI"]
-# names = ["SpliceAI_raw"]
-# ops = ["self"]
+# SpliceAI Annotations
+#SpliceAI VCF Processing
+[[annotation]]
+file = "spliceai.vcf.gz"
+fields = ["SpliceAI"]
+names = ["SpliceAI_raw"]
+ops = ["self"]
 
-# #SpliceAI VCF Processing
-# [[postannotation]]
-# fields = ["SpliceAI_raw"]
-# op = "lua:spliceai(SpliceAI_raw)"
-# type = "String"
-# name = "SpliceAI_processed"
+#SpliceAI VCF Processing
+[[postannotation]]
+fields = ["SpliceAI_raw"]
+op = "lua:spliceai(SpliceAI_raw)"
+type = "String"
+name = "SpliceAI_processed"
 
-# # SpliceAI DS_AG
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[3]"
-# type = "Float"
-# name = "DS_AG"
+# SpliceAI DS_AG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[4]"
+type = "Float"
+name = "DS_AG"
 
-# # SpliceAI DS_AL
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[4]"
-# type = "Float"
-# name = "DS_AL"
+# SpliceAI DS_AL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[5]"
+type = "Float"
+name = "DS_AL"
 
-# # SpliceAI DS_DG
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[5]"
-# type = "Float"
-# name = "DS_DG"
+# SpliceAI DS_DG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[6]"
+type = "Float"
+name = "DS_DG"
 
-# # SpliceAI DS_DL
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[6]"
-# type = "Float"
-# name = "DS_DL"
+# SpliceAI DS_DL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[7]"
+type = "Float"
+name = "DS_DL"
 
-# # SpliceAI DP_AG
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[7]"
-# type = "Float"
-# name = "DP_AG"
+# SpliceAI DP_AG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[8]"
+type = "Float"
+name = "DP_AG"
 
-# # SpliceAI DP_AL
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[8]"
-# type = "Float"
-# name = "DP_AL"
+# SpliceAI DP_AL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[9]"
+type = "Float"
+name = "DP_AL"
 
-# # SpliceAI DP_DG
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[9]"
-# type = "Float"
-# name = "DP_DG"
+# SpliceAI DP_DG
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[10]"
+type = "Float"
+name = "DP_DG"
 
-# # SpliceAI DP_DL
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[10]"
-# type = "Float"
-# name = "DP_DL"
+# SpliceAI DP_DL
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[11]"
+type = "Float"
+name = "DP_DL"
 
-# # SpliceAI delete
-# [[postannotation]]
-# fields = ["SpliceAI_processed", "SpliceAI_raw"]
-# op = "delete"
+# SpliceAI delete
+[[postannotation]]
+fields = ["SpliceAI_processed", "SpliceAI_raw"]
+op = "delete"
 
 
 # # MMSplice (computed during Introme)

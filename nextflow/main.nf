@@ -179,10 +179,10 @@ workflow {
     // STEP 3: annotate the subsetted VCF with useful information, to be used for filtering downstream
     //         and run hard filtering on the values of annotations added in the previous step
     assets_path = workflow.projectDir + '/assets/'
-    conf_path =  Channel.fromPath(assets_path + '/conf.lua', type: 'file')
+    conf_pre_lua_path =  Channel.fromPath(assets_path + '/conf_pre.lua', type: 'file')
     toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
     // assets = Channel.fromPath(path, type: 'any')
-    variant_info(anno_input, data_preprocessing.out.sorted_gtf, conf_path, toml_path)
+    variant_info(anno_input, data_preprocessing.out.sorted_gtf, conf_pre_lua_path, toml_path)
 
 
     // STEP 4: Run MMSplice, Splice AI, Pangolin, Spliceogen, Squirls and Spip
@@ -194,7 +194,7 @@ workflow {
     spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
 
     // // Run MMSplice
-    // mmsplice(variant_info.out.variant_info_rmanno, ref_genome, gtf)
+    mmsplice(variant_info.out.variant_info_rmanno, ref_genome, gtf)
 
     // Run Pangolin
     // pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
@@ -224,19 +224,19 @@ workflow {
                       ref_genome.first(),
                       template_header_vcf)
 
-    conf_lua = Channel.fromPath(assets_path + '/conf.lua', type: 'file')
+    conf_ensemble_lua_path =  Channel.fromPath(assets_path + '/conf_ensemble.lua', type: 'file')
     ensemble_anno_toml = Channel.fromPath(assets_path + '/vcfanno_splicing.toml', type: 'file')
     // gencode_toml = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
     
     // STEP 6: Run splicing annotations
     splicing_anno(
       variant_info.out.variant_info, // vcf
-      conf_lua,
+      conf_ensemble_lua_path,
       ensemble_anno_toml,
 
       spliceai.out.spliceai_output, 
 
-      // mmsplice.out.mmsplice_output,
+      mmsplice.out.mmsplice_output,
       // mmsplice.out.mmsplice_output_tbi,
       // pangolin.out.pangolin_output,
       // pangolin.out.pangolin_output_tbi,
@@ -244,6 +244,8 @@ workflow {
       // spip.out.spip_output_tbi,
       //squirl.out.squirl_output,
       //squirl.out.squirl_output_tbi,
+      introme_functions.out.ag_check,
+      introme_functions.out.ag_check_tbi,
       introme_functions.out.ese_score,
       introme_functions.out.ese_score_tbi
     )

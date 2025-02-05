@@ -22,8 +22,11 @@ process spliceai {
     script:
         """
         wget https://compbio.ccia.org.au/introme/files/${params.genome_build}/${params.spliceai_db} --no-check-certificate
+        touch spliceai.vcf
+        sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1&\\2/g' spliceai.vcf
         ls -lah
         spliceai -I ${vcf} -O ${params.prefix}.spliceai.vcf -R ${ref_genome} -A ${params.spliceai_db} -D ${distance} -M ${mask} 1>./log
+
 
         # Check if need to sort 
         # bgzip spliceai.vcf 
