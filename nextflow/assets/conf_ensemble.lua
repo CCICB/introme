@@ -102,6 +102,8 @@ function splitSpliceAIRecords(str)
     local pos = 1
     local len = #str
 
+	-- Debug print statement: (note this will print to vcf):
+	-- print(string.format("Received: %s", str))
     while pos <= len do
         local start = pos
         local fieldCount = 0
@@ -140,8 +142,9 @@ function splitSpliceAIRecords(str)
 
         table.insert(records, record)
         pos = recordEnd + 1  -- Move past the comma (if present)
-		-- Debug print statement here:
-		print(string.format("Parsed record: %s", record))
+
+		-- Debug print statement (note this will print to vcf):
+		-- print(string.format("Parsed record: %s", record))
     end
 
     return records

@@ -190,7 +190,7 @@ workflow {
     // Define paramaters for SpliceAI
     distance = 1000
     mask = 0
-    // Run SplicAI
+    // Run SpliceAI
     spliceai(variant_info.out.variant_info_rmanno, ref_genome.first(), distance, mask)
 
     // // Run MMSplice

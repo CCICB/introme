@@ -4,7 +4,7 @@ process mmsplice {
     beforeScript 'echo Starting mmsplice'
     afterScript  'echo Completed mmsplice'
     publishDir (path: "${params.outdir}/mmsplice")
-    cpus 4
+    cpus 8
     memory '10 GB'
     debug  true
 
