@@ -214,7 +214,7 @@ function pangolin(entry) -- processes Pangolin scores
 		return entry -- returns original value if single entry
 	elseif t == "table" then
 		local maximums = {}
-		for i=1,#entry do -- calculate the maximum Pangolin score of GAIN_POS, GAIN_SCORE, LOSS_POS, LOSS_SCORE for each entry
+		for i=1,#entry do -- calculate the maximum Pangolin score of GAIN_SCORE, LOSS_SCORE for each entry
 			local gain = split(entry[i], "|")[2]
 			local loss = split(entry[i], "|")[3]
 			maximums[i] = math.max(tonumber(split(gain, ":")[2]), math.abs(tonumber(split(loss, ":")[2])))
@@ -223,30 +223,72 @@ function pangolin(entry) -- processes Pangolin scores
 	end
 end
 
-function spip(entry) -- processes precomputed SPiP scores
-	local t = type(entry)
-	if t == "string" then
-		return entry -- returns original value if single entry
-	elseif t == "table" then
-		local interconfident = tonumber(split(entry[i], "|")[4])
-		maximums[i] = tonumber(split(interconfident, "%")[1]) * 1.0
-		return entry[indexOf(maximums, math.max(unpack(maximums)))] -- returns the full record which contains the maximum InterConfident score
-	end
+-- Processes precomputed SPiP scores:
+--   - If a single string is given, it returns it directly.
+--   - If a table (multiple entries) is given, it returns the entry with the highest main score.
+function spip(entry)
+    if type(entry) == "string" then
+        return entry
+    elseif type(entry) == "table" then
+        local bestScore = -math.huge
+        local bestEntry = nil
+        for i, rec in ipairs(entry) do
+            local score = spip_interconfident(rec)
+            if score and score > bestScore then
+                bestScore = score
+                bestEntry = rec
+            end
+        end
+        return bestEntry
+    end
+    return nil
 end
 
-function spip_interconfident(str) -- get the InterConfident Score
-	local interconfident = tonumber(split(str, "|")[4])
-	return tonumber(split(interconfident, "%")[1]) * 1.0
+-- Helper function to parse the InterConfident field.
+-- Expected icField format: "00.5 % [00.01 % - 02.75 %]"
+function parse_interconfident(icField)
+    -- Build a pattern that extracts three groups:
+    -- 1. The main score, 2. The min score, 3. The max score.
+    --
+    -- Breakdown of the pattern:
+    --   ^(%d+%.?%d*)       => captures the main score (e.g. "00.5")
+    --   %s*%%%s*           => matches the literal "%" with optional spaces around it
+    --   %[%s*              => matches the literal "[" with optional spaces
+    --   (%d+%.?%d*)        => captures the min score (e.g. "00.01")
+    --   %s*%%%s*           => matches the literal "%" with optional spaces
+    --   %-%s*              => matches the literal "-" (dash) with optional spaces
+    --   (%d+%.?%d*)        => captures the max score (e.g. "02.75")
+    --   %s*%%%s*%]$        => matches the literal "%" and the closing "]", with optional spaces.
+    local pattern = "^(%d+%.?%d*)%s*%%" ..
+                    "%s*%[" ..
+                    "%s*(%d+%.?%d*)" ..
+                    "%s*%%" ..
+                    "%s*%-%s*(%d+%.?%d*)" ..
+                    "%s*%%%s*%]$"
+    local main, min, max = string.match(icField, pattern)
+    return tonumber(main), tonumber(min), tonumber(max)
 end
 
-function spip_min(str) -- get the InterConfident Min Range
-	local interconfident = tonumber(split(str, "|")[4])
-	local segment = tonumber(split(interconfident, "%")[2])
-	return tonumber(string.match(segment, "%d+%.?%d*")) * 1.0
+-- Returns the main InterConfident score from a SPiP annotation string.
+function spip_interconfident(str)
+    local fields = split(str, "|")
+    local icField = fields[4] or ""
+    local main, min, max = parse_interconfident(icField)
+    return main
 end
 
-function spip_max(str) -- get the InterConfident Max Range
-	local interconfident = tonumber(split(str, "|")[4])
-	local segment = tonumber(split(interconfident, "%")[3])
-	return tonumber(string.match(segment, "%d+%.?%d*")) * 1.0
+-- Returns the minimum InterConfident score from a SPiP annotation string.
+function spip_min(str)
+    local fields = split(str, "|")
+    local icField = fields[4] or ""
+    local main, min, max = parse_interconfident(icField)
+    return min
+end
+
+-- Returns the maximum InterConfident score from a SPiP annotation string.
+function spip_max(str)
+    local fields = split(str, "|")
+    local icField = fields[4] or ""
+    local main, min, max = parse_interconfident(icField)
+    return max
 end

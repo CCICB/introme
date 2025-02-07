@@ -22,10 +22,11 @@ process splicing_anno {
 		// path spliceai_output_tbi
         path mmsplice_output
 		// path mmsplice_output_tbi
-        // path pangolin_output
+        path pangolin_output
         // path pangolin_output_tbi
-        // path spip_output
+        path spip_output
         // path spip_output_tbi
+        path spliceogen_output
         //path squirl_output
         //path squirl_output_tbi
 		path ag_check
@@ -46,6 +47,17 @@ process splicing_anno {
 
     bgzip -c ${mmsplice_output} > mmsplice.vcf.gz
     tabix -p vcf mmsplice.vcf.gz
+
+    bgzip -c ${pangolin_output} > pangolin.vcf.gz
+    tabix -p vcf pangolin.vcf.gz
+
+    # vcfanno needs an = somewhere in header lines
+    sed -i -E 's_(##SPiP output) (v[0-9]+.[0-9]*)_\\1=\\2_' ${spip_output}
+    bgzip -c ${spip_output} > spip.vcf.gz
+    tabix -p vcf spip.vcf.gz
+
+    bgzip -c ${spliceogen_output} > spliceogen.tsv.gz
+    tabix -s1 -b2 -e3 spliceogen.tsv.gz
 
     ln -s ${ag_check} introme_annotate.ag_check.vcf.gz
     ln -s ${ag_check_tbi} introme_annotate.ag_check.vcf.gz.tbi

@@ -1,12 +1,5 @@
 # File used by VCFanno to define how a VCF file should be annotated
 
-# # MMSplice (computed during Introme)
-# [[annotation]]
-# file = "introme_annotate.mmsplice.vcf.gz"
-# fields = ["alt_acceptor", "alt_acceptor_intron", "alt_donor", "alt_donor_intron", "alt_exon", "delta_logit_PSI", "pathogenicity", "ref_acceptor", "ref_acceptor_intron", "ref_donor", "ref_donor_intron", "ref_exon"]
-# ops = ["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
-# names = ["MMSplice_alt_acceptor", "MMSplice_alt_acceptor_intron", "MMSplice_alt_donor", "MMSplice_alt_donor_intron", "MMSplice_alt_exon", "MMSplice_delta_logit_PSI", "MMSplice_pathogenicity", "MMSplice_ref_acceptor", "MMSplice_ref_acceptor_intron", "MMSplice_ref_donor", "MMSplice_ref_donor_intron", "MMSplice_ref_exon"]
-
 # Introme AG/GT Computation (computed during Introme)
 [[annotation]]
 file = "introme_annotate.ag_check.vcf.gz"
@@ -23,7 +16,7 @@ columns = [9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]
 # ops = ["self"]
 # columns = [3]
 # fields =  ["A1_Hazeem_alt", "A1_Hazeem_diff", "A1_Hazeem_july_alt", "A1_Hazeem_july_diff", "A1_neuBG_alt", "A1_neuBG_diff", "A1_winBG_alt", "A1_winBG_diff", "SRSF1_alt", "SRSF1_diff", "SRSF1_igM_alt", "SRSF1_igM_diff", "SRSF2_alt", "SRSF2_diff", "SRSF5_alt", "SRSF5_diff", "SRSF6_alt", "SRSF6_diff"]
-ops = ["mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean", "mean"]
+ops = ["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
 names =  ["ESE_A1_Hazeem_alt", "ESE_A1_Hazeem_diff", "ESE_A1_Hazeem_july_alt", "ESE_A1_Hazeem_july_diff", "ESE_A1_neuBG_alt", "ESE_A1_neuBG_diff", "ESE_A1_winBG_alt", "ESE_A1_winBG_diff", "ESE_SRSF1_alt", "ESE_SRSF1_diff", "ESE_SRSF1_igM_alt", "ESE_SRSF1_igM_diff", "ESE_SRSF2_alt", "ESE_SRSF2_diff", "ESE_SRSF5_alt", "ESE_SRSF5_diff", "ESE_SRSF6_alt", "ESE_SRSF6_diff"]
 
 # SpliceAI Annotations
@@ -248,87 +241,114 @@ name = "MMSplice_ref_exon"
 fields = ["MMSplice_raw", "MMSplice_processed"]
 op = "delete"
 
-# # Pangolin Annotations
-# # Pangolin VCF Processing
-# [[annotation]]
-# file = "pangolin.vcf.gz"
-# fields = ["Pangolin"]
-# names = ["Pangolin_raw"]
-# ops = ["self"]
+# Pangolin Annotations
+# Pangolin VCF Processing
+[[annotation]]
+file = "pangolin.vcf.gz"
+fields = ["Pangolin"]
+names = ["Pangolin_raw"]
+ops = ["self"]
 
-# # Pangolin VCF Processing
-# [[postannotation]]
-# fields = ["Pangolin_raw"]
-# op = "lua:pangolin(Pangolin_raw)"
-# type = "String"
-# name = "Pangolin_processed"
+# Pangolin VCF Processing
+[[postannotation]]
+fields = ["Pangolin_raw"]
+op = "lua:pangolin(Pangolin_raw)"
+type = "String"
+name = "Pangolin_processed"
 
-# # Pangolin gain
-# [[postannotation]]
-# fields = ["Pangolin_processed"]
-# op = "lua:split(split(Pangolin_processed,'|')[2], ':')[2]"
-# type = "Float"
-# name = "Pangolin_Gain"
+# Pangolin gain
+[[postannotation]]
+fields = ["Pangolin_processed"]
+op = "lua:split(split(Pangolin_processed,'|')[2], ':')[2]"
+type = "Float"
+name = "Pangolin_Gain"
 
-# # Pangolin loss
-# [[postannotation]]
-# fields = ["Pangolin_processed"]
-# op = "lua:split(split(Pangolin_processed,'|')[3], ':')[2]"
-# type = "Float"
-# name = "Pangolin_Loss"
+# Pangolin loss
+[[postannotation]]
+fields = ["Pangolin_processed"]
+op = "lua:split(split(Pangolin_processed,'|')[3], ':')[2]"
+type = "Float"
+name = "Pangolin_Loss"
 
-# # Pangolin delete
-# [[postannotation]]
-# fields = ["Pangolin_processed", "Pangolin_raw"]
-# op = "delete"
+# Pangolin delete
+[[postannotation]]
+fields = ["Pangolin_processed", "Pangolin_raw"]
+op = "delete"
 
-# # SPIP Annotations
-# # SPIP VCF Processing
-# [[annotation]]
-# file = "spip.vcf.gz"
-# fields = ["SPiP"]
-# names = ["SPiP_raw"]
-# ops = ["self"]
+# SPIP Annotations
+# SPIP VCF Processing
+##INFO=<ID=SPiP,Number=.,Type=String,Description="SPiPs predictions of splicing defects.
+# Format: 'Alt|varID|Interpretation|InterConfident|SPiPscore|strand|gNomen|varType|ntChange|
+#           1 | 2   | 3            | 4            | 5       | 6    | 7    | 8     | 9      |
+# ExonInfo|exonSize|transcript|gene|NearestSS|DistSS|RegType|SPiCEproba|SPiCEinter_2thr|
+#  10     | 11     | 12       | 13 | 14      | 15   | 16    | 17       | 18            |
+# deltaMES|BP|mutInPBarea|deltaESRscore|posCryptMut|sstypeCryptMut|probaCryptMut|
+# classProbaCryptMut|nearestSStoCrypt|nearestPosSStoCrypt|nearestDistSStoCrypt|posCryptWT|
+# probaCryptWT|classProbaCryptWT|posSSPhysio|probaSSPhysio|classProbaSSPhysio|probaSSPhysioMut|
+# classProbaSSPhysioMut'">
 
-# # SPIP VCF Processing
-# [[postannotation]]
-# fields = ["SPiP_raw"]
-# op = "lua:spip(SPiP_raw)"
-# type = "String"
-# name = "SPiP_processed"
+[[annotation]]
+file = "spip.vcf.gz"
+fields = ["SPiP"]
+names = ["SPiP_raw"]
+ops = ["self"]
 
-# # SPIP Interconfident score
-# [[postannotation]]
-# fields = ["SPiP_processed"]
-# op = "lua:spip_interconfident(SPiP_processed)"
-# type = "Float"
-# name = "SPIP_Score"
+# SPIP VCF Processing
+[[postannotation]]
+fields = ["SPiP_raw"]
+op = "lua:spip(SPiP_raw)"
+type = "String"
+name = "SPiP_processed"
 
-# # SPIP Interconfident min range
-# [[postannotation]]
-# fields = ["SPiP_processed"]
-# op = "lua:spip_min(SPiP_processed)"
-# type = "Float"
-# name = "SPIP_Range_Min"
+# SPIP Interconfident score
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:spip_interconfident(SPiP_processed)"
+type = "Float"
+name = "SPIP_Score"
 
-# # SPIP Interconfident min range
-# [[postannotation]]
-# fields = ["SPiP_processed"]
-# op = "lua:spip_max(SPiP_processed)"
-# type = "Float"
-# name = "SPIP_Range_Max"
+# SPIP Interconfident min range
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:spip_min(SPiP_processed)"
+type = "Float"
+name = "SPIP_Range_Min"
 
-# # SPIP SPiCE Probability score
-# [[postannotation]]
-# fields = ["SPiP_processed"]
-# op = "lua:split(SPiP_processed,'|')[17]"
-# type = "Float"
-# name = "SPiCE_Prob"
+# SPIP Interconfident min range
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:spip_max(SPiP_processed)"
+type = "Float"
+name = "SPIP_Range_Max"
 
-# # SPIP delete
-# [[postannotation]]
-# fields = ["SPiP_processed", "SPiP_raw"]
-# op = "delete"
+# SPIP SPiCE Probability score
+[[postannotation]]
+fields = ["SPiP_processed"]
+op = "lua:split(SPiP_processed,'|')[17]"
+type = "Float"
+name = "SPiCE_Prob"
+
+# SPIP delete
+[[postannotation]]
+fields = ["SPiP_processed", "SPiP_raw"]
+op = "delete"
+
+# Spliceogen Annotations
+# CHR	START	END	REF	ALT	GENE	withinSite	mesDonRef	mesDonAlt	mesAccRef	mesAccAlt	gsDonRef
+#  1     2       3   4   5   6       7           8           9           10          11          12
+# gsDonAlt	gsAccRef	gsAccAlt	ESEmaxRef	ESEmaxAlt	ESSminRef	ESSminAlt	donGainP	accGainP	donLossP	accLossP
+#  13        14          15          16          17          18          19          20          21          22          23
+
+[[annotation]]
+file = "spliceogen.tsv.gz"
+columns = [8, 9, 10, 11,
+            16, 17, 18, 19,
+            20, 21, 22, 23]
+names = ["mesDonRef", "mesDonAlt", "mesAccRef", "mesAccAlt",
+    "ESEmaxRef", "ESEmaxAlt", "ESSminRef", "ESSminAlt",
+    "DonGainP", "AccGainP", "DonLossP", "AccLossP"]
+ops = ["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
+
 
 # # Squirl Annotations
 # # Squirl VCF Processing

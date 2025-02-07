@@ -12,7 +12,7 @@ process spliceogen {
         path gtf
     
     output:
-        path "${params.prefix}.spliceogen.txt", emit:  spliceogen_output
+        path "${params.prefix}.spliceogen.tsv", emit:  spliceogen_output
     
     script:
         """
@@ -33,6 +33,6 @@ process spliceogen {
 
         ls output
 
-        mv output/*_out.txt \$ORIG_DIR/${params.prefix}.spliceogen.txt
+        mv output/*_out.txt \$ORIG_DIR/${params.prefix}.spliceogen.tsv
         """
 }   

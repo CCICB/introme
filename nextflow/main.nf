@@ -197,10 +197,10 @@ workflow {
     mmsplice(variant_info.out.variant_info_rmanno, ref_genome, gtf)
 
     // Run Pangolin
-    // pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
+    pangolin(variant_info.out.variant_info_rmanno, ref_genome.first())
 
     // Run Spip
-    // spip(variant_info.out.variant_info_rmanno)
+    spip(variant_info.out.variant_info_rmanno)
 
     // Run Squirl
     // download from patricia server to run squirl??? 
@@ -209,7 +209,7 @@ workflow {
     // squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
 
     // Run Splicoegen
-    // spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
+    spliceogen(variant_info.out.variant_info_rmanno, ref_genome.first(), gtf.first())
 
     // STEP 5: Execute introme functions such as AG_check
     ag_script_path = file('../AG_check/AG_check.py')
@@ -238,10 +238,12 @@ workflow {
 
       mmsplice.out.mmsplice_output,
       // mmsplice.out.mmsplice_output_tbi,
-      // pangolin.out.pangolin_output,
+
+      pangolin.out.pangolin_output,
       // pangolin.out.pangolin_output_tbi,
-      // spip.out.spip_output,
+      spip.out.spip_output,
       // spip.out.spip_output_tbi,
+      spliceogen.out.spliceogen_output,
       //squirl.out.squirl_output,
       //squirl.out.squirl_output_tbi,
       introme_functions.out.ag_check,
