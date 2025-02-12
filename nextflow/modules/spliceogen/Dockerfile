@@ -8,8 +8,11 @@ LC_ALL=C.UTF-8
 
 # Install required system packages and clean up APT cache
 RUN apt-get update && \
-apt-get install -y --no-install-recommends openjdk-11-jre-headless bedtools git && \
-rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+        openjdk-11-jre-headless \
+        bedtools \
+        git \
+    && rm -rf /var/lib/apt/lists/*
 
 # Define build-time variables
 ARG SPLICEOGEN_REPO=https://github.com/VCCRI/Spliceogen.git
@@ -30,3 +33,5 @@ RUN chmod +x RUN.sh
 
 # Set the entrypoint to run the application
 ENTRYPOINT ["./RUN.sh"]
+
+LABEL version="v2.0"

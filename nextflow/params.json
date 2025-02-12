@@ -4,7 +4,7 @@
     "mmsplice_docker_container" : "gabyou/mmsplice:v1.0",
     "spliceogen_docker_container" : "headoncollusion/spliceogen:v2.0",
     "pangolin_docker_container" : "headoncollusion/pangolin:v1.1",
-    "spip_docker_container" : "headoncollusion/spip:v1.0",
+    "spip_docker_container" : "headoncollusion/spip:v1.1",
 
     "squirl_docker_container" : "gabyou/squirl:v1.0",
 

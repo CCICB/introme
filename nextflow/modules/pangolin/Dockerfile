@@ -18,7 +18,7 @@ RUN conda update -n base -c defaults conda && \
 conda install -y python=3.9 && \
 conda config --add channels bioconda && \
 conda install -y -c conda-forge pyvcf && \
-conda install -y pytorch torchvision torchaudio cpuonly -c pytorch && \
+conda install -y pytorch cpuonly -c pytorch && \
 conda clean -afy
 
 # Define build-time variable for Pangolin commit
@@ -28,3 +28,5 @@ ARG PANGOLIN_COMMIT=fd12887eff04720ea0b4cdd02373f23132b39774
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir gffutils biopython pandas pyfastx && \
     pip install --no-cache-dir pangolin@git+https://github.com/bw2/Pangolin.git@${PANGOLIN_COMMIT}
+
+LABEL version="v1.2"
