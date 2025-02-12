@@ -1,0 +1,34 @@
+FROM python:3.6-slim
+
+USER root
+WORKDIR /app
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH=/app:/opt/conda/bin:$PATH
+
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -y --no-install-recommends \
+        procps \
+        git && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir numpy  \
+cython pybigwig  \
+cyvcf2
+
+ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
+ARG VERSION=2.4.0
+
+# Fix writeVCF IndexError: index 0 is out of bounds for axis 0 with size 0
+RUN git clone --branch ${VERSION} --depth 1 ${MMSPLICE_REPO} /tmp/mmsplice && \
+    sed -i 's/if pred is not None:/if (pred is not None and len(pred.index) > 0 ):/' /tmp/mmsplice/mmsplice/utils.py && \
+    pip install --no-cache-dir /tmp/mmsplice && \
+    rm -rf /tmp/mmsplice
+
+COPY --chmod=744 run_mmsplice.py .
+
+LABEL version="v2.0"
+

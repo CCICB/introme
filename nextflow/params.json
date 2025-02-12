@@ -1,10 +1,10 @@
 {
 
     "spliceai_docker_container" : "headoncollusion/spliceai_gpu:v1.0",
-    "mmsplice_docker_container" : "gabyou/mmsplice:v1.0",
-    "spliceogen_docker_container" : "headoncollusion/spliceogen:v2.0",
-    "pangolin_docker_container" : "headoncollusion/pangolin:v1.1",
+    "mmsplice_docker_container" : "headoncollusion/mmsplice:v2.0",
     "spip_docker_container" : "headoncollusion/spip:v1.1",
+    "spliceogen_docker_container" : "headoncollusion/spliceogen:v2.0",
+    "pangolin_docker_container" : "headoncollusion/pangolin:v1.2",
 
     "squirl_docker_container" : "gabyou/squirl:v1.0",
 

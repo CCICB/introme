@@ -22,7 +22,7 @@ process mmsplice {
         pwd
         ls
 
-		python3 /MMSplice_MTSplice/run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $gtf --output mmsplice.vcf
+		run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $gtf --output mmsplice.vcf
         # bgzip mmsplice.vcf
         # tabix mmsplice.vcf.gz
         """
