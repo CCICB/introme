@@ -1,4 +1,4 @@
-FROM python:3.6-slim
+FROM python:3.10-slim
 
 USER root
 WORKDIR /app
@@ -11,13 +11,15 @@ RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         procps \
+        # gcc \
+        # build-essential \
+        # zlib1g-dev \
         git && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir numpy  \
-cython pybigwig  \
-cyvcf2
+    pip install --no-cache-dir numpy==1.26.4 cython pybigwig cyvcf2
+
 
 ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
 ARG VERSION=2.4.0
