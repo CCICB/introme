@@ -1,10 +1,11 @@
 process spliceai {
+    label 'gpu'
     container "${params.spliceai_docker_container}"
-    // containerOptions '--workdir /'
+    cpus params.spliceai_cpus
+
     beforeScript 'echo Starting spliceai'
     afterScript  'echo Completed spliceai'
     publishDir (path: "${params.outdir}/spliceai")
-    cpus 8 // On my computer (Gab's) the max available is 8 - should be 32
 
     debug  true
 

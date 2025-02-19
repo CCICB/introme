@@ -1,6 +1,7 @@
 {
+    "spliceai_cpu_docker_container" : "headoncollusion/spliceai:v1.0-cpu",
+    "spliceai_gpu_docker_container" : "headoncollusion/spliceai:v1.1-gpu",
 
-    "spliceai_docker_container" : "headoncollusion/spliceai_gpu:v1.0",
     "mmsplice_docker_container" : "headoncollusion/mmsplice:v2.0",
     "spip_docker_container" : "headoncollusion/spip:v1.1",
     "spliceogen_docker_container" : "headoncollusion/spliceogen:v2.0",
