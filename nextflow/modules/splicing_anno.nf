@@ -41,7 +41,7 @@ process splicing_anno {
     script:
     """
     echo splicing_anno
-    sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1\\&\\2/g' ${spliceai_output} #
+    # sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1\\&\\2/g' ${spliceai_output} #
     bgzip -c ${spliceai_output} > spliceai.vcf.gz
     tabix -p vcf spliceai.vcf.gz
 
