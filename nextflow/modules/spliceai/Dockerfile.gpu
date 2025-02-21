@@ -34,10 +34,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir tensorflow[and-cuda]
 
 # Define build-time variable for SpliceAI commit
-ARG SPLICEAI_COMMIT=23f46843d8fec47572e5d081e46e759f2914d714
+ARG SPLICEAI_REPO=https://github.com/donren-leung/SpliceAI
+ARG SPLICEAI_COMMIT=3577e1823a607265064874102e63dcdca049b9d4
 
-RUN pip install --no-cache-dir spliceai@git+https://github.com/donren-leung/SpliceAI@${SPLICEAI_COMMIT}
+RUN pip install --no-cache-dir spliceai@git+${SPLICEAI_REPO}@${SPLICEAI_COMMIT}
 
 ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
 
-LABEL version="v1.2-gpu"
+LABEL version="v1.4-gpu"

@@ -1,32 +1,28 @@
 # Dockerfile.cpu
-FROM continuumio/miniconda3:latest
+FROM python:3.9-slim
 
 # Set noninteractive mode and locale
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PATH=/opt/conda/bin:$PATH
+    LC_ALL=C.UTF-8
 
 # Install system packages (note: no CUDA toolkit), and clean up apt caches
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        apt-utils \
+        procps \
         wget \
         git && \
     apt-get -y upgrade && \
     rm -rf /var/lib/apt/lists/*
 
-# Update conda, install Python 3.9, add the bioconda channel, and clean conda caches
-RUN conda update -n base -c defaults conda && \
-    conda install -y python=3.9 && \
-    conda config --add channels bioconda && \
-    conda clean -afy
-
 # Upgrade pip and install TensorFlow (CPU‑only) and SpliceAI
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir tensorflow-cpu && \
-    pip install --no-cache-dir spliceai@git+https://github.com/bw2/SpliceAI
+    pip install --no-cache-dir tensorflow-cpu
 
-CMD ["bash"]
+# Define build-time variable for SpliceAI commit
+ARG SPLICEAI_REPO=https://github.com/donren-leung/SpliceAI
+ARG SPLICEAI_COMMIT=3577e1823a607265064874102e63dcdca049b9d4
 
-LABEL version="v1.0-cpu"
+RUN pip install --no-cache-dir spliceai@git+${SPLICEAI_REPO}@${SPLICEAI_COMMIT}
+
+LABEL version="v1.4-cpu"
