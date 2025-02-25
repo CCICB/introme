@@ -28,11 +28,11 @@ op = "delete"
 # ops = ["uniq"]
 # names = ["omim_inheritance"]
 
-[[annotation]]
-file = "assets/clinvar_20250106.vcf.gz"
-fields = ["CLNSIG"]
-ops = ["uniq"]
-names = ["clinvar_clinicalSignificance"]
+# [[annotation]]
+# file = "assets/clinvar_20250106.vcf.gz"
+# fields = ["CLNSIG"]
+# ops = ["uniq"]
+# names = ["clinvar_clinicalSignificance"]
 
 # [[annotation]]
 # file = "assets/dbscSNV1.1.hg.combined_annotations.tsv"
@@ -58,13 +58,13 @@ columns = [4, 5, 6]
 ops = ["self", "self", "self"]
 names = ["U12", "U12_strand", "U12_score"]
 
-## SpliceAI Annotations
-#SpliceAI SNV
-# [[annotation]]
-# file = "assets/spliceai_scores.masked.snv.hg38.vcf.gz"
-# fields = ["SpliceAI"]
-# names = ["SpliceAI_NonSeparated_snv"]
-# ops = ["self"]
+# SpliceAI Annotations
+SpliceAI SNV
+[[annotation]]
+file = "assets/spliceai_scores.masked.snv.hg38.vcf.gz"
+fields = ["SpliceAI"]
+names = ["SpliceAI_NonSeparated_snv"]
+ops = ["self"]
 
 #SpliceAI Indel
 [[annotation]]
@@ -73,12 +73,12 @@ fields = ["SpliceAI"]
 names = ["SpliceAI_NonSeparated_indel"]
 ops = ["self"]
 
-# #SpliceAI SNV Processing
-# [[postannotation]]
-# fields = ["SpliceAI_NonSeparated_snv"]
-# op = "lua:spliceai(SpliceAI_NonSeparated_snv)"
-# type = "String"
-# name = "SpliceAI_processed"
+#SpliceAI SNV Processing
+[[postannotation]]
+fields = ["SpliceAI_NonSeparated_snv"]
+op = "lua:spliceai(SpliceAI_NonSeparated_snv)"
+type = "String"
+name = "SpliceAI_processed"
 
 #SpliceAI Indel Processing
 [[postannotation]]
@@ -87,12 +87,12 @@ op = "lua:spliceai(SpliceAI_NonSeparated_indel)"
 type = "String"
 name = "SpliceAI_processed"
 
-#SpliceAI ALLELE
-# [[postannotation]]
-# fields = ["SpliceAI_processed"]
-# op = "lua:split(SpliceAI_processed,'|')[1]"
-# type = "String"
-# name = "ALLELE_spliceai"
+SpliceAI ALLELE
+[[postannotation]]
+fields = ["SpliceAI_processed"]
+op = "lua:split(SpliceAI_processed,'|')[1]"
+type = "String"
+name = "ALLELE_spliceai"
 
 #SpliceAI SYMBOL
 [[postannotation]]

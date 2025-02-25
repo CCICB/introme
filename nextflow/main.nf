@@ -179,7 +179,7 @@ workflow {
     // STEP 3: annotate the subsetted VCF with useful information, to be used for filtering downstream
     //         and run hard filtering on the values of annotations added in the previous step
     assets_path = workflow.projectDir + '/assets/'
-    conf_pre_lua_path =  Channel.fromPath(assets_path + '/conf_pre.lua', type: 'file')
+    conf_pre_lua_path =  Channel.fromPath(assets_path + '/conf_pre_anno.lua', type: 'file')
     toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
     // assets = Channel.fromPath(path, type: 'any')
     variant_info(anno_input, data_preprocessing.out.sorted_gtf, conf_pre_lua_path, toml_path)

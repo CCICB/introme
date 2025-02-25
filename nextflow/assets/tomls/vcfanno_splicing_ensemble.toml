@@ -1,4 +1,4 @@
-# File used by VCFanno to define how a VCF file should be annotated
+# Used for combining the ensemble tool scores
 
 # Introme AG/GT Computation (computed during Introme)
 [[annotation]]

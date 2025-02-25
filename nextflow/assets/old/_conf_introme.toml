@@ -1,4 +1,4 @@
-# File used by VCFanno to define how a VCF file should be annotated
+# Deprecated by vcfanno_splicing_ensemble.toml???
 
 # MMSplice (computed during Introme)
 [[annotation]]

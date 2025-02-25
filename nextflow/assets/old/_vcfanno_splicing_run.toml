@@ -1,5 +1,4 @@
-# File used by VCFanno to define how a VCF file should be annotated
-# File for splicing score annotation (from annotation file)
+# Deprecated by removal of cadd/dbsc and by annotate.hg19/38.toml???
 
 # [[annotation]]
 # file="cadd_v1.3.vcf.gz"
@@ -14,11 +13,11 @@
 # ops=["self", "self"]
 # names=["dbscSNV_AdaBoost_Score", "dbscSNV_RandomForest_Score"]
 
-# [[annotation]]
-# file="gencode_v26_branchpoints.csv.liftedtohg19.collated.bed.gz"
-# columns=[4,5,6,7,8]
-# ops=["self", "self", "self", "self", "self"]
-# names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_U2_Binding_Energy", "Branchpointer_max_Prob"]
+[[annotation]]
+file="gencode_v26_branchpoints.csv.liftedtohg19.collated.bed.gz"
+columns=[4,5,6,7,8]
+ops=["self", "self", "self", "self", "self"]
+names=["Branchpointer_Prob", "Branchpointer_U2_Binding_Energy", "Branchpointer_options", "Branchpointer_max_U2_Binding_Energy", "Branchpointer_max_Prob"]
 
 [[annotation]]
 file="U12.bed.gz"
