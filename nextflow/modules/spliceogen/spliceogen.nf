@@ -1,9 +1,12 @@
 process spliceogen {
     container "${params.spliceogen_docker_container}"
+    cpus params.spliceogen_cpus
     containerOptions = '--entrypoint ""'
+
     beforeScript 'echo Starting spliceogen'
     afterScript  'echo Completed spliceogen'
     publishDir (path: "${params.outdir}/spliceogen")
+
     debug  true
 
     input:

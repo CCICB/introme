@@ -22,6 +22,7 @@ process spliceai {
     
     script:
         """
+        export TF_FORCE_GPU_ALLOW_GROWTH=true
         wget https://compbio.ccia.org.au/introme/files/${params.genome_build}/${params.spliceai_db} --no-check-certificate
         touch ${params.prefix}.spliceai.vcf
 

@@ -1,9 +1,12 @@
 process spip {
     container "${params.spip_docker_container}"
+    cpus params.spip_cpus
     // containerOptions "--workdir / -v ${params.outdir}/variant_info/:/data/"
+
     beforeScript 'echo Starting spip'
     afterScript  'echo Completed spip'
     publishDir (path: "${params.outdir}/spip")
+
     debug  true
 
     input:

@@ -1,0 +1,52 @@
+# Use NVIDIA’s CUDA runtime as the base image
+FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
+
+# Set environment variables for noninteractive apt and locale settings
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Install essential packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        apt-utils \
+        wget \
+        git && \
+    apt-get -y upgrade && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/conda && \
+    rm /tmp/miniconda.sh
+
+# Update PATH to include conda
+ENV PATH=/opt/conda/bin:$PATH
+
+# Update Conda and install Python and packages
+RUN conda update -n base -c defaults conda -y && \
+    conda install -y python=3.9 && \
+    conda config --add channels bioconda && \
+    conda install -y -c conda-forge pyvcf && \
+    conda clean -afy
+
+# Upgrade pip and install TensorFlow (GPU-capable)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu126 && \
+    pip install --no-cache-dir gffutils biopython pandas pyfastx
+
+# Define build-time variable for Pangolin commit
+ARG PANGOLIN_REPO=https://github.com/bw2/Pangolin
+ARG PANGOLIN_COMMIT=fd12887eff04720ea0b4cdd02373f23132b39774
+
+RUN git clone ${PANGOLIN_REPO} /tmp/pangolin --depth 1 && \
+    cd /tmp/pangolin && \
+    git checkout ${PANGOLIN_COMMIT} && \
+    sed -i -E 's_if (seq\[5000\+d:5000\+d\+len\(ref\)\]) != (ref)_if \1.upper() != \2.upper()_' pangolin/pangolin.py && \
+    pip install --no-cache-dir . && \
+    cd && \
+    rm -rf /tmp/pangolin
+
+ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
+
+LABEL version="v1.3-gpu"

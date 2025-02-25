@@ -1,0 +1,52 @@
+# Use NVIDIA’s CUDA runtime as the base image
+FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
+
+# Set environment variables for noninteractive apt and locale settings
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Install essential packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        apt-utils \
+        wget \
+        git && \
+    apt-get -y upgrade && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Miniconda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/conda && \
+    rm /tmp/miniconda.sh
+
+# Update PATH to include conda
+ENV PATH=/opt/conda/bin:$PATH
+
+# Update conda, install Python 3.9, add channels, and clean up caches
+RUN conda update -n base -c defaults conda -y && \
+    conda install -y python=3.9 && \
+    conda config --add channels bioconda && \
+    conda clean -afy
+
+# Upgrade pip and install TensorFlow (GPU-capable) (split commands for caching w/ SpliceAI)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir tensorflow[and-cuda]
+
+RUN pip install --no-cache-dir numpy==1.26.4 cython pybigwig cyvcf2
+
+WORKDIR /app
+ENV PATH=/app:$PATH
+
+ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
+ARG VERSION=2.4.0
+
+# Fix writeVCF IndexError: index 0 is out of bounds for axis 0 with size 0
+RUN git clone --branch ${VERSION} --depth 1 ${MMSPLICE_REPO} /tmp/mmsplice && \
+    sed -i 's/if pred is not None:/if (pred is not None and len(pred.index) > 0 ):/' /tmp/mmsplice/mmsplice/utils.py && \
+    pip install --no-cache-dir /tmp/mmsplice && \
+    rm -rf /tmp/mmsplice
+
+COPY --chmod=744 run_mmsplice.py .
+
+LABEL version="v2.1-gpu"

@@ -18,15 +18,23 @@ RUN conda update -n base -c defaults conda && \
 conda install -y python=3.9 && \
 conda config --add channels bioconda && \
 conda install -y -c conda-forge pyvcf && \
-conda install -y pytorch cpuonly -c pytorch && \
 conda clean -afy
-
-# Define build-time variable for Pangolin commit
-ARG PANGOLIN_COMMIT=fd12887eff04720ea0b4cdd02373f23132b39774
 
 # Upgrade pip and install Python packages
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir gffutils biopython pandas pyfastx && \
-    pip install --no-cache-dir pangolin@git+https://github.com/bw2/Pangolin.git@${PANGOLIN_COMMIT}
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir gffutils biopython pandas pyfastx
 
-LABEL version="v1.2"
+# Define build-time variable for Pangolin commit
+ARG PANGOLIN_REPO=https://github.com/bw2/Pangolin
+ARG PANGOLIN_COMMIT=fd12887eff04720ea0b4cdd02373f23132b39774
+
+RUN git clone ${PANGOLIN_REPO} /tmp/pangolin --depth 1 && \
+    cd /tmp/pangolin && \
+    git checkout ${PANGOLIN_COMMIT} && \
+    sed -i -E 's_if (seq\[5000\+d:5000\+d\+len\(ref\)\]) != (ref)_if \1.upper() != \2.upper()_' pangolin/pangolin.py && \
+    pip install --no-cache-dir . && \
+    cd && \
+    rm -rf /tmp/pangolin
+
+LABEL version="v1.3-cpu"

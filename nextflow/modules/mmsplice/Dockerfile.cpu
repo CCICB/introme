@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 USER root
 WORKDIR /app
@@ -32,5 +32,4 @@ RUN git clone --branch ${VERSION} --depth 1 ${MMSPLICE_REPO} /tmp/mmsplice && \
 
 COPY --chmod=744 run_mmsplice.py .
 
-LABEL version="v2.0"
-
+LABEL version="v2.1"

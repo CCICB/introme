@@ -1,9 +1,13 @@
 process pangolin {
+    label 'gpu'
     container "${params.pangolin_docker_container}"
+    cpus params.pangolin_cpus
     // containerOptions '--workdir /'
+
     beforeScript 'echo Starting pangolin'
     afterScript  'echo Completed pangolin'
     publishDir (path: "${params.outdir}/pangolin")
+
     debug  true
 
     input:
