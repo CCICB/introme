@@ -1,6 +1,7 @@
 process spliceogen {
     container "${params.spliceogen_docker_container}"
     cpus params.spliceogen_cpus
+    memory params.spliceogen_mem
     containerOptions = '--entrypoint ""'
 
     beforeScript 'echo Starting spliceogen'

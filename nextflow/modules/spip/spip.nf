@@ -1,6 +1,7 @@
 process spip {
     container "${params.spip_docker_container}"
     cpus params.spip_cpus
+    memory params.spip_mem
     // containerOptions "--workdir / -v ${params.outdir}/variant_info/:/data/"
 
     beforeScript 'echo Starting spip'

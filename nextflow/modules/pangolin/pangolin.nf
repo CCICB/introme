@@ -2,6 +2,7 @@ process pangolin {
     label 'gpu'
     container "${params.pangolin_docker_container}"
     cpus params.pangolin_cpus
+    memory params.pangolin_mem
     // containerOptions '--workdir /'
 
     beforeScript 'echo Starting pangolin'

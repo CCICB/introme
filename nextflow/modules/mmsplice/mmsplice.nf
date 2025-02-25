@@ -2,7 +2,7 @@ process mmsplice {
     label 'gpu'
     container "${params.mmsplice_docker_container}"
     cpus params.mmsplice_cpus
-    memory '10 GB'
+    memory params.mmsplice_mem
 
     // containerOptions '--workdir /MMSplice_MTSplice'
 

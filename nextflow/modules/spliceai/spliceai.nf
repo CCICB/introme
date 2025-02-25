@@ -2,6 +2,7 @@ process spliceai {
     label 'gpu'
     container "${params.spliceai_docker_container}"
     cpus params.spliceai_cpus
+    memory params.spliceai_mem
 
     beforeScript 'echo Starting spliceai'
     afterScript  'echo Completed spliceai'
