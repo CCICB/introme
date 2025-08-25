@@ -11,6 +11,11 @@ process splicing_anno {
         path conf_lua
         path ensemble_anno_toml
 
+        path annotate_toml
+        path branchpointer_dir
+        path regions_dir
+        path u12_dir
+
 		// path cadd
 		// path cadd_tbi
 		// path dbscSNV
@@ -68,13 +73,21 @@ process splicing_anno {
     pwd
     ls
 
+    vcfanno \
+        -base-path ./ \
+        -p \$(getconf _NPROCESSORS_ONLN) \
+        -lua ${conf_lua} \
+        ${anotate_toml} \
+        ${vcf} > step1.vcf
+    
+    bgzip step1.vcf
 
     vcfanno \
         -base-path ./ \
         -p \$(getconf _NPROCESSORS_ONLN) \
         -lua ${conf_lua} \
         ${ensemble_anno_toml} \
-        ${vcf} > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
+        step1.vcf > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     
     bgzip -k ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     """

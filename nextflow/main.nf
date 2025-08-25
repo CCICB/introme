@@ -225,14 +225,23 @@ workflow {
                       template_header_vcf)
 
     conf_ensemble_lua_path =  Channel.fromPath(assets_path + '/conf_ensemble.lua', type: 'file')
-    ensemble_anno_toml = Channel.fromPath(assets_path + '/vcfanno_splicing.toml', type: 'file')
-    // gencode_toml = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
+    ensemble_anno_toml = Channel.fromPath(assets_path + '/tomls/vcfanno_splicing.toml', type: 'file')
+    annotate_toml = Channel.fromPath(assets_path + '/tomls/vcfanno_splicing.toml', type: 'file')
+
+    branchpointer_dir = Channel.fromPath(assets_path + '/branchpointer', type: 'dir')
+    regions_dir = Channel.fromPath(assets_path + '/regions', type: 'dir')
+    u12_dir = Channel.fromPath(assets_path + '/U12', type: 'dir')
     
     // STEP 6: Run splicing annotations
     splicing_anno(
-      variant_info.out.variant_info, // vcf
+      variant_info.out.variant_info, // .vcf.gz
       conf_ensemble_lua_path,
       ensemble_anno_toml,
+
+      annotate_toml,
+      branchpointer_dir,
+      regions_dir,
+      u12_dir,
 
       spliceai.out.spliceai_output, 
 
