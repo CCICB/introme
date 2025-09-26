@@ -125,6 +125,7 @@ include { spip }                from './modules/spip/spip.nf'
 include { squirl }              from './modules/squirl.nf'
 include { introme_functions }   from './modules/introme_functions.nf'
 include { splicing_anno }       from './modules/splicing_anno.nf'
+include { ensemble }            from './modules/ensemble.nf'
 
 /* 
  * Print summary of supplied parameters
@@ -261,5 +262,14 @@ workflow {
       introme_functions.out.ese_score_tbi
     )
 
+    clf_model_path = Channel.fromPath(assets_path + '/models/all_hgb_model_SEP25.pkl')
+    columns_path = Channel.fromPath(assets_path + '/models/columns.json')
+    introme_script_path = file('../ESE/scoring.py')
+
     // STEP 7: Generate consensus scores - ML
+    ensemble(
+      ensemble_score_script_path,
+      clf_model_path,
+      splicing_anno.out.splicing_anno_output
+    )
 }

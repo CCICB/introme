@@ -15,7 +15,7 @@
 
     "data_preprocessing_docker_container" : "gabyou/data_prepocessing:v2.0",
     "variant_info_docker_container" : "gabyou/variant_info:v3.2",
-    "introme_functions_docker_container" : "headoncollusion/ag_check:v1.4",
+    "introme_functions_docker_container" : "headoncollusion/ag_check:v1.5",
 
     "min_QUAL": ">=200",
     "min_DP" : ">=20",
