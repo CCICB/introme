@@ -270,6 +270,7 @@ workflow {
     ensemble(
       ensemble_score_script_path,
       clf_model_path,
+      columns_path,
       splicing_anno.out.splicing_anno_output
     )
 }
