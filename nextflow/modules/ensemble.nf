@@ -1,4 +1,4 @@
-process splicing_anno {
+process ensemble {
     container "${params.introme_functions_docker_container}"
     beforeScript 'echo Starting Introme ensemble score generation'
     afterScript  'echo Completed Introme ensemble score generation'

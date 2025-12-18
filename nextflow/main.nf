@@ -181,7 +181,7 @@ workflow {
     //         and run hard filtering on the values of annotations added in the previous step
     assets_path = workflow.projectDir + '/assets/'
     conf_pre_lua_path =  Channel.fromPath(assets_path + '/conf_pre_anno.lua', type: 'file')
-    toml_path = Channel.fromPath(assets_path + '/gencode.' + params.genome_build + '.toml', type: 'file')
+    toml_path = Channel.fromPath(assets_path + '/tomls/gencode.' + params.genome_build + '.toml', type: 'file')
     // assets = Channel.fromPath(path, type: 'any')
     variant_info(anno_input, data_preprocessing.out.sorted_gtf, conf_pre_lua_path, toml_path)
 
@@ -226,8 +226,8 @@ workflow {
                       template_header_vcf)
 
     conf_ensemble_lua_path =  Channel.fromPath(assets_path + '/conf_ensemble.lua', type: 'file')
-    ensemble_anno_toml = Channel.fromPath(assets_path + '/tomls/vcfanno_splicing.toml', type: 'file')
-    annotate_toml = Channel.fromPath(assets_path + '/tomls/vcfanno_splicing.toml', type: 'file')
+    ensemble_anno_toml = Channel.fromPath(assets_path + '/tomls/vcfanno_splicing_ensemble.toml', type: 'file')
+    annotate_toml = Channel.fromPath(assets_path + '/tomls/annotate.' + params.genome_build + '.toml', type: 'file')
 
     branchpointer_dir = Channel.fromPath(assets_path + '/branchpointer', type: 'dir')
     regions_dir = Channel.fromPath(assets_path + '/regions', type: 'dir')
@@ -237,9 +237,9 @@ workflow {
     splicing_anno(
       variant_info.out.variant_info, // .vcf.gz
       conf_ensemble_lua_path,
+      annotate_toml,
       ensemble_anno_toml,
 
-      annotate_toml,
       branchpointer_dir,
       regions_dir,
       u12_dir,
@@ -262,9 +262,10 @@ workflow {
       introme_functions.out.ese_score_tbi
     )
 
+    // TODO: decide on where to put inference script.
+    ensemble_score_script_path = file('../ESE/ML/inference.py')
     clf_model_path = Channel.fromPath(assets_path + '/models/all_hgb_model_SEP25.pkl')
     columns_path = Channel.fromPath(assets_path + '/models/columns.json')
-    introme_script_path = file('../ESE/scoring.py')
 
     // STEP 7: Generate consensus scores - ML
     ensemble(

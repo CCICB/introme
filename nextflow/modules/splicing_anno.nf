@@ -9,9 +9,9 @@ process splicing_anno {
     input:
         path vcf
         path conf_lua
+        path annotate_toml
         path ensemble_anno_toml
 
-        path annotate_toml
         path branchpointer_dir
         path regions_dir
         path u12_dir
@@ -77,9 +77,10 @@ process splicing_anno {
         -base-path ./ \
         -p \$(getconf _NPROCESSORS_ONLN) \
         -lua ${conf_lua} \
-        ${anotate_toml} \
+        ${annotate_toml} \
         ${vcf} > step1.vcf
     
+    # turns into step1.vcf.gz
     bgzip step1.vcf
 
     vcfanno \
@@ -87,7 +88,7 @@ process splicing_anno {
         -p \$(getconf _NPROCESSORS_ONLN) \
         -lua ${conf_lua} \
         ${ensemble_anno_toml} \
-        step1.vcf > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
+        step1.vcf.gz > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     
     bgzip -k ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     """
