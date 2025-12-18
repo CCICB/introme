@@ -306,7 +306,7 @@ if __name__ == "__main__":
     # exit(0)
 
     df = vcf2pandas(splicing_anno_vcf_path,
-                    remove_empty_columns=True,
+                    remove_empty_columns=False,
                     info_fields=INFO_FIELDS)
 
     with open(output_path, 'w') as outfile:
