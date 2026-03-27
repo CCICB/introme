@@ -3,3 +3,5 @@
 output/
 work/
 params.json
+*.html
+*.txt

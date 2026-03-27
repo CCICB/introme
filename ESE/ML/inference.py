@@ -231,13 +231,14 @@ def main(model, df, columns, outfile):
     )
 
     df = pd.concat([dummys, df.drop(columns=DUMMY_COLS)], axis=1)
-    print(len(df.columns))
+    print(f"vcf has {len(df.columns)} columns (including dummies)")
 
     print(df.head(2))
 
-    print(set(df.columns) - set(columns))
-    print(set(columns) - set(df.columns))
+    print("excluded columns:", set(df.columns) - set(columns))
+    print("expected but unpresent columns:", set(columns) - set(df.columns))
 
+    # Final reindex to ensure correct column order
     df = df.reindex(columns=columns)
     print(df.columns)
     print(len(df.columns))
@@ -302,7 +303,7 @@ if __name__ == "__main__":
     with open(columns_path, 'rb') as file:
         columns = json.load(file)
 
-    print(columns, len(columns), type(columns))
+    print('columns loaded', columns, len(columns), type(columns))
     # exit(0)
 
     df = vcf2pandas(splicing_anno_vcf_path,
