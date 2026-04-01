@@ -79,7 +79,9 @@ def preprocess(train_mode: bool, df: pd.DataFrame) -> pd.DataFrame:
                                                                 dots_zeros=['INFO:U12',
                                                                             'INFO:Branchpointer',
                                                                             'INFO:SpliceAI_DS',
-                                                                            'INFO:Spliceogen'],
+                                                                            'INFO:Spliceogen',
+                                                                            'INFO:MMSplice',
+                                                                            'INFO:Pangolin'],
                                                                 nans_zeros=[],
                                                                 nans_large_minus=['INFO:SPIP'])
 
@@ -295,8 +297,25 @@ def infer_main(model, df, columns, outfile):
     6. (GENERATED) Reorder columns to match training order
         - Given by param (combinations) for inference, should be the training columns of used model.
     """
+    df = preprocess(train_mode=False, df=df)
+
+    print(f"vcf has {len(df.columns)} columns (including dummies)")
+
+    print(df.head(2))
+
+    print("excluded columns:", set(df.columns) - set(columns))
+    print("expected but unpresent columns:", set(columns) - set(df.columns))
+
     features = df[columns]
-    features = preprocess(train_mode=False, df=features)
+
+    print("before:", len(features))
+
+    bad_features = features[features.isin(["."]).any(axis=1)]
+    features = features[~features.isin(["."]).any(axis=1)]
+    print("after:", len(features))
+
+    obj_cols = features.select_dtypes(include=["object"]).columns.tolist()
+    print("Object dtype columns:", obj_cols)
 
     y_scores = model.predict_proba(features)[:, 1]
     scores_series = pd.Series(y_scores, index=features.index).astype(object)
