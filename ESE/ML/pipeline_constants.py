@@ -1,4 +1,6 @@
 
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, GradientBoostingClassifier
+
 INFO_FIELDS = {
     # ./-/+ --> 0:. 1:-/+
     'AG_Created': 'AGcheck_AG_Created',
@@ -124,3 +126,27 @@ VARIANT_TYPE = [f"INFO:AGcheck_Variant_Type_{suffix}" for suffix in [
                     "('INSDEL',)",
                     "('SNV',)",
                 ]]
+
+# Training regimes
+
+ENSEMBLE_SCORE_COLS = {
+    "ese": "INFO:ESE_",
+    "mmsplice": "INFO:MMSplice_",
+    "pangolin": "INFO:Pangolin_",
+    "spip": "INFO:SPIP_",
+    "spliceai": "INFO:SpliceAI_DS",
+    "spliceogen": "INFO:Spliceogen_",
+}
+
+RAW_SCORE_COLS = {
+    "spliceai": ['INFO:SpliceAI_DS_AG', 'INFO:SpliceAI_DS_AL', 'INFO:SpliceAI_DS_DG', 'INFO:SpliceAI_DS_DL'],
+    "spip": ['INFO:SPIP_SPiCE_Prob'],
+    "pangolin": ['INFO:Pangolin_Gain', 'INFO:Pangolin_Loss'],
+    "spliceogen": ['INFO:Spliceogen_AccGainP',	'INFO:Spliceogen_AccLossP', 'INFO:Spliceogen_DonGainP', 'INFO:Spliceogen_DonLossP'],
+}
+
+CLASSIFIERS = {
+    "RandomForest": (RandomForestClassifier, {}),
+    "HistGradientBoosting": (HistGradientBoostingClassifier, {}),
+    "GradientBoosting": (GradientBoostingClassifier, {}),
+}

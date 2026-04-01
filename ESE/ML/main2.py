@@ -1,4 +1,5 @@
 from itertools import chain
+from pathlib import Path
 import json
 import os, pickle, sys
 from typing import Literal
@@ -7,18 +8,30 @@ from vcf2pandas import vcf2pandas
 import pandas as pd
 import numpy as np
 
+# Machine Learning
+from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, precision_recall_curve, auc
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
+
 from pipeline_constants import (
     DUMMY_COLS,
     GENE_REGIONS,
     INFO_FIELDS,
     VARIANT_TYPE,
+    ENSEMBLE_SCORE_COLS,
+    RAW_SCORE_COLS,
+    CLASSIFIERS,
 )
 
 """
 Functions:
 - preprocess()
     - assert_and_convert_single_float_tuples_allow_dot()
-- subset_features()
+- make_col_combinations()
 - train_main()
 - infer_main()
 """
@@ -31,7 +44,7 @@ def preprocess(train_mode: bool, df: pd.DataFrame) -> pd.DataFrame:
     3. (Common) AG_check lost/created dots -> 0/1's
     4. (Common) U12 intronic & Strand dots -> 0/1's
     5. (Common) dots/NaNs in numeric columns -> 0's or large negative values (configurable)
-    
+
     Inference mode:
     1. (SKIP because there are no ground truth labels)
     2. (CONSTANT) Generate the seen dummy columns from pipeline_constants
@@ -100,11 +113,11 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
           * equals the string "."
       - Convert such valid single-float tuples to the float value.
       - Leave the "." string as-is instead of trying to convert it to float.
-    Returns a copy of df with the converted columns (dtype may remain 'object' 
+    Returns a copy of df with the converted columns (dtype may remain 'object'
     if "." strings are present).
     """
     df = df.copy()
-    
+
     for col in df.columns:
         if not col.startswith("INFO:"):
             continue
@@ -112,7 +125,7 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
             print(f"Processing column: {col}")
         # Check if this column contains *any* tuples
         has_tuple = df[col].apply(lambda x: isinstance(x, tuple)).any()
-        
+
         if has_tuple:
             # Define a helper to check if each value is valid
             def is_valid_tuple(x):
@@ -122,7 +135,7 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
                 if (x[0] is None):
                     print(col, x[0])
                 return (len(x) == 1 and (isinstance(x[0], float) or x[0] is None))
-            
+
             # If any row fails the validity check, raise an error
             valid_series = df[col].apply(is_valid_tuple)
             if not valid_series.all():
@@ -131,13 +144,13 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
                 raise ValueError(
                     f"Column '{col}' contains invalid tuple values: {offending_values}"
                 )
-            
+
         # Convert single-float tuples to that float
         def convert_tuple_to_float(x):
             if isinstance(x, tuple):
                 return sanitise(x[0])  # we've already asserted it's length-1 float
             return sanitise(x)
-        
+
         def sanitise(x):
             if not (str(x) in ["", ".", "NaN", "nan", "None"]):
                 return x
@@ -151,38 +164,17 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
             if any(col.startswith(x) for x in nans_large_minus) and str(x) in ["NaN", "nan", "None"]:
                 return -99999
             return x
-        
+
         df[col] = df[col].apply(convert_tuple_to_float)
-    
+
     return df
-
-# def subset_features(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-#     """
-#     Group df columns by prediction tools, also into 'ensemble' and 'info' (auxiliary info)
-#     This is a given param (list, and category name mapping)
-    
-#     Train:
-
-#     7. (COMMON) Return df with selected columns, and the list of selected columns
-        
-#     Inference:
-
-#     7. (COMMON) Return df with selected columns, and the list of selected columns
-#     """
-#     df = df.reindex(columns=columns)
-#     return df
 
 def make_col_combinations(df: pd.DataFrame) -> dict[str, list[str]]:
     """
     Generate feature combinations based on the DataFrame columns.
     """
     ensemble_scores = [
-        ("ese",         [c for c in df.columns if c.startswith("INFO:ESE_")]),
-        ("mmsplice",    [c for c in df.columns if c.startswith("INFO:MMSplice_")]),
-        ("pangolin",    [c for c in df.columns if c.startswith("INFO:Pangolin_")]),
-        ("spip",        [c for c in df.columns if c.startswith("INFO:SPIP_")]),
-        ("spliceai",    [c for c in df.columns if c.startswith("INFO:SpliceAI_DS")]),
-        ("spliceogen",  [c for c in df.columns if c.startswith("INFO:Spliceogen_")]),
+        (name, [c for c in df.columns if c.startswith(prefix)]) for name, prefix in ENSEMBLE_SCORE_COLS.items()
     ]
 
     ensemble_cols = [cols for _, cols in ensemble_scores]
@@ -205,7 +197,7 @@ def make_col_combinations(df: pd.DataFrame) -> dict[str, list[str]]:
 
     return combinations
 
-def train_main(model, df, columns, outfile):
+def train_main(model, df, columns, logpath):
     """
     Preprocess according to train mode, train various models and save the best model weight/model/columns.
     1-5. Preprocess
@@ -221,72 +213,106 @@ def train_main(model, df, columns, outfile):
         b) Different random seeds
         c) Different feature subset (e.g. SpliceAI only, Spliceogen only, etc.)
         d) Evaluate on validation set, save F1, AUPRC, etc.
+        e) Compare with using the "raw" feature scores (e.g. SpliceAI_DS) as the only feature,
+            to see if the model is actually learning something useful.
     """
     df = preprocess(train_mode=True, df=df)
-    ensemble_scores = [
-        ("ese",         [c for c in df.columns if c.startswith("INFO:ESE_")]),
-        ("mmsplice",    [c for c in df.columns if c.startswith("INFO:MMSplice_")]),
-        ("pangolin",    [c for c in df.columns if c.startswith("INFO:Pangolin_")]),
-        ("spip",        [c for c in df.columns if c.startswith("INFO:SPIP_")]),
-        ("spliceai",    [c for c in df.columns if c.startswith("INFO:SpliceAI_DS")]),
-        ("spliceogen",  [c for c in df.columns if c.startswith("INFO:Spliceogen_")]),
-    ]
+    combinations = make_col_combinations(df)
 
-    ensemble_cols = [cols for _, cols in ensemble_scores]
-
-    agcheck    = [col for col in df.columns if col.startswith('INFO:AGcheck_')]
-    bpter      = [col for col in df.columns if col.startswith('INFO:Branchpointer_')]
-    u12        = [col for col in df.columns if col.startswith('INFO:U12_')]
-    geneinfo   = [col for col in df.columns if col.startswith('INFO:GENEINFO_')]
-    info       = [agcheck, bpter, u12, geneinfo]
-
-    # for l in ensemble_scores:
-    #     print(len(l), l)
-
-    # for l in info:
-    #     print(len(l), l)
-    
-    # for col in df.columns:
-    #     if col == "REF" or col == "ALT":
-    #         continue
-    #     print(f"Column: {col}")
-    #     print("Unique values:", df[col].unique())
-    #     print()
-
-    # df[df['ID'] == 'SVDBConflicting']
-
-    combinations: dict[str, list[str]] = {
-        "all_info": list(chain.from_iterable(ensemble_cols)) + list(chain.from_iterable(info)),
-        "all_noinfo": list(chain.from_iterable(ensemble_cols)),
-        "notools_info": list(chain.from_iterable(info)),
-    }
-
-    for name, cols in ensemble_scores:
-        combinations[name + "_info"] = cols + list(chain.from_iterable(info))
+    # run name to tuple: (train auprc, val auprc)
+    results: dict[str, tuple[float, float]] = {}
 
     for name, cols in combinations.items():
         print(f"Training with feature set: {name} ({len(cols)} features)")
-        # cols = cols + ['ID_SVDBSplice']
+        cols = cols + ['ID_SVDBSplice']
+        print(f"{len(cols)=} {cols=}")
+
         features = df[cols]
-        target = df['ID_SVDBSplice']
-        # features = features.drop(columns=['ID_SVDBSplice'])
 
-        # print(f"{len(cols)=} {cols=}")
+        print("before:", len(features))
+        bad_feature_mask = features.isin(["."]).any(axis=1)
+        rows_with_bad_features = features[bad_feature_mask]
+        features = features[~bad_feature_mask]
+        print("after:", len(features))
+        print("dropped rows due to missing feature values:", len(rows_with_bad_features))
 
-        # print("before:", len(features))
-        bad_features = features[features.isin(["."]).any(axis=1)]
-        features = features[~features.isin(["."]).any(axis=1)]
-        # print("after:", len(features))
+        # print("Removed rows with bad features:")
+        # print(rows_with_bad_features.to_string())
 
-        # print("Removed bad features:")
-        # print(bad_features.to_string())
+        target = df.loc[features.index, 'ID_SVDBSplice']
+        features = features.drop(columns=['ID_SVDBSplice'])
 
         # ones = (target == 1).sum()
         # zeros = (target == 0).sum()
 
         # print(f'{target}, {ones=}, {zeros=}')
 
- 
+        X_train_, X_test, y_train_, y_test = train_test_split(features, target, test_size=0.20, random_state=42)
+        X_train, X_val, y_train, y_val = train_test_split(X_train_, y_train_, test_size=0.20, random_state=42)
+
+        for model_name, (ModelClass, param_grid) in CLASSIFIERS.items():
+            # Just init with default params for now, can add hyperparameter tuning later
+            clf = ModelClass()
+            clf.fit(X_train, y_train)
+
+            y_train_preds = clf.predict_proba(X_train)[:, 1]
+            y_val_preds = clf.predict_proba(X_val)[:, 1]
+
+            train_fig, train_auprc = plot_precision_recall_curve(y_train, y_train_preds, model_name, name)
+            val_fig, val_auprc = plot_precision_recall_curve(y_val, y_val_preds, model_name, name)
+            results[f"{model_name}_{name}"] = (train_auprc, val_auprc)
+
+            # save the figures
+            train_fig.savefig(Path(logpath) / f"{model_name}_{name}_train_pr_curve.png")
+            val_fig.savefig(Path(logpath) / f"{model_name}_{name}_val_pr_curve.png")
+            plt.close(train_fig)
+            plt.close(val_fig)
+
+    # Save results to a JSON file
+    with open(Path(logpath) / "training_results.json", "w") as f:
+        json.dump(results, f, indent=4)
+
+    # get best validation AUPRC model
+    best_model_name, (best_train_auprc, best_val_auprc) = max(results.items(), key=lambda item: item[1][1])
+    print(f"Best model: {best_model_name} with train AUPRC={best_train_auprc:.4f} and val AUPRC={best_val_auprc:.4f}")
+
+    # evaluate the best model on the test set and save metrics and PR curve
+    # TODO
+
+def plot_precision_recall_curve(y_true, y_scores, model_name, feature_set_name) -> tuple[Figure, float]:
+    """
+    Returns figure object.
+    """
+    precision, recall, thresholds = precision_recall_curve(y_true, y_scores)
+
+    # F1 for all threshold points (same length as thresholds)
+    # precision_recall_curve returns one extra point where recall=0;
+    # thresholds has length len(precision) - 1, so slice.
+    f1_scores = 2 * precision[:-1] * recall[:-1] / (precision[:-1] + recall[:-1] + 1e-12)
+
+    best_idx = np.argmax(f1_scores)
+    best_f1 = f1_scores[best_idx]
+    best_threshold = thresholds[best_idx]
+
+    pr_auc = float(auc(recall, precision))
+
+    # Use Object-Oriented API
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.plot(recall, precision, label=f'PR curve (AUC={pr_auc:.3f})')
+
+    # Mark the best F1 point
+    ax.scatter(recall[best_idx], precision[best_idx], color='red', label=f'Best F1={best_f1:.3f}')
+
+    ax.set_xlabel('Recall')
+    ax.set_ylabel('Precision')
+    ax.set_title(f'PR Curve: {model_name}\nFeatures: {feature_set_name}')
+    ax.set_xlim(0.0, 1.0)
+    ax.set_ylim(0.0, 1.05) # Small padding at top
+    ax.legend(loc='lower left')
+    ax.grid(True, linestyle='--', alpha=0.7)
+
+    return fig, pr_auc
+
 
 def infer_main(model, df, columns, outfile):
     """
@@ -326,7 +352,8 @@ def infer_main(model, df, columns, outfile):
 
 if __name__ == "__main__":
     USAGE = f"""
-    Usage: {sys.argv[0]} [train|infer] model_path.pkl columns.json splicing_anno.vcf output_path.tsv
+    Usage: {sys.argv[0]} infer model_path.pkl columns.json splicing_anno.vcf output_path.tsv
+           {sys.argv[0]} train model_path.pkl columns.json splicing_anno.vcf output_folder
     """
     if len(sys.argv) != 6:
         raise ValueError(USAGE)
