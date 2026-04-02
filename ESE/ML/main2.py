@@ -13,6 +13,8 @@ from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSe
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, precision_recall_curve, auc
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
@@ -101,10 +103,10 @@ def preprocess(train_mode: bool, df: pd.DataFrame) -> pd.DataFrame:
     return features
 
 def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
-                                                     dots_largeminus: list[str],
-                                                     dots_zeros: list[str],
-                                                     nans_zeros: list[str],
-                                                     nans_large_minus: list[str]) -> pd.DataFrame:
+                                                     dots_largeminus: list[str] = [],
+                                                     dots_zeros: list[str] = [],
+                                                     nans_zeros: list[str] = [],
+                                                     nans_large_minus: list[str] = []) -> pd.DataFrame:
     """
     For each column in df:
       - If the column contains any tuples, assert that every tuple is either:
@@ -146,7 +148,7 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
                 )
 
         # Convert single-float tuples to that float
-        def convert_tuple_to_float(x):
+        def convert_tuple_to_singleton(x):
             if isinstance(x, tuple):
                 return sanitise(x[0])  # we've already asserted it's length-1 float
             return sanitise(x)
@@ -165,7 +167,8 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
                 return -99999
             return x
 
-        df[col] = df[col].apply(convert_tuple_to_float)
+        df[col] = df[col].apply(convert_tuple_to_singleton)
+        df[col] = pd.to_numeric(df[col], errors='coerce')
 
     return df
 
@@ -194,10 +197,12 @@ def make_col_combinations(df: pd.DataFrame) -> dict[str, list[str]]:
     for name, cols in ensemble_scores:
         combinations[name + "_info"] = cols + list(chain.from_iterable(info))
         combinations[name + "_noinfo"] = cols
+        if name in RAW_SCORE_COLS:
+            combinations[name + "_raw"] = RAW_SCORE_COLS[name]
 
     return combinations
 
-def train_main(model, df, columns, logpath):
+def train_main(model_path, df, columns_path, log_path):
     """
     Preprocess according to train mode, train various models and save the best model weight/model/columns.
     1-5. Preprocess
@@ -219,36 +224,56 @@ def train_main(model, df, columns, logpath):
     df = preprocess(train_mode=True, df=df)
     combinations = make_col_combinations(df)
 
-    # run name to tuple: (train auprc, val auprc)
-    results: dict[str, tuple[float, float]] = {}
+    # Run name -> tuple: (train auprc, val auprc)
+    results: dict[str, dict[str, float]] = {}
 
-    for name, cols in combinations.items():
-        print(f"Training with feature set: {name} ({len(cols)} features)")
-        cols = cols + ['ID_SVDBSplice']
-        print(f"{len(cols)=} {cols=}")
+    # Store models and test sets to evaluate the best one later
+    saved_models = {}
+    saved_test_data = {}
 
-        features = df[cols]
+    # Ensure directory exists
+    log_dir = Path(log_path)
+    log_dir.mkdir(parents=True, exist_ok=True)
 
-        print("before:", len(features))
-        bad_feature_mask = features.isin(["."]).any(axis=1)
-        rows_with_bad_features = features[bad_feature_mask]
-        features = features[~bad_feature_mask]
-        print("after:", len(features))
-        print("dropped rows due to missing feature values:", len(rows_with_bad_features))
+    # Global train/val/test split before filtering out unscorable rows. This avoids data leakage
+    # and allows fair comparison of feature sets with different numbers of unscorable rows.
+    # Unscorable rows will be filtered out separately for each feature set during training.
+    target_col = 'ID_SVDBSplice'
+    X_all = df.drop(columns=[target_col])
+    y_all = df[target_col]
 
-        # print("Removed rows with bad features:")
-        # print(rows_with_bad_features.to_string())
+    X_train_full_, X_test_full, y_train_full_, y_test_full = train_test_split(
+        X_all, y_all, test_size=0.20, random_state=42
+    )
+    X_train_full, X_val_full, y_train_full, y_val_full = train_test_split(
+        X_train_full_, y_train_full_, test_size=0.20, random_state=42
+    )
 
-        target = df.loc[features.index, 'ID_SVDBSplice']
-        features = features.drop(columns=['ID_SVDBSplice'])
+    for feature_group, cols in combinations.items():
+        print(f"Training with feature set: {feature_group} ({len(cols)} features)")
 
-        # ones = (target == 1).sum()
-        # zeros = (target == 0).sum()
+        # Apply the missing value filter to our globally split datasets
+        X_train, y_train = filter_bad_features(X_train_full, y_train_full, cols)
+        X_val, y_val = filter_bad_features(X_val_full, y_val_full, cols)
+        X_test, y_test = filter_bad_features(X_test_full, y_test_full, cols)
 
-        # print(f'{target}, {ones=}, {zeros=}')
+        if feature_group.endswith("_raw"):
+            model_name = "RawScoreOnly"
 
-        X_train_, X_test, y_train_, y_test = train_test_split(features, target, test_size=0.20, random_state=42)
-        X_train, X_val, y_train, y_val = train_test_split(X_train_, y_train_, test_size=0.20, random_state=42)
+            # Do not fit a model; the prediction is just the max of all "abs(raw score)" from specified columns
+            y_train_preds = X_train.abs().max(axis=1)
+            y_val_preds = X_val.abs().max(axis=1)
+
+            evaluate_and_save_pr_curves(
+                y_train, y_train_preds, y_val, y_val_preds,
+                model_name, feature_group, log_dir, results
+            )
+
+            # Save state for best model evaluation later
+            run_key = f"{model_name}_{feature_group}"
+            saved_models[run_key] = None  # No model, just the raw scores
+            saved_test_data[run_key] = (X_test, y_test)
+            continue
 
         for model_name, (ModelClass, param_grid) in CLASSIFIERS.items():
             # Just init with default params for now, can add hyperparameter tuning later
@@ -258,26 +283,62 @@ def train_main(model, df, columns, logpath):
             y_train_preds = clf.predict_proba(X_train)[:, 1]
             y_val_preds = clf.predict_proba(X_val)[:, 1]
 
-            train_fig, train_auprc = plot_precision_recall_curve(y_train, y_train_preds, model_name, name)
-            val_fig, val_auprc = plot_precision_recall_curve(y_val, y_val_preds, model_name, name)
-            results[f"{model_name}_{name}"] = (train_auprc, val_auprc)
+            evaluate_and_save_pr_curves(
+                y_train, y_train_preds, y_val, y_val_preds,
+                model_name, feature_group, log_dir, results
+            )
 
-            # save the figures
-            train_fig.savefig(Path(logpath) / f"{model_name}_{name}_train_pr_curve.png")
-            val_fig.savefig(Path(logpath) / f"{model_name}_{name}_val_pr_curve.png")
-            plt.close(train_fig)
-            plt.close(val_fig)
-
-    # Save results to a JSON file
-    with open(Path(logpath) / "training_results.json", "w") as f:
-        json.dump(results, f, indent=4)
+            # Save state for test set evaluation
+            run_key = f"{model_name}_{feature_group}"
+            saved_models[run_key] = clf
+            saved_test_data[run_key] = (X_test, y_test)
 
     # get best validation AUPRC model
-    best_model_name, (best_train_auprc, best_val_auprc) = max(results.items(), key=lambda item: item[1][1])
-    print(f"Best model: {best_model_name} with train AUPRC={best_train_auprc:.4f} and val AUPRC={best_val_auprc:.4f}")
+    best_model_key, best_model_metric_items = max(results.items(), key=lambda item: item[1]['val auprc'])
+    print(f"Best model: {best_model_key} with train AUPRC={best_model_metric_items['train auprc']:.4f} and val AUPRC={best_model_metric_items['val auprc']:.4f}")
 
     # evaluate the best model on the test set and save metrics and PR curve
-    # TODO
+    best_clf = saved_models[best_model_key]
+    X_test_best, y_test_best = saved_test_data[best_model_key]
+
+    if best_clf is not None:
+        y_test_preds = best_clf.predict_proba(X_test_best)[:, 1]
+    else:
+        # This means the best "model" was actually just using the raw score as the prediction
+        y_test_preds = X_test_best.abs().max(axis=1)
+
+    model_name, feature_group = best_model_key.split("_", 1)
+    test_fig, test_auprc = plot_precision_recall_curve(y_test_best, y_test_preds, model_name, feature_group)
+    test_fig.savefig(log_dir / f"{best_model_key}_test_pr_curve.png")
+    plt.close(test_fig)
+
+    print(f"Best model test AUPRC: {test_auprc:.4f}")
+    results[best_model_key]["test auprc"] = round(100 * test_auprc, 4)
+
+    # Save all scores, and the best model and according columns
+    with open(Path(columns_path) / f"{best_model_key}_columns.json", 'w') as f:
+        json.dump(combinations[feature_group], f, indent=4)
+    with open(Path(log_path) / "training_results.json", "w") as f:
+        # Save as list sorted by desc order of val AUPRC
+        sorted_results = dict(sorted(results.items(), key=lambda item: item[1]['val auprc'], reverse=True))
+        json.dump(sorted_results, f, indent=4)
+
+    if best_clf is not None:
+        with open(Path(model_path) / f"{best_model_key}_model.pkl", 'wb') as f:
+            pickle.dump(best_clf, f)
+
+def filter_bad_features(X_split, y_split, feature_cols):
+    # Remove rows where any feature is "." (indicating unscorable by that tool)
+    X_subset = X_split[feature_cols].copy()
+    initial_len = len(X_subset)
+
+    bad_feature_mask = X_subset.isna().any(axis=1) | (X_subset == '.').any(axis=1)
+    X_clean, y_clean = X_subset[~bad_feature_mask], y_split[~bad_feature_mask]
+
+    dropped_len = initial_len - len(X_clean)
+    if dropped_len > 0:
+        print(f"cleaned rows. before: {initial_len} | after: {len(X_clean)} | dropped: {dropped_len}")
+    return X_clean, y_clean
 
 def plot_precision_recall_curve(y_true, y_scores, model_name, feature_set_name) -> tuple[Figure, float]:
     """
@@ -313,8 +374,26 @@ def plot_precision_recall_curve(y_true, y_scores, model_name, feature_set_name) 
 
     return fig, pr_auc
 
+def evaluate_and_save_pr_curves(y_train, y_train_preds, y_val, y_val_preds,
+                                model_name: str, feature_group: str, log_dir: Path, results: dict[str, dict[str, float]]):
+    """Helper function to plot, save, and record Precision-Recall curves."""
+    train_fig, train_auprc = plot_precision_recall_curve(y_train, y_train_preds, model_name, feature_group)
+    val_fig, val_auprc = plot_precision_recall_curve(y_val, y_val_preds, model_name, feature_group)
 
-def infer_main(model, df, columns, outfile):
+    results[f"{model_name}_{feature_group}"] = {
+        "train auprc": round(100 * train_auprc, 4),
+        "val auprc": round(100 * val_auprc, 4)
+    }
+
+    # Save the figures
+    train_fig.savefig(log_dir / f"{model_name}_{feature_group}_train_pr_curve.png")
+    val_fig.savefig(log_dir / f"{model_name}_{feature_group}_val_pr_curve.png")
+
+    # Close figures to free up memory
+    plt.close(train_fig)
+    plt.close(val_fig)
+
+def infer_main(model_path, df, columns_path, outfile):
     """
     Preprocess according to inference mode, run inference on supplied model and columns
     and save output TSV.
@@ -323,6 +402,13 @@ def infer_main(model, df, columns, outfile):
     6. (GENERATED) Reorder columns to match training order
         - Given by param (combinations) for inference, should be the training columns of used model.
     """
+    with open(model_path, 'rb') as file:
+        model = pickle.load(file)
+
+    with open(columns_path, 'rb') as file:
+        columns = json.load(file)
+
+    df_original = df.copy()
     df = preprocess(train_mode=False, df=df)
 
     print(f"vcf has {len(df.columns)} columns (including dummies)")
@@ -332,28 +418,40 @@ def infer_main(model, df, columns, outfile):
     print("excluded columns:", set(df.columns) - set(columns))
     print("expected but unpresent columns:", set(columns) - set(df.columns))
 
-    features = df[columns]
+    # features = df[columns]
 
-    print("before:", len(features))
+    features, _ = filter_bad_features(df, pd.Series([0]*len(df)), columns)
 
-    bad_features = features[features.isin(["."]).any(axis=1)]
-    features = features[~features.isin(["."]).any(axis=1)]
-    print("after:", len(features))
-
-    obj_cols = features.select_dtypes(include=["object"]).columns.tolist()
-    print("Object dtype columns:", obj_cols)
+    if len(features) == 0:
+        print("No valid rows after filtering for inference. Saving empty output.")
+        df['introme_score'] = np.nan
+        df.to_csv(outfile, sep='\t', index=False)
+        return
 
     y_scores = model.predict_proba(features)[:, 1]
     scores_series = pd.Series(y_scores, index=features.index).astype(object)
-    scores_full = scores_series.reindex(df.index, fill_value=None)
+    scores_full = scores_series.reindex(df_original.index, fill_value=None)
 
-    df['introme_score'] = scores_full
-    df.to_csv(outfile, sep='\t')
+    # for col starting with "INFO:" if tuple but only length one, unpack to just that value
+    for col in df_original.columns:
+        if col.startswith("INFO:") and df_original[col].apply(lambda x: (isinstance(x, tuple) and len(x) == 1) or x is None or x == ".").all():
+            df_original[col] = df_original[col].apply(lambda x: x[0] if isinstance(x, tuple) and len(x) == 1 else x)
+    df_original['introme_score'] = scores_full
+    df_original.to_csv(outfile, sep='\t')
 
 if __name__ == "__main__":
     USAGE = f"""
     Usage: {sys.argv[0]} infer model_path.pkl columns.json splicing_anno.vcf output_path.tsv
            {sys.argv[0]} train model_path.pkl columns.json splicing_anno.vcf output_folder
+
+    model_path.pkl: path to the saved model pickle file (for inference) or where to save the model (for training)
+
+    columns.json: path to the saved columns JSON file (for inference) or where to save the columns (for training)
+
+    splicing_anno.vcf: path to the input VCF file with splicing annotations
+
+    output_path.tsv: path to the output TSV file with scores (for inference)
+    output_folder: path to the output folder where model and columns will be saved (for training)
     """
     if len(sys.argv) != 6:
         raise ValueError(USAGE)
@@ -364,13 +462,13 @@ if __name__ == "__main__":
     splicing_anno_vcf_path = sys.argv[4]
     output_path = sys.argv[5]
 
-    with open(model_path, 'rb') as file:
-        model = pickle.load(file)
+    # with open(model_path, 'rb') as file:
+    #     model = pickle.load(file)
 
-    with open(columns_path, 'rb') as file:
-        columns = json.load(file)
+    # with open(columns_path, 'rb') as file:
+    #     columns = json.load(file)
 
-    print('columns loaded', columns, len(columns), type(columns))
+    # print('columns loaded', columns, len(columns), type(columns))
     # exit(0)
 
     df = vcf2pandas(splicing_anno_vcf_path,
@@ -378,7 +476,7 @@ if __name__ == "__main__":
                     info_fields=INFO_FIELDS)
 
     if is_train_mode:
-        train_main(model, df, columns, output_path)
+        train_main(model_path, df, columns_path, output_path)
     else:
         with open(output_path, 'w') as outfile:
-            infer_main(model, df, columns, outfile)
+            infer_main(model_path, df, columns_path, outfile)

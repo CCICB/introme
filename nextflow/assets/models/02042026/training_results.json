@@ -1,0 +1,143 @@
+{
+    "RandomForest_all_info": {
+        "train auprc": 100.0,
+        "val auprc": 98.1937
+    },
+    "HistGradientBoosting_all_info": {
+        "train auprc": 99.8078,
+        "val auprc": 98.4887,
+        "test auprc": 98.9312
+    },
+    "RandomForest_all_noinfo": {
+        "train auprc": 100.0,
+        "val auprc": 98.2546
+    },
+    "HistGradientBoosting_all_noinfo": {
+        "train auprc": 99.7117,
+        "val auprc": 98.3157
+    },
+    "RandomForest_notools_info": {
+        "train auprc": 94.6974,
+        "val auprc": 93.0873
+    },
+    "HistGradientBoosting_notools_info": {
+        "train auprc": 94.3602,
+        "val auprc": 93.065
+    },
+    "RandomForest_ese_info": {
+        "train auprc": 99.749,
+        "val auprc": 93.5392
+    },
+    "HistGradientBoosting_ese_info": {
+        "train auprc": 96.6728,
+        "val auprc": 94.0269
+    },
+    "RandomForest_ese_noinfo": {
+        "train auprc": 98.3734,
+        "val auprc": 79.2628
+    },
+    "HistGradientBoosting_ese_noinfo": {
+        "train auprc": 86.5437,
+        "val auprc": 80.4612
+    },
+    "RandomForest_mmsplice_info": {
+        "train auprc": 99.9618,
+        "val auprc": 96.9921
+    },
+    "HistGradientBoosting_mmsplice_info": {
+        "train auprc": 98.7528,
+        "val auprc": 97.0431
+    },
+    "RandomForest_mmsplice_noinfo": {
+        "train auprc": 99.9461,
+        "val auprc": 96.3474
+    },
+    "HistGradientBoosting_mmsplice_noinfo": {
+        "train auprc": 98.6049,
+        "val auprc": 96.1626
+    },
+    "RawScoreOnly_mmsplice_raw": {
+        "train auprc": 92.6329,
+        "val auprc": 92.0215
+    },
+    "RandomForest_pangolin_info": {
+        "train auprc": 99.4169,
+        "val auprc": 97.6378
+    },
+    "HistGradientBoosting_pangolin_info": {
+        "train auprc": 98.7978,
+        "val auprc": 97.8274
+    },
+    "RandomForest_pangolin_noinfo": {
+        "train auprc": 98.4361,
+        "val auprc": 97.3826
+    },
+    "HistGradientBoosting_pangolin_noinfo": {
+        "train auprc": 98.2729,
+        "val auprc": 97.4554
+    },
+    "RawScoreOnly_pangolin_raw": {
+        "train auprc": 97.8716,
+        "val auprc": 97.5286
+    },
+    "RandomForest_spip_info": {
+        "train auprc": 98.7903,
+        "val auprc": 95.6912
+    },
+    "HistGradientBoosting_spip_info": {
+        "train auprc": 97.5465,
+        "val auprc": 96.6909
+    },
+    "RandomForest_spip_noinfo": {
+        "train auprc": 97.3238,
+        "val auprc": 94.4873
+    },
+    "HistGradientBoosting_spip_noinfo": {
+        "train auprc": 96.2635,
+        "val auprc": 95.5901
+    },
+    "RawScoreOnly_spip_raw": {
+        "train auprc": 93.126,
+        "val auprc": 92.8335
+    },
+    "RandomForest_spliceai_info": {
+        "train auprc": 100.0,
+        "val auprc": 97.9455
+    },
+    "HistGradientBoosting_spliceai_info": {
+        "train auprc": 99.1776,
+        "val auprc": 97.9073
+    },
+    "RandomForest_spliceai_noinfo": {
+        "train auprc": 99.9969,
+        "val auprc": 97.5355
+    },
+    "HistGradientBoosting_spliceai_noinfo": {
+        "train auprc": 98.7226,
+        "val auprc": 97.532
+    },
+    "RawScoreOnly_spliceai_raw": {
+        "train auprc": 97.3877,
+        "val auprc": 96.8745
+    },
+    "RandomForest_spliceogen_info": {
+        "train auprc": 100.0,
+        "val auprc": 96.5598
+    },
+    "HistGradientBoosting_spliceogen_info": {
+        "train auprc": 98.1085,
+        "val auprc": 96.5667
+    },
+    "RandomForest_spliceogen_noinfo": {
+        "train auprc": 100.0,
+        "val auprc": 95.8825
+    },
+    "HistGradientBoosting_spliceogen_noinfo": {
+        "train auprc": 97.7955,
+        "val auprc": 95.8371
+    },
+    "RawScoreOnly_spliceogen_raw": {
+        "train auprc": 94.599,
+        "val auprc": 93.8525
+    }
+}

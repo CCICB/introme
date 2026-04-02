@@ -127,7 +127,8 @@ VARIANT_TYPE = [f"INFO:AGcheck_Variant_Type_{suffix}" for suffix in [
                     "('SNV',)",
                 ]]
 
-# Training regimes
+###############################################################################
+# Training Settings below
 
 ENSEMBLE_SCORE_COLS = {
     "ese": "INFO:ESE_",
@@ -138,15 +139,21 @@ ENSEMBLE_SCORE_COLS = {
     "spliceogen": "INFO:Spliceogen_",
 }
 
+# These are the main scores from each tool, usually splice change prob or log prob.
+# Apply max of abs to all specified columns
 RAW_SCORE_COLS = {
     "spliceai": ['INFO:SpliceAI_DS_AG', 'INFO:SpliceAI_DS_AL', 'INFO:SpliceAI_DS_DG', 'INFO:SpliceAI_DS_DL'],
     "spip": ['INFO:SPIP_SPiCE_Prob'],
     "pangolin": ['INFO:Pangolin_Gain', 'INFO:Pangolin_Loss'],
-    "spliceogen": ['INFO:Spliceogen_AccGainP',	'INFO:Spliceogen_AccLossP', 'INFO:Spliceogen_DonGainP', 'INFO:Spliceogen_DonLossP'],
+    "spliceogen": ['INFO:Spliceogen_AccGainP', 'INFO:Spliceogen_AccLossP', 'INFO:Spliceogen_DonGainP', 'INFO:Spliceogen_DonLossP'],
+    # "The main score is predicted by MMSplice, which shows the effect of the variant on the inclusion level (PSI percent spliced in) of the exon.
+    # If delta_logit_psi is bigger than 2 or smaller than -2, the effect of variant can be considered strong."
+    "mmsplice": ['INFO:MMSplice_delta_logit_PSI'],
 }
 
+# Model names mapped to (model class, hyperparameter grid for tuning)
 CLASSIFIERS = {
     "RandomForest": (RandomForestClassifier, {}),
     "HistGradientBoosting": (HistGradientBoostingClassifier, {}),
-    "GradientBoosting": (GradientBoostingClassifier, {}),
+    # "GradientBoosting": (GradientBoostingClassifier, {}),
 }
