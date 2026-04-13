@@ -1,8 +1,8 @@
+import argparse
 from itertools import chain
 from pathlib import Path
 import json
-import os, pickle, sys
-from typing import Literal
+import pickle
 
 from vcf2pandas import vcf2pandas
 import pandas as pd
@@ -13,6 +13,8 @@ from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSe
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, precision_recall_curve, auc
+from sklearn.model_selection import GroupKFold
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -28,6 +30,12 @@ from pipeline_constants import (
     RAW_SCORE_COLS,
     CLASSIFIERS,
 )
+
+TARGET_COL = 'ID_SVDBSplice'
+CHROM_COL = 'CHROM'
+DEFAULT_TEST_CHROMS = ['chr1', 'chr3', 'chr5', 'chr7', 'chr9']
+CV_FOLDS = 5
+RANDOM_STATE = 42
 
 """
 Functions:
@@ -202,7 +210,7 @@ def make_col_combinations(df: pd.DataFrame) -> dict[str, list[str]]:
 
     return combinations
 
-def train_main(model_path, df, columns_path, log_path):
+def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir: Path, run_name: str):
     """
     Preprocess according to train mode, train various models and save the best model weight/model/columns.
     1-5. Preprocess
@@ -221,111 +229,239 @@ def train_main(model_path, df, columns_path, log_path):
         e) Compare with using the "raw" feature scores (e.g. SpliceAI_DS) as the only feature,
             to see if the model is actually learning something useful.
     """
+    save_dir.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
+
     df = preprocess(train_mode=True, df=df)
     combinations = make_col_combinations(df)
-
-    # Run name -> tuple: (train auprc, val auprc)
-    results: dict[str, dict[str, float]] = {}
-
-    # Store models and test sets to evaluate the best one later
-    saved_models = {}
-    saved_test_data = {}
-
-    # Ensure directory exists
-    log_dir = Path(log_path)
-    log_dir.mkdir(parents=True, exist_ok=True)
 
     # Global train/val/test split before filtering out unscorable rows. This avoids data leakage
     # and allows fair comparison of feature sets with different numbers of unscorable rows.
     # Unscorable rows will be filtered out separately for each feature set during training.
-    target_col = 'ID_SVDBSplice'
-    X_all = df.drop(columns=[target_col])
-    y_all = df[target_col]
+    if TARGET_COL not in df.columns:
+        raise ValueError(f"Target column '{TARGET_COL}' is missing after preprocessing. Available columns: {df.columns}")
+    if CHROM_COL not in df.columns:
+        raise ValueError(f"Chromosome column '{CHROM_COL}' is missing after preprocessing. Available columns: {df.columns}")
+    y_all = pd.to_numeric(df[TARGET_COL], errors='raise').astype(int)
+    if not set(y_all.unique()).issubset({0, 1}):
+        raise ValueError(f"Target column '{TARGET_COL}' must be binary (0 and 1). Found values: {y_all.unique()}")
 
-    X_train_full_, X_test_full, y_train_full_, y_test_full = train_test_split(
-        X_all, y_all, test_size=0.20, random_state=42
-    )
-    X_train_full, X_val_full, y_train_full, y_val_full = train_test_split(
-        X_train_full_, y_train_full_, test_size=0.20, random_state=42
-    )
+    X_all = df.drop(columns=[TARGET_COL])
+    test_mask = df[CHROM_COL].isin(test_chroms)
+    if test_mask.sum() == 0:
+        raise ValueError(f"No rows found for test chromosomes {test_chroms}. Check if chromosome naming (e.g. chr1 vs 1).")
+    if (~test_mask).sum() == 0:
+        raise ValueError(f"No rows remain for train/validation after applying test chromosome split.")
+    
+    X_train_full = X_all[~test_mask]
+    y_train_full = y_all[~test_mask]
+    groups_train = df[CHROM_COL].loc[~test_mask]
 
+    X_test_full = X_all.loc[test_mask]
+    y_test_full = y_all.loc[test_mask]
+    groups_test = df[CHROM_COL].loc[test_mask]
+
+    overlap_chroms = set(groups_train.unique()) & set(groups_test.unique())
+    if len(overlap_chroms) != 0:
+        raise ValueError(f"Data leakage risk: Chromosomes {', '.join(overlap_chroms)} appear in both train and test sets.")
+    
+    if groups_train.nunique() < CV_FOLDS:
+        raise ValueError(f"Need at least {CV_FOLDS} non-test chromosomes for GroupKFold,"
+                         f" but only found {groups_train.nunique()}.")
+    
+    cv = GroupKFold(n_splits=CV_FOLDS)
+    cv_splits = list(cv.split(X_train_full, y_train_full, groups=groups_train))
+
+    results: dict[str, dict] = {} # run name -> stats dict (train auprc, val auprc, etc.)
+    run_register: dict[str, dict] = {} # run name -> dict of info to save about that run (e.g. model params, feature columns used, etc.)
+    skipped_runs: dict[str, str] = {}  # run name -> reason for skipping
+    # # Store models and test sets to evaluate the best one later
+    # saved_models = {}
+    # saved_test_data = {}
     for feature_group, cols in combinations.items():
-        print(f"Training with feature set: {feature_group} ({len(cols)} features)")
-
-        # Apply the missing value filter to our globally split datasets
-        X_train, y_train = filter_bad_features(X_train_full, y_train_full, cols)
-        X_val, y_val = filter_bad_features(X_val_full, y_val_full, cols)
-        X_test, y_test = filter_bad_features(X_test_full, y_test_full, cols)
-
-        if feature_group.endswith("_raw"):
-            model_name = "RawScoreOnly"
-
-            # Do not fit a model; the prediction is just the max of all "abs(raw score)" from specified columns
-            y_train_preds = X_train.abs().max(axis=1)
-            y_val_preds = X_val.abs().max(axis=1)
-
-            evaluate_and_save_pr_curves(
-                y_train, y_train_preds, y_val, y_val_preds,
-                model_name, feature_group, log_dir, results
-            )
-
-            # Save state for best model evaluation later
-            run_key = f"{model_name}_{feature_group}"
-            saved_models[run_key] = None  # No model, just the raw scores
-            saved_test_data[run_key] = (X_test, y_test)
+        missing_cols = [col for col in cols if col not in X_all.columns]
+        error = None
+        if missing_cols:
+            reason = f"The following columns for feature group '{feature_group}' are missing: {missing_cols}"
+            print(reason)
+            skipped_runs[feature_group] = reason
             continue
 
-        for model_name, (ModelClass, param_grid) in CLASSIFIERS.items():
-            # Just init with default params for now, can add hyperparameter tuning later
-            clf = ModelClass()
-            clf.fit(X_train, y_train)
+        print(f"Training with feature set: {feature_group} ({len(cols)} features)")
 
-            y_train_preds = clf.predict_proba(X_train)[:, 1]
-            y_val_preds = clf.predict_proba(X_val)[:, 1]
+        models = [
+            ("RawScoreOnly", None)
+        ] if feature_group.endswith("_raw") else [
+            (name, cls) for name, (cls, _) in CLASSIFIERS.items() if cls is not None
+        ]
 
-            evaluate_and_save_pr_curves(
-                y_train, y_train_preds, y_val, y_val_preds,
-                model_name, feature_group, log_dir, results
-            )
-
-            # Save state for test set evaluation
+        for model_name, ModelClass in models:
             run_key = f"{model_name}_{feature_group}"
-            saved_models[run_key] = clf
-            saved_test_data[run_key] = (X_test, y_test)
+            fold_train_auprcs: list[float] = []
+            fold_val_auprcs: list[float] = []
+
+            for fold_idx, (train_idx, val_idx) in enumerate(cv_splits):
+                X_train_fold, y_train_fold = X_train_full.iloc[train_idx], y_train_full.iloc[train_idx]
+                X_val_fold, y_val_fold = X_train_full.iloc[val_idx], y_train_full.iloc[val_idx]
+
+                X_train, y_train = filter_bad_features(X_train_fold, y_train_fold, cols)
+                X_val, y_val = filter_bad_features(X_val_fold, y_val_fold, cols)
+
+                if len(X_train) == 0 or len(X_val) == 0:
+                    error = f"Fold {fold_idx}: No valid training samples after filtering for feature group '{feature_group}'"
+                    break
+
+                if ModelClass is None:
+                    # Do not fit a model; the prediction is just the max of all "abs(raw score)" from specified columns
+                    y_train_preds = X_train.abs().max(axis=1)
+                    y_val_preds = X_val.abs().max(axis=1)
+                else:
+                    clf = ModelClass(random_state=RANDOM_STATE)
+                    clf.fit(X_train, y_train)
+
+                    y_train_preds = clf.predict_proba(X_train)[:, 1]
+                    y_val_preds = clf.predict_proba(X_val)[:, 1]
+
+                fold_train_auprcs.append(compute_auprc(y_train, y_train_preds))
+                fold_val_auprcs.append(compute_auprc(y_val, y_val_preds))
+
+            if error is not None:
+                print(f"Skipping model {run_key} due to error: {error}")
+                skipped_runs[run_key] = error
+                continue
+
+            results[run_key] = {
+                "train auprc": round(100 * float(np.mean(fold_train_auprcs)), 4),
+                "val auprc":   round(100 * float(np.mean(fold_val_auprcs)), 4),
+                "train auprc std": round(100 * float(np.std(fold_train_auprcs)), 4),
+                "val auprc std":   round(100 * float(np.std(fold_val_auprcs)), 4),
+                "num folds": CV_FOLDS,
+                "all fold train auprcs": [round(100 * float(auprc), 4) for auprc in fold_train_auprcs],
+                "all fold val auprcs": [round(100 * float(auprc), 4) for auprc in fold_val_auprcs],
+            }
+
+            run_register[run_key] = {
+                "model_name": model_name,
+                "feature_group": feature_group,
+                "feature_columns": cols,
+                "is_raw": feature_group.endswith("_raw"),
+                "model_class": ModelClass
+                # "model_params": clf.get_params() if ModelClass is not None else None,
+            }
+
+        # if feature_group.endswith("_raw"):
+        #     model_name = "RawScoreOnly"
+
+        #     # Do not fit a model; the prediction is just the max of all "abs(raw score)" from specified columns
+        #     y_train_preds = X_train.abs().max(axis=1)
+        #     y_val_preds = X_val.abs().max(axis=1)
+
+        #     evaluate_and_save_pr_curves(
+        #         y_train, y_train_preds, y_val, y_val_preds,
+        #         model_name, feature_group, log_dir, results
+        #     )
+
+        #     # Save state for best model evaluation later
+        #     run_key = f"{model_name}_{feature_group}"
+        #     saved_models[run_key] = None  # No model, just the raw scores
+        #     saved_test_data[run_key] = (X_test, y_test)
+        #     continue
+
+        # for model_name, (ModelClass, param_grid) in CLASSIFIERS.items():
+        #     # Just init with default params for now, can add hyperparameter tuning later
+        #     clf = ModelClass()
+        #     clf.fit(X_train, y_train)
+
+        #     y_train_preds = clf.predict_proba(X_train)[:, 1]
+        #     y_val_preds = clf.predict_proba(X_val)[:, 1]
+
+        #     evaluate_and_save_pr_curves(
+        #         y_train, y_train_preds, y_val, y_val_preds,
+        #         model_name, feature_group, log_dir, results
+        #     )
+
+        #     # Save state for test set evaluation
+        #     run_key = f"{model_name}_{feature_group}"
+        #     saved_models[run_key] = clf
+        #     saved_test_data[run_key] = (X_test, y_test)
+
+    if not results:
+        raise ValueError(f"No models were successfully trained. Skipped runs: {skipped_runs}")
 
     # get best validation AUPRC model
-    best_model_key, best_model_metric_items = max(results.items(), key=lambda item: item[1]['val auprc'])
-    print(f"Best model: {best_model_key} with train AUPRC={best_model_metric_items['train auprc']:.4f} and val AUPRC={best_model_metric_items['val auprc']:.4f}")
+    model_run_keys = [key for key in results.keys() if not key.endswith("_raw")]
+    best_model_key = max(model_run_keys, key=lambda run_key: results[run_key]['val auprc'])
+    print(f"Best model: {best_model_key} with train AUPRC={results[best_model_key]['train auprc']:.4f} and val AUPRC={results[best_model_key]['val auprc']:.4f}")
+
+    raw_run_keys = [key for key in results.keys() if key.endswith("_raw")]
+    best_raw_key = max(raw_run_keys, key=lambda run_key: results[run_key]['val auprc'])
+    print(f"Best raw score only model: {best_raw_key} with val AUPRC={results[best_raw_key]['val auprc']:.4f}")
+
+    def evalute_on_test(run_key: str):
+        meta = run_register[run_key]
+        feature_cols = meta['feature_columns']
+        feature_group = meta['feature_group']
+        model_name = str(meta['model_name'])
+
+        X_train, y_train = filter_bad_features(X_train_full, y_train_full, feature_cols)
+        X_test, y_test = filter_bad_features(X_test_full, y_test_full, feature_cols)
+
+        if len(X_train) == 0 or len(X_test) == 0:
+            raise ValueError(f"Skipping test evaluation for {run_key} due to no valid samples after filtering.")
+
+        ModelClass = meta['model_class']
+        if ModelClass is None:
+            y_test_preds = X_test.abs().max(axis=1)
+        else:
+            trained_model = ModelClass(random_state=RANDOM_STATE)
+            trained_model.fit(X_train, y_train)
+            y_test_preds = trained_model.predict_proba(X_test)[:, 1]
+        
+        test_fig, test_auprc = plot_precision_recall_curve(y_test, y_test_preds, model_name, feature_group)
+        test_fig.savefig(log_dir / f"{run_key}_{run_name}_test_pr_curve.png")
+        plt.close(test_fig)
+        return round(100 * test_auprc, 4)
 
     # evaluate the best model on the test set and save metrics and PR curve
-    best_clf = saved_models[best_model_key]
-    X_test_best, y_test_best = saved_test_data[best_model_key]
+    best_model_test_auprc = evalute_on_test(best_model_key)
+    results[best_model_key]["test auprc"] = best_model_test_auprc
+    print(f"Best model test AUPRC: {best_model_test_auprc:.4f}")
 
-    if best_clf is not None:
-        y_test_preds = best_clf.predict_proba(X_test_best)[:, 1]
-    else:
-        # This means the best "model" was actually just using the raw score as the prediction
-        y_test_preds = X_test_best.abs().max(axis=1)
-
-    model_name, feature_group = best_model_key.split("_", 1)
-    test_fig, test_auprc = plot_precision_recall_curve(y_test_best, y_test_preds, model_name, feature_group)
-    test_fig.savefig(log_dir / f"{best_model_key}_test_pr_curve.png")
-    plt.close(test_fig)
-
-    print(f"Best model test AUPRC: {test_auprc:.4f}")
-    results[best_model_key]["test auprc"] = round(100 * test_auprc, 4)
+    best_raw_test_auprc = evalute_on_test(best_raw_key)
+    results[best_raw_key]["test auprc"] = best_raw_test_auprc
+    print(f"Best raw-score-only model test AUPRC: {best_raw_test_auprc:.4f}")
 
     # Save all scores, and the best model and according columns
-    with open(Path(columns_path) / f"{best_model_key}_columns.json", 'w') as f:
-        json.dump(combinations[feature_group], f, indent=4)
-    with open(Path(log_path) / "training_results.json", "w") as f:
-        # Save as list sorted by desc order of val AUPRC
-        sorted_results = dict(sorted(results.items(), key=lambda item: item[1]['val auprc'], reverse=True))
-        json.dump(sorted_results, f, indent=4)
+    with open(save_dir / f"{best_model_key}_{run_name}_columns.json", 'w') as f:
+        json.dump(run_register[best_model_key]['feature_columns'], f, indent=4)
+    with open(save_dir / f"{best_model_key}_{run_name}_model.pkl", 'wb') as f:
+        pickle.dump(run_register[best_model_key]['model_class'](), f)
 
-    if best_clf is not None:
-        with open(Path(model_path) / f"{best_model_key}_model.pkl", 'wb') as f:
-            pickle.dump(best_clf, f)
+    best_model_summary = {
+        "description": "best model by validation AUPRC among all non-raw-score-only models",
+        "model_key": best_model_key,
+        "validation_auprc": results[best_model_key]['val auprc'],
+        "test_auprc": results[best_model_key]['test auprc'],
+    }
+
+    raw_summary = {
+        "description": "best raw-score-only model by validation AUPRC",
+        "model_key": best_raw_key,
+        "validation_auprc": results[best_raw_key]['val auprc'],
+        "test_auprc": results[best_raw_key]['test auprc'],
+    }
+
+    # Save as list sorted by desc order of val AUPRC
+    sorted_results = dict(sorted(results.items(), key=lambda item: item[1]['val auprc'], reverse=True))
+    payload = {
+        "best_model": best_model_summary,
+        "best_raw_score_model": raw_summary,
+        "all_results": sorted_results,
+        "skipped_runs": skipped_runs,
+    }
+
+    with open(log_dir / f"training_results_{run_name}.json", "w") as f:
+        json.dump(payload, f, indent=4)
 
 def filter_bad_features(X_split, y_split, feature_cols):
     # Remove rows where any feature is "." (indicating unscorable by that tool)
@@ -339,6 +475,10 @@ def filter_bad_features(X_split, y_split, feature_cols):
     if dropped_len > 0:
         print(f"cleaned rows. before: {initial_len} | after: {len(X_clean)} | dropped: {dropped_len}")
     return X_clean, y_clean
+
+def compute_auprc(y_true, y_scores) -> float:
+    precision, recall, _ = precision_recall_curve(y_true, y_scores)
+    return float(auc(recall, precision))
 
 def plot_precision_recall_curve(y_true, y_scores, model_name, feature_set_name) -> tuple[Figure, float]:
     """
@@ -375,15 +515,15 @@ def plot_precision_recall_curve(y_true, y_scores, model_name, feature_set_name) 
     return fig, pr_auc
 
 def evaluate_and_save_pr_curves(y_train, y_train_preds, y_val, y_val_preds,
-                                model_name: str, feature_group: str, log_dir: Path, results: dict[str, dict[str, float]]):
+                                model_name: str, feature_group: str, log_dir: Path):
     """Helper function to plot, save, and record Precision-Recall curves."""
     train_fig, train_auprc = plot_precision_recall_curve(y_train, y_train_preds, model_name, feature_group)
     val_fig, val_auprc = plot_precision_recall_curve(y_val, y_val_preds, model_name, feature_group)
 
-    results[f"{model_name}_{feature_group}"] = {
-        "train auprc": round(100 * train_auprc, 4),
-        "val auprc": round(100 * val_auprc, 4)
-    }
+    # results[f"{model_name}_{feature_group}"] = {
+    #     "train auprc": round(100 * train_auprc, 4),
+    #     "val auprc": round(100 * val_auprc, 4)
+    # }
 
     # Save the figures
     train_fig.savefig(log_dir / f"{model_name}_{feature_group}_train_pr_curve.png")
@@ -393,7 +533,7 @@ def evaluate_and_save_pr_curves(y_train, y_train_preds, y_val, y_val_preds,
     plt.close(train_fig)
     plt.close(val_fig)
 
-def infer_main(model_path, df, columns_path, outfile):
+def infer_main(model_path: Path, df: pd.DataFrame, columns_path: Path, output_path: Path):
     """
     Preprocess according to inference mode, run inference on supplied model and columns
     and save output TSV.
@@ -425,7 +565,7 @@ def infer_main(model_path, df, columns_path, outfile):
     if len(features) == 0:
         print("No valid rows after filtering for inference. Saving empty output.")
         df['introme_score'] = np.nan
-        df.to_csv(outfile, sep='\t', index=False)
+        df.to_csv(output_path, sep='\t', index=False)
         return
 
     y_scores = model.predict_proba(features)[:, 1]
@@ -437,46 +577,56 @@ def infer_main(model_path, df, columns_path, outfile):
         if col.startswith("INFO:") and df_original[col].apply(lambda x: (isinstance(x, tuple) and len(x) == 1) or x is None or x == ".").all():
             df_original[col] = df_original[col].apply(lambda x: x[0] if isinstance(x, tuple) and len(x) == 1 else x)
     df_original['introme_score'] = scores_full
-    df_original.to_csv(outfile, sep='\t')
+    df_original.to_csv(output_path, sep='\t', index=False)
+
+def existing_file(path_str: str) -> Path:
+    path = Path(path_str)
+    if not path.is_file():
+        raise argparse.ArgumentTypeError(f"Expected an existing file path, got: {path_str}")
+    return path
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Train or run inference for the Introme ensemble score model.")
+    subparsers = parser.add_subparsers(dest="mode", required=True, help="Mode of operation: 'train' or 'infer'")
+
+    infer_parser = subparsers.add_parser("infer", help="Run inference using a saved model and feature columns.")
+    infer_parser.add_argument("--model-path", required=True, type=existing_file, help="Path to an existing model pickle (.pkl) file.")
+    infer_parser.add_argument("--columns-path", required=True, type=existing_file, help="Path to an existing columns JSON file.")
+    infer_parser.add_argument("--input-vcf", required=True, type=existing_file, help="Path to the input VCF file with splicing annotations.")
+    infer_parser.add_argument("--output-tsv", required=True, type=Path, help="Path to write the output TSV scores")
+
+    train_parser = subparsers.add_parser("train", help="Train candidate models and save selected model + columns")
+    train_parser.add_argument("--save-dir", required=True, type=Path, help="Directory to save the best model pickle and columns JSON.")
+    train_parser.add_argument("--input-vcf", required=True, type=existing_file, help="Path to the input VCF file with splicing annotations and labels.")
+    train_parser.add_argument("--log-dir", required=True, type=Path, help="Directory to save training logs, metrics, and plots.")
+    train_parser.add_argument("--run-name", required=True, type=str, help="Name for this training run (used in saved files).")
+    train_parser.add_argument("--test-chroms", default=DEFAULT_TEST_CHROMS, nargs='+', help=f"List of chromosomes to use as test set (default: {DEFAULT_TEST_CHROMS})")
+
+    return parser
 
 if __name__ == "__main__":
-    USAGE = f"""
-    Usage: {sys.argv[0]} infer model_path.pkl columns.json splicing_anno.vcf output_path.tsv
-           {sys.argv[0]} train model_path.pkl columns.json splicing_anno.vcf output_folder
+    parser = build_parser()
+    args = parser.parse_args()
 
-    model_path.pkl: path to the saved model pickle file (for inference) or where to save the model (for training)
-
-    columns.json: path to the saved columns JSON file (for inference) or where to save the columns (for training)
-
-    splicing_anno.vcf: path to the input VCF file with splicing annotations
-
-    output_path.tsv: path to the output TSV file with scores (for inference)
-    output_folder: path to the output folder where model and columns will be saved (for training)
-    """
-    if len(sys.argv) != 6:
-        raise ValueError(USAGE)
-
-    is_train_mode = (sys.argv[1] == "train")
-    model_path = sys.argv[2]
-    columns_path = sys.argv[3]
-    splicing_anno_vcf_path = sys.argv[4]
-    output_path = sys.argv[5]
-
-    # with open(model_path, 'rb') as file:
-    #     model = pickle.load(file)
-
-    # with open(columns_path, 'rb') as file:
-    #     columns = json.load(file)
-
-    # print('columns loaded', columns, len(columns), type(columns))
-    # exit(0)
-
-    df = vcf2pandas(splicing_anno_vcf_path,
-                    remove_empty_columns=is_train_mode,
-                    info_fields=INFO_FIELDS)
+    is_train_mode = (args.mode == "train")
+    df = vcf2pandas(str(args.input_vcf),
+        remove_empty_columns=is_train_mode,
+        info_fields=INFO_FIELDS
+    )
 
     if is_train_mode:
-        train_main(model_path, df, columns_path, output_path)
+        train_main(
+            save_dir=args.save_dir,
+            df=df,
+            test_chroms=args.test_chroms,
+            log_dir=args.log_dir,
+            run_name=args.run_name
+        )
     else:
-        with open(output_path, 'w') as outfile:
-            infer_main(model_path, df, columns_path, outfile)
+        infer_main(
+            model_path=args.model_path,
+            df=df,
+            columns_path=args.columns_path,
+            output_path=args.output_tsv
+        )
+

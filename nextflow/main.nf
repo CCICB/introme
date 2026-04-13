@@ -263,7 +263,7 @@ workflow {
     )
 
     // TODO: decide on where to put inference script.
-    ensemble_score_script_path = file('../ESE/ML/inference.py')
+    ensemble_score_script_path = file('../ESE/ML/main2.py')
     clf_model_path = Channel.fromPath(assets_path + '/models/all_hgb_model_SEP25.pkl')
     columns_path = Channel.fromPath(assets_path + '/models/columns.json')
 

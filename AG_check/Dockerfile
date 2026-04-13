@@ -38,9 +38,9 @@ RUN curl -L https://github.com/samtools/bcftools/releases/download/1.17/bcftools
     rm -rf bcftools-1.17 bcftools.tar.bz2
 
 RUN pip install --upgrade pip --no-cache-dir && \
-    pip install --no-cache-dir pysam Biopython pandas vcf2pandas scikit-learn
+    pip install --no-cache-dir pysam Biopython pandas vcf2pandas scikit-learn matplotlib
 
 RUN curl -L https://github.com/brentp/vcfanno/releases/download/v0.3.5/vcfanno_linux64 -o /usr/local/bin/vcfanno && \
     chmod +x /usr/local/bin/vcfanno
 
-LABEL version='v1.5'
+LABEL version='v1.6'

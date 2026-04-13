@@ -17,6 +17,10 @@ process ensemble {
 
     script:
     """
-    python3 ${ensemble_score_script_path} ${clf_model_path} ${columns_path} ${splicing_anno_vcf} ${params.prefix}.introme.predictions.tsv
+    python3 ${ensemble_score_script_path} infer \
+        --model-path ${clf_model_path} \
+        --columns-path ${columns_path} \
+        --input-vcf ${splicing_anno_vcf} \
+        --output-tsv ${params.prefix}.introme.predictions.tsv
     """
 }

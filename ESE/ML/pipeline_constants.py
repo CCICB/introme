@@ -1,3 +1,4 @@
+from typing import Any, TypeAlias
 
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, GradientBoostingClassifier
 
@@ -151,9 +152,10 @@ RAW_SCORE_COLS = {
     "mmsplice": ['INFO:MMSplice_delta_logit_PSI'],
 }
 
-# Model names mapped to (model class, hyperparameter grid for tuning)
-CLASSIFIERS = {
+ClassifierCtor: TypeAlias = type[RandomForestClassifier | HistGradientBoostingClassifier]
+ClassifierSpec: TypeAlias = tuple[ClassifierCtor, dict[str, Any]]
+
+CLASSIFIERS: dict[str, ClassifierSpec] = {
     "RandomForest": (RandomForestClassifier, {}),
     "HistGradientBoosting": (HistGradientBoostingClassifier, {}),
-    # "GradientBoosting": (GradientBoostingClassifier, {}),
 }
