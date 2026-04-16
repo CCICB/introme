@@ -31,5 +31,14 @@
     "gtf" : "",
     "genome_build" :  "hg38",
     "prefix" :  "test",
-    "bed" : ""
+    "bed" : "",
+
+    "ml_mode" : "infer",
+    "ml_model_path" : "./assets/models/17042026/RandomForest_all_info_introme_train_run_model.pkl",
+    "ml_columns_path" : "./assets/models/17042026/RandomForest_all_info_introme_train_run_columns.json",
+
+    "ml_save_dir" : "./output/ensemble_train/models",
+    "ml_log_dir" : "./output/ensemble_train/logs",
+    "ml_run_name" : "introme_train_run",
+    "ml_test_chroms" : ["chr1", "chr3", "chr5", "chr7", "chr9"]
 }

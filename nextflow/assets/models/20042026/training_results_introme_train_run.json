@@ -1,0 +1,1073 @@
+{
+    "best_model": {
+        "description": "best model by validation AUPRC among all non-raw-score-only models",
+        "model_key": "RandomForest_all_info",
+        "validation_auprc": 98.4296,
+        "test_auprc": 98.5575,
+        "params": {
+            "n_jobs": -1,
+            "min_samples_leaf": 5
+        }
+    },
+    "best_raw_score_model": {
+        "description": "best raw-score-only model by validation AUPRC",
+        "model_key": "RawScoreOnly_pangolin_raw",
+        "validation_auprc": 97.869,
+        "test_auprc": 97.95
+    },
+    "all_results": {
+        "RandomForest_all_info": {
+            "train auprc": 99.7411,
+            "val auprc": 98.4296,
+            "train auprc std": 0.0176,
+            "val auprc std": 0.3184,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.7467,
+                99.7532,
+                99.7593,
+                99.7092,
+                99.737
+            ],
+            "all fold val auprcs": [
+                98.3617,
+                98.294,
+                97.9665,
+                98.9166,
+                98.6089
+            ],
+            "test auprc": 98.5575
+        },
+        "HistGradientBoosting_all_info": {
+            "train auprc": 99.7795,
+            "val auprc": 98.4264,
+            "train auprc std": 0.0204,
+            "val auprc std": 0.3534,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.799,
+                99.7552,
+                99.8049,
+                99.7804,
+                99.7582
+            ],
+            "all fold val auprcs": [
+                98.2997,
+                98.1479,
+                98.0276,
+                98.9846,
+                98.672
+            ]
+        },
+        "XGBoost_all_info": {
+            "train auprc": 99.1118,
+            "val auprc": 98.3802,
+            "train auprc std": 0.0478,
+            "val auprc std": 0.4407,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.1403,
+                99.1367,
+                99.1517,
+                99.0202,
+                99.1098
+            ],
+            "all fold val auprcs": [
+                98.5157,
+                97.9987,
+                97.7599,
+                98.9668,
+                98.6601
+            ]
+        },
+        "XGBoost_all_noinfo": {
+            "train auprc": 99.0485,
+            "val auprc": 98.3777,
+            "train auprc std": 0.0597,
+            "val auprc std": 0.3337,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.0651,
+                99.0763,
+                99.1237,
+                98.9441,
+                99.0335
+            ],
+            "all fold val auprcs": [
+                98.4143,
+                98.0912,
+                97.9864,
+                98.9377,
+                98.459
+            ]
+        },
+        "RandomForest_all_noinfo": {
+            "train auprc": 99.7401,
+            "val auprc": 98.3632,
+            "train auprc std": 0.0181,
+            "val auprc std": 0.4019,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.7474,
+                99.7483,
+                99.7607,
+                99.7071,
+                99.7371
+            ],
+            "all fold val auprcs": [
+                98.2086,
+                98.1839,
+                97.7993,
+                98.9361,
+                98.6879
+            ]
+        },
+        "HistGradientBoosting_all_noinfo": {
+            "train auprc": 99.7597,
+            "val auprc": 98.3304,
+            "train auprc std": 0.0496,
+            "val auprc std": 0.3028,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.7984,
+                99.7679,
+                99.8101,
+                99.6694,
+                99.7525
+            ],
+            "all fold val auprcs": [
+                98.2484,
+                98.1485,
+                97.9254,
+                98.7891,
+                98.5405
+            ]
+        },
+        "XGBoost_pangolin_info": {
+            "train auprc": 98.5386,
+            "val auprc": 98.3131,
+            "train auprc std": 0.0884,
+            "val auprc std": 0.3586,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.5579,
+                98.5944,
+                98.6249,
+                98.3709,
+                98.5447
+            ],
+            "all fold val auprcs": [
+                98.3078,
+                98.0789,
+                97.8837,
+                98.9476,
+                98.3473
+            ]
+        },
+        "HistGradientBoosting_pangolin_info": {
+            "train auprc": 98.8514,
+            "val auprc": 98.2653,
+            "train auprc std": 0.0967,
+            "val auprc std": 0.362,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.8806,
+                98.8944,
+                98.9927,
+                98.7193,
+                98.7699
+            ],
+            "all fold val auprcs": [
+                98.2683,
+                97.9857,
+                97.8153,
+                98.8638,
+                98.3936
+            ]
+        },
+        "RandomForest_pangolin_info": {
+            "train auprc": 98.798,
+            "val auprc": 98.147,
+            "train auprc std": 0.0727,
+            "val auprc std": 0.39,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.8296,
+                98.8345,
+                98.8753,
+                98.6639,
+                98.7867
+            ],
+            "all fold val auprcs": [
+                98.0127,
+                97.9507,
+                97.6829,
+                98.8381,
+                98.2507
+            ]
+        },
+        "XGBoost_spliceai_info": {
+            "train auprc": 98.4334,
+            "val auprc": 98.0618,
+            "train auprc std": 0.0985,
+            "val auprc std": 0.4719,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.4609,
+                98.5377,
+                98.5103,
+                98.2613,
+                98.3969
+            ],
+            "all fold val auprcs": [
+                97.9888,
+                97.48,
+                97.7275,
+                98.8466,
+                98.2662
+            ]
+        },
+        "HistGradientBoosting_spliceai_info": {
+            "train auprc": 99.1837,
+            "val auprc": 98.0469,
+            "train auprc std": 0.1707,
+            "val auprc std": 0.4437,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.2151,
+                99.4427,
+                99.2103,
+                98.9098,
+                99.1405
+            ],
+            "all fold val auprcs": [
+                97.9452,
+                97.6034,
+                97.706,
+                98.8563,
+                98.1235
+            ]
+        },
+        "RandomForest_spliceai_info": {
+            "train auprc": 99.2916,
+            "val auprc": 98.0197,
+            "train auprc std": 0.052,
+            "val auprc std": 0.4815,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.3001,
+                99.3352,
+                99.3385,
+                99.1949,
+                99.2891
+            ],
+            "all fold val auprcs": [
+                98.016,
+                97.442,
+                97.6551,
+                98.8426,
+                98.1428
+            ]
+        },
+        "XGBoost_pangolin_noinfo": {
+            "train auprc": 98.1937,
+            "val auprc": 97.9246,
+            "train auprc std": 0.084,
+            "val auprc std": 0.3408,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.1966,
+                98.2648,
+                98.2929,
+                98.0551,
+                98.1592
+            ],
+            "all fold val auprcs": [
+                97.9382,
+                97.5934,
+                97.5194,
+                98.4367,
+                98.1354
+            ]
+        },
+        "HistGradientBoosting_pangolin_noinfo": {
+            "train auprc": 98.3071,
+            "val auprc": 97.8704,
+            "train auprc std": 0.1,
+            "val auprc std": 0.325,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.3262,
+                98.3622,
+                98.4449,
+                98.1504,
+                98.2515
+            ],
+            "all fold val auprcs": [
+                97.8321,
+                97.5891,
+                97.468,
+                98.3431,
+                98.1199
+            ]
+        },
+        "RawScoreOnly_pangolin_raw": {
+            "train auprc": 97.8928,
+            "val auprc": 97.869,
+            "train auprc std": 0.0949,
+            "val auprc std": 0.3577,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.9091,
+                97.999,
+                97.9748,
+                97.7364,
+                97.845
+            ],
+            "all fold val auprcs": [
+                97.8435,
+                97.4594,
+                97.5228,
+                98.4119,
+                98.1072
+            ],
+            "test auprc": 97.95
+        },
+        "RandomForest_pangolin_noinfo": {
+            "train auprc": 98.3677,
+            "val auprc": 97.8051,
+            "train auprc std": 0.0731,
+            "val auprc std": 0.4531,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.3792,
+                98.4081,
+                98.4557,
+                98.2369,
+                98.3585
+            ],
+            "all fold val auprcs": [
+                97.7601,
+                97.5304,
+                97.1688,
+                98.4921,
+                98.0741
+            ]
+        },
+        "HistGradientBoosting_spliceai_noinfo": {
+            "train auprc": 98.915,
+            "val auprc": 97.749,
+            "train auprc std": 0.1428,
+            "val auprc std": 0.5333,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.9164,
+                99.0966,
+                99.007,
+                98.6708,
+                98.8843
+            ],
+            "all fold val auprcs": [
+                97.7971,
+                97.2403,
+                97.0947,
+                98.5424,
+                98.0707
+            ]
+        },
+        "XGBoost_spliceai_noinfo": {
+            "train auprc": 98.2098,
+            "val auprc": 97.7226,
+            "train auprc std": 0.1144,
+            "val auprc std": 0.5145,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.1905,
+                98.3305,
+                98.3331,
+                98.0264,
+                98.1684
+            ],
+            "all fold val auprcs": [
+                97.7631,
+                97.1501,
+                97.1627,
+                98.4743,
+                98.0626
+            ]
+        },
+        "RandomForest_spliceai_noinfo": {
+            "train auprc": 99.3407,
+            "val auprc": 97.7143,
+            "train auprc std": 0.0386,
+            "val auprc std": 0.5474,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.3366,
+                99.3821,
+                99.3766,
+                99.2744,
+                99.334
+            ],
+            "all fold val auprcs": [
+                97.8222,
+                97.109,
+                97.103,
+                98.5258,
+                98.0114
+            ]
+        },
+        "RawScoreOnly_spliceai_raw": {
+            "train auprc": 97.3732,
+            "val auprc": 97.3291,
+            "train auprc std": 0.1509,
+            "val auprc std": 0.5691,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.4377,
+                97.5043,
+                97.5184,
+                97.1212,
+                97.2843
+            ],
+            "all fold val auprcs": [
+                97.1461,
+                96.7971,
+                96.7347,
+                98.1984,
+                97.769
+            ]
+        },
+        "RandomForest_spliceogen_info": {
+            "train auprc": 99.0154,
+            "val auprc": 96.7521,
+            "train auprc std": 0.0603,
+            "val auprc std": 0.8408,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.0262,
+                99.0754,
+                99.0821,
+                98.9293,
+                98.9642
+            ],
+            "all fold val auprcs": [
+                96.7133,
+                95.7329,
+                95.9484,
+                97.923,
+                97.4428
+            ]
+        },
+        "HistGradientBoosting_spliceogen_info": {
+            "train auprc": 98.3492,
+            "val auprc": 96.6877,
+            "train auprc std": 0.2976,
+            "val auprc std": 0.7648,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.5141,
+                98.219,
+                98.7695,
+                97.8782,
+                98.365
+            ],
+            "all fold val auprcs": [
+                96.5973,
+                95.8701,
+                95.9126,
+                97.8688,
+                97.19
+            ]
+        },
+        "XGBoost_spliceogen_info": {
+            "train auprc": 97.2777,
+            "val auprc": 96.6306,
+            "train auprc std": 0.1679,
+            "val auprc std": 0.8867,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.3106,
+                97.4306,
+                97.4564,
+                97.0002,
+                97.191
+            ],
+            "all fold val auprcs": [
+                96.6031,
+                95.8134,
+                95.5272,
+                97.8762,
+                97.3331
+            ]
+        },
+        "RandomForest_spip_info": {
+            "train auprc": 97.6021,
+            "val auprc": 96.6051,
+            "train auprc std": 0.111,
+            "val auprc std": 0.5773,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.6875,
+                97.6372,
+                97.7134,
+                97.4031,
+                97.5695
+            ],
+            "all fold val auprcs": [
+                96.2772,
+                96.2233,
+                95.9642,
+                97.4928,
+                97.068
+            ]
+        },
+        "XGBoost_mmsplice_info": {
+            "train auprc": 97.5355,
+            "val auprc": 96.5939,
+            "train auprc std": 0.1052,
+            "val auprc std": 0.5983,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.5673,
+                97.5796,
+                97.671,
+                97.3533,
+                97.5062
+            ],
+            "all fold val auprcs": [
+                96.4118,
+                96.1883,
+                95.7991,
+                97.3364,
+                97.2337
+            ]
+        },
+        "RandomForest_mmsplice_info": {
+            "train auprc": 99.3057,
+            "val auprc": 96.5326,
+            "train auprc std": 0.0339,
+            "val auprc std": 0.7012,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.3123,
+                99.3435,
+                99.3373,
+                99.2541,
+                99.2812
+            ],
+            "all fold val auprcs": [
+                96.2822,
+                96.3121,
+                95.4888,
+                97.5248,
+                97.055
+            ]
+        },
+        "HistGradientBoosting_spip_info": {
+            "train auprc": 97.563,
+            "val auprc": 96.5146,
+            "train auprc std": 0.1298,
+            "val auprc std": 0.631,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.6306,
+                97.4556,
+                97.7841,
+                97.4349,
+                97.5101
+            ],
+            "all fold val auprcs": [
+                95.8302,
+                96.3596,
+                96.013,
+                97.6022,
+                96.7679
+            ]
+        },
+        "HistGradientBoosting_mmsplice_info": {
+            "train auprc": 99.1562,
+            "val auprc": 96.4678,
+            "train auprc std": 0.0434,
+            "val auprc std": 0.645,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.1402,
+                99.1532,
+                99.2228,
+                99.0901,
+                99.1748
+            ],
+            "all fold val auprcs": [
+                96.1147,
+                96.1641,
+                95.6484,
+                97.432,
+                96.9798
+            ]
+        },
+        "XGBoost_spip_info": {
+            "train auprc": 96.9405,
+            "val auprc": 96.3478,
+            "train auprc std": 0.1517,
+            "val auprc std": 0.6666,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.073,
+                96.9858,
+                97.0965,
+                96.6856,
+                96.8617
+            ],
+            "all fold val auprcs": [
+                95.6466,
+                96.0043,
+                95.8185,
+                97.3502,
+                96.9195
+            ]
+        },
+        "RandomForest_spliceogen_noinfo": {
+            "train auprc": 99.0571,
+            "val auprc": 96.0462,
+            "train auprc std": 0.0611,
+            "val auprc std": 1.0006,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.0798,
+                99.1164,
+                99.1185,
+                98.9681,
+                99.0029
+            ],
+            "all fold val auprcs": [
+                95.9956,
+                95.1756,
+                94.7604,
+                97.43,
+                96.8694
+            ]
+        },
+        "HistGradientBoosting_spliceogen_noinfo": {
+            "train auprc": 97.8817,
+            "val auprc": 96.0251,
+            "train auprc std": 0.2543,
+            "val auprc std": 0.9697,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.6438,
+                97.8152,
+                98.2505,
+                97.6001,
+                98.0987
+            ],
+            "all fold val auprcs": [
+                96.1192,
+                95.2749,
+                94.6451,
+                97.3198,
+                96.7666
+            ]
+        },
+        "XGBoost_spliceogen_noinfo": {
+            "train auprc": 96.7772,
+            "val auprc": 95.8999,
+            "train auprc std": 0.2082,
+            "val auprc std": 1.0907,
+            "num folds": 5,
+            "all fold train auprcs": [
+                96.8138,
+                96.9534,
+                97.0267,
+                96.4584,
+                96.6338
+            ],
+            "all fold val auprcs": [
+                95.9427,
+                95.1102,
+                94.3206,
+                97.3107,
+                96.8155
+            ]
+        },
+        "XGBoost_mmsplice_noinfo": {
+            "train auprc": 97.0794,
+            "val auprc": 95.8237,
+            "train auprc std": 0.151,
+            "val auprc std": 0.8734,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.1078,
+                97.1911,
+                97.2794,
+                96.8717,
+                96.9471
+            ],
+            "all fold val auprcs": [
+                95.8177,
+                95.1812,
+                94.5681,
+                96.8524,
+                96.6994
+            ]
+        },
+        "RandomForest_mmsplice_noinfo": {
+            "train auprc": 99.3263,
+            "val auprc": 95.8104,
+            "train auprc std": 0.0326,
+            "val auprc std": 0.8072,
+            "num folds": 5,
+            "all fold train auprcs": [
+                99.3152,
+                99.3673,
+                99.357,
+                99.2767,
+                99.3155
+            ],
+            "all fold val auprcs": [
+                95.5685,
+                95.4892,
+                94.6011,
+                96.8739,
+                96.5193
+            ]
+        },
+        "XGBoost_spip_noinfo": {
+            "train auprc": 96.178,
+            "val auprc": 95.6949,
+            "train auprc std": 0.1663,
+            "val auprc std": 0.8063,
+            "num folds": 5,
+            "all fold train auprcs": [
+                96.3766,
+                96.2548,
+                96.2977,
+                95.9632,
+                95.9977
+            ],
+            "all fold val auprcs": [
+                94.8752,
+                95.4762,
+                94.8384,
+                96.6729,
+                96.6119
+            ]
+        },
+        "HistGradientBoosting_mmsplice_noinfo": {
+            "train auprc": 98.9284,
+            "val auprc": 95.5701,
+            "train auprc std": 0.0676,
+            "val auprc std": 0.8605,
+            "num folds": 5,
+            "all fold train auprcs": [
+                98.9586,
+                98.8958,
+                99.0143,
+                98.8159,
+                98.9575
+            ],
+            "all fold val auprcs": [
+                95.2374,
+                95.0877,
+                94.4066,
+                96.7134,
+                96.4056
+            ]
+        },
+        "HistGradientBoosting_spip_noinfo": {
+            "train auprc": 96.3205,
+            "val auprc": 95.5509,
+            "train auprc std": 0.1684,
+            "val auprc std": 0.8729,
+            "num folds": 5,
+            "all fold train auprcs": [
+                96.5187,
+                96.3448,
+                96.485,
+                96.1256,
+                96.1286
+            ],
+            "all fold val auprcs": [
+                94.4617,
+                95.5905,
+                94.6775,
+                96.4408,
+                96.5841
+            ]
+        },
+        "RandomForest_spip_noinfo": {
+            "train auprc": 96.6236,
+            "val auprc": 95.2,
+            "train auprc std": 0.1509,
+            "val auprc std": 0.7483,
+            "num folds": 5,
+            "all fold train auprcs": [
+                96.7968,
+                96.6851,
+                96.7455,
+                96.4174,
+                96.4731
+            ],
+            "all fold val auprcs": [
+                94.356,
+                95.2631,
+                94.3429,
+                96.0819,
+                95.9558
+            ]
+        },
+        "HistGradientBoosting_ese_info": {
+            "train auprc": 96.6655,
+            "val auprc": 94.4906,
+            "train auprc std": 0.3434,
+            "val auprc std": 0.9375,
+            "num folds": 5,
+            "all fold train auprcs": [
+                96.6568,
+                96.3259,
+                97.1556,
+                96.26,
+                96.9292
+            ],
+            "all fold val auprcs": [
+                94.1645,
+                94.0613,
+                93.2827,
+                96.0712,
+                94.8735
+            ]
+        },
+        "RandomForest_ese_info": {
+            "train auprc": 97.0492,
+            "val auprc": 94.49,
+            "train auprc std": 0.1403,
+            "val auprc std": 0.8923,
+            "num folds": 5,
+            "all fold train auprcs": [
+                97.0937,
+                97.1428,
+                97.2112,
+                96.8087,
+                96.9895
+            ],
+            "all fold val auprcs": [
+                94.0869,
+                93.634,
+                93.7629,
+                96.0238,
+                94.9425
+            ]
+        },
+        "RawScoreOnly_spliceogen_raw": {
+            "train auprc": 94.3971,
+            "val auprc": 94.2906,
+            "train auprc std": 0.3352,
+            "val auprc std": 1.2576,
+            "num folds": 5,
+            "all fold train auprcs": [
+                94.4505,
+                94.7937,
+                94.6661,
+                93.8495,
+                94.2259
+            ],
+            "all fold val auprcs": [
+                94.215,
+                92.7018,
+                93.2193,
+                96.1527,
+                95.164
+            ]
+        },
+        "XGBoost_ese_info": {
+            "train auprc": 94.8669,
+            "val auprc": 94.1501,
+            "train auprc std": 0.2299,
+            "val auprc std": 0.9725,
+            "num folds": 5,
+            "all fold train auprcs": [
+                94.9693,
+                95.0,
+                95.0678,
+                94.4247,
+                94.8725
+            ],
+            "all fold val auprcs": [
+                93.8454,
+                93.4233,
+                93.176,
+                95.9103,
+                94.3954
+            ]
+        },
+        "RandomForest_notools_info": {
+            "train auprc": 94.1138,
+            "val auprc": 93.5696,
+            "train auprc std": 0.2593,
+            "val auprc std": 1.0801,
+            "num folds": 5,
+            "all fold train auprcs": [
+                94.2478,
+                94.2938,
+                94.3209,
+                93.6218,
+                94.0847
+            ],
+            "all fold val auprcs": [
+                93.0307,
+                92.8056,
+                92.6003,
+                95.5536,
+                93.8579
+            ]
+        },
+        "HistGradientBoosting_notools_info": {
+            "train auprc": 94.2465,
+            "val auprc": 93.5269,
+            "train auprc std": 0.2786,
+            "val auprc std": 1.0782,
+            "num folds": 5,
+            "all fold train auprcs": [
+                94.3254,
+                94.3874,
+                94.5357,
+                93.7192,
+                94.2645
+            ],
+            "all fold val auprcs": [
+                93.0233,
+                92.6278,
+                92.7175,
+                95.5408,
+                93.725
+            ]
+        },
+        "XGBoost_notools_info": {
+            "train auprc": 93.9135,
+            "val auprc": 93.5107,
+            "train auprc std": 0.2606,
+            "val auprc std": 1.133,
+            "num folds": 5,
+            "all fold train auprcs": [
+                94.0067,
+                94.1156,
+                94.1654,
+                93.444,
+                93.8358
+            ],
+            "all fold val auprcs": [
+                92.8709,
+                92.481,
+                92.7109,
+                95.5392,
+                93.9516
+            ]
+        },
+        "RawScoreOnly_spip_raw": {
+            "train auprc": 93.0208,
+            "val auprc": 92.9875,
+            "train auprc std": 0.2693,
+            "val auprc std": 1.0491,
+            "num folds": 5,
+            "all fold train auprcs": [
+                93.2209,
+                93.1984,
+                93.2925,
+                92.6398,
+                92.7524
+            ],
+            "all fold val auprcs": [
+                92.2146,
+                92.4026,
+                91.8291,
+                94.4134,
+                94.0778
+            ]
+        },
+        "RawScoreOnly_mmsplice_raw": {
+            "train auprc": 92.5591,
+            "val auprc": 92.5475,
+            "train auprc std": 0.2298,
+            "val auprc std": 0.9522,
+            "num folds": 5,
+            "all fold train auprcs": [
+                92.4898,
+                92.7753,
+                92.88,
+                92.315,
+                92.3354
+            ],
+            "all fold val auprcs": [
+                92.85,
+                91.7549,
+                91.1334,
+                93.5245,
+                93.4746
+            ]
+        },
+        "RandomForest_ese_noinfo": {
+            "train auprc": 90.5936,
+            "val auprc": 79.7713,
+            "train auprc std": 0.5038,
+            "val auprc std": 2.5159,
+            "num folds": 5,
+            "all fold train auprcs": [
+                90.8063,
+                91.0882,
+                91.0518,
+                89.7984,
+                90.2233
+            ],
+            "all fold val auprcs": [
+                78.8913,
+                77.484,
+                76.9766,
+                82.926,
+                82.5786
+            ]
+        },
+        "HistGradientBoosting_ese_noinfo": {
+            "train auprc": 86.5688,
+            "val auprc": 79.2434,
+            "train auprc std": 0.9923,
+            "val auprc std": 2.8222,
+            "num folds": 5,
+            "all fold train auprcs": [
+                86.5656,
+                87.5235,
+                87.4536,
+                84.7722,
+                86.5291
+            ],
+            "all fold val auprcs": [
+                78.4496,
+                77.444,
+                75.372,
+                82.6642,
+                82.2874
+            ]
+        },
+        "XGBoost_ese_noinfo": {
+            "train auprc": 80.5549,
+            "val auprc": 78.1422,
+            "train auprc std": 0.6145,
+            "val auprc std": 2.8432,
+            "num folds": 5,
+            "all fold train auprcs": [
+                80.8486,
+                81.152,
+                81.145,
+                79.7981,
+                79.8308
+            ],
+            "all fold val auprcs": [
+                76.976,
+                76.2355,
+                74.5288,
+                81.5636,
+                81.4071
+            ]
+        }
+    },
+    "skipped_runs": {}
+}

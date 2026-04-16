@@ -1,12 +1,10 @@
-import argparse
 from itertools import chain
 from pathlib import Path
-import json
 import pickle
+import json
 
-from vcf2pandas import vcf2pandas
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 # Machine Learning
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
@@ -20,7 +18,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-
 from pipeline_constants import (
     DUMMY_COLS,
     GENE_REGIONS,
@@ -31,6 +28,8 @@ from pipeline_constants import (
     CLASSIFIERS,
 )
 
+from utils import preprocess, filter_bad_features
+
 TARGET_COL = 'ID_SVDBSplice'
 CHROM_COL = 'CHROM'
 DEFAULT_TEST_CHROMS = ['chr1', 'chr3', 'chr5', 'chr7', 'chr9']
@@ -39,146 +38,12 @@ RANDOM_STATE = 42
 
 """
 Functions:
-- preprocess()
-    - assert_and_convert_single_float_tuples_allow_dot()
 - make_col_combinations()
 - train_main()
-- infer_main()
+- compute_auprc()
+- plot_precision_recall_curve()
+- evaluate_and_save_pr_curves()
 """
-
-def preprocess(train_mode: bool, df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Training mode:
-    1. Remove conflicting class and dummify the other class columns
-    2. Dummyify AGcheck_Variant_Type and GENEINFO_gene_regions, then drop original columns
-    3. (Common) AG_check lost/created dots -> 0/1's
-    4. (Common) U12 intronic & Strand dots -> 0/1's
-    5. (Common) dots/NaNs in numeric columns -> 0's or large negative values (configurable)
-
-    Inference mode:
-    1. (SKIP because there are no ground truth labels)
-    2. (CONSTANT) Generate the seen dummy columns from pipeline_constants
-    3. (Common) AG_check lost/created dots -> 0/1's
-    4. (Common) U12 intronic & Strand dots -> 0/1's
-    5. (Common) dots/NaNs in numeric columns -> 0's or large negative values (configurable)
-    """
-    if train_mode:
-        # 1. Remove conflicting class and dummify the other class columns
-        # (e.g. if label is binary, drop one of the two columns and rename the other to "label")
-        # 2. Dummyify AGcheck_Variant_Type and GENEINFO_gene_regions, then drop original columns
-        df = df[df['ID'] != 'SVDVConflicting']
-        df = pd.get_dummies(df, columns=['ID'])
-
-        df = pd.get_dummies(df, columns=['INFO:AGcheck_Variant_Type'])
-        df = pd.get_dummies(df, columns=['INFO:GENEINFO_gene_regions'])
-    else:
-        # 1. (SKIP because there are no ground truth labels)
-        # 2. (CONSTANT) Generate the seen dummy columns from pipeline_constants
-        dummys = pd.get_dummies(df[DUMMY_COLS], columns=DUMMY_COLS).reindex(
-            columns=GENE_REGIONS + VARIANT_TYPE,
-            fill_value=False,
-        )
-        df = pd.concat([dummys, df.drop(columns=DUMMY_COLS)], axis=1)
-
-    # 3. (Common) AG_check lost/created dots -> 0/1's
-    for col in [col for col in df.columns if col.startswith('INFO:AGcheck_')]:
-        if not col.endswith('Created') and not col.endswith('Lost'):
-            continue
-        # Convert AGcheck_lost/created to 0 if dot, and 1 if minus OR plus strand
-        df[col] = (df[col] != '.')
-
-    # 4. (Common) U12 intronic & Strand dots -> 0/1's
-    df['INFO:U12_Intron_Type'] = (df['INFO:U12_Intron_Type'] == 'U12')
-    df['INFO:GENEINFO_is_intronic'] = (df['INFO:GENEINFO_is_intronic'] == ('intronic',))
-
-    df['INFO:GENEINFO_strand_minus'] = df['INFO:GENEINFO_strand'].apply(lambda x: '-' in x)
-    df['INFO:GENEINFO_strand_plus'] = df['INFO:GENEINFO_strand'].apply(lambda x: '+' in x)
-    df = df.drop(columns=['INFO:GENEINFO_strand'])
-
-    # 5. (Common) dots/NaNs in numeric columns -> 0's or large negative values (configurable)
-    features = assert_and_convert_single_float_tuples_allow_dot(df,
-                                                                dots_largeminus=['INFO:SpliceAI_DP',
-                                                                                'INFO:SPIP'],
-                                                                dots_zeros=['INFO:U12',
-                                                                            'INFO:Branchpointer',
-                                                                            'INFO:SpliceAI_DS',
-                                                                            'INFO:Spliceogen',
-                                                                            'INFO:MMSplice',
-                                                                            'INFO:Pangolin'],
-                                                                nans_zeros=[],
-                                                                nans_large_minus=['INFO:SPIP'])
-
-    return features
-
-def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
-                                                     dots_largeminus: list[str] = [],
-                                                     dots_zeros: list[str] = [],
-                                                     nans_zeros: list[str] = [],
-                                                     nans_large_minus: list[str] = []) -> pd.DataFrame:
-    """
-    For each column in df:
-      - If the column contains any tuples, assert that every tuple is either:
-          * length-1 and contains a float, or
-          * is None, or
-          * equals the string "."
-      - Convert such valid single-float tuples to the float value.
-      - Leave the "." string as-is instead of trying to convert it to float.
-    Returns a copy of df with the converted columns (dtype may remain 'object'
-    if "." strings are present).
-    """
-    df = df.copy()
-
-    for col in df.columns:
-        if not col.startswith("INFO:"):
-            continue
-        else:
-            print(f"Processing column: {col}")
-        # Check if this column contains *any* tuples
-        has_tuple = df[col].apply(lambda x: isinstance(x, tuple)).any()
-
-        if has_tuple:
-            # Define a helper to check if each value is valid
-            def is_valid_tuple(x):
-                # Valid if it's None, or the special ".", or a single-float tuple
-                if x is None or x == "." or not isinstance(x, tuple):
-                    return True
-                if (x[0] is None):
-                    print(col, x[0])
-                return (len(x) == 1 and (isinstance(x[0], float) or x[0] is None))
-
-            # If any row fails the validity check, raise an error
-            valid_series = df[col].apply(is_valid_tuple)
-            if not valid_series.all():
-                # Extract offending values
-                offending_values = df[col][~valid_series].unique()
-                raise ValueError(
-                    f"Column '{col}' contains invalid tuple values: {offending_values}"
-                )
-
-        # Convert single-float tuples to that float
-        def convert_tuple_to_singleton(x):
-            if isinstance(x, tuple):
-                return sanitise(x[0])  # we've already asserted it's length-1 float
-            return sanitise(x)
-
-        def sanitise(x):
-            if not (str(x) in ["", ".", "NaN", "nan", "None"]):
-                return x
-            # because spliceai can't do multinucleotide to multinucleotide variants.
-            if any(col.startswith(x) for x in dots_largeminus) and (str(x) == "." or str(x) == ""):
-                return -99999
-            if any(col.startswith(x) for x in dots_zeros) and (str(x) == "." or str(x) == ""):
-                return 0
-            if any(col.startswith(x) for x in nans_zeros) and str(x) in ["NaN", "nan", "None"]:
-                return 0
-            if any(col.startswith(x) for x in nans_large_minus) and str(x) in ["NaN", "nan", "None"]:
-                return -99999
-            return x
-
-        df[col] = df[col].apply(convert_tuple_to_singleton)
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-
-    return df
 
 def make_col_combinations(df: pd.DataFrame) -> dict[str, list[str]]:
     """
@@ -290,12 +155,13 @@ def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir
         print(f"Training with feature set: {feature_group} ({len(cols)} features)")
 
         models = [
-            ("RawScoreOnly", None)
+            ("RawScoreOnly", (None, {}))
         ] if feature_group.endswith("_raw") else [
-            (name, cls) for name, (cls, _) in CLASSIFIERS.items() if cls is not None
+            (name, (cls, kwargs)) for name, (cls, kwargs) in CLASSIFIERS.items() if cls is not None
         ]
 
-        for model_name, ModelClass in models:
+        for model_name, model_payload in models:
+            ModelClass, model_params = model_payload
             run_key = f"{model_name}_{feature_group}"
             fold_train_auprcs: list[float] = []
             fold_val_auprcs: list[float] = []
@@ -316,7 +182,7 @@ def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir
                     y_train_preds = X_train.abs().max(axis=1)
                     y_val_preds = X_val.abs().max(axis=1)
                 else:
-                    clf = ModelClass(random_state=RANDOM_STATE)
+                    clf = ModelClass(random_state=RANDOM_STATE, **model_params)
                     clf.fit(X_train, y_train)
 
                     y_train_preds = clf.predict_proba(X_train)[:, 1]
@@ -345,8 +211,8 @@ def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir
                 "feature_group": feature_group,
                 "feature_columns": cols,
                 "is_raw": feature_group.endswith("_raw"),
-                "model_class": ModelClass
-                # "model_params": clf.get_params() if ModelClass is not None else None,
+                "model_class": ModelClass,
+                "model_params": model_params
             }
 
         # if feature_group.endswith("_raw"):
@@ -411,23 +277,26 @@ def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir
 
         ModelClass = meta['model_class']
         if ModelClass is None:
+            trained_model = None
             y_test_preds = X_test.abs().max(axis=1)
         else:
-            trained_model = ModelClass(random_state=RANDOM_STATE)
+            model_params = meta['model_params']
+            trained_model = ModelClass(random_state=RANDOM_STATE, **model_params)
             trained_model.fit(X_train, y_train)
             y_test_preds = trained_model.predict_proba(X_test)[:, 1]
         
         test_fig, test_auprc = plot_precision_recall_curve(y_test, y_test_preds, model_name, feature_group)
         test_fig.savefig(log_dir / f"{run_key}_{run_name}_test_pr_curve.png")
         plt.close(test_fig)
-        return round(100 * test_auprc, 4)
+        return trained_model, round(100 * test_auprc, 4)
 
     # evaluate the best model on the test set and save metrics and PR curve
-    best_model_test_auprc = evalute_on_test(best_model_key)
+    best_model, best_model_test_auprc = evalute_on_test(best_model_key)
+    assert best_model is not None, "Best model should not be None since it was trained above. Check for errors during training."
     results[best_model_key]["test auprc"] = best_model_test_auprc
     print(f"Best model test AUPRC: {best_model_test_auprc:.4f}")
 
-    best_raw_test_auprc = evalute_on_test(best_raw_key)
+    _, best_raw_test_auprc = evalute_on_test(best_raw_key)
     results[best_raw_key]["test auprc"] = best_raw_test_auprc
     print(f"Best raw-score-only model test AUPRC: {best_raw_test_auprc:.4f}")
 
@@ -435,13 +304,14 @@ def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir
     with open(save_dir / f"{best_model_key}_{run_name}_columns.json", 'w') as f:
         json.dump(run_register[best_model_key]['feature_columns'], f, indent=4)
     with open(save_dir / f"{best_model_key}_{run_name}_model.pkl", 'wb') as f:
-        pickle.dump(run_register[best_model_key]['model_class'](), f)
+        pickle.dump(best_model, f)
 
     best_model_summary = {
         "description": "best model by validation AUPRC among all non-raw-score-only models",
         "model_key": best_model_key,
         "validation_auprc": results[best_model_key]['val auprc'],
         "test_auprc": results[best_model_key]['test auprc'],
+        "params": run_register[best_model_key]['model_params']
     }
 
     raw_summary = {
@@ -462,19 +332,6 @@ def train_main(save_dir: Path, df: pd.DataFrame, test_chroms: list[str], log_dir
 
     with open(log_dir / f"training_results_{run_name}.json", "w") as f:
         json.dump(payload, f, indent=4)
-
-def filter_bad_features(X_split, y_split, feature_cols):
-    # Remove rows where any feature is "." (indicating unscorable by that tool)
-    X_subset = X_split[feature_cols].copy()
-    initial_len = len(X_subset)
-
-    bad_feature_mask = X_subset.isna().any(axis=1) | (X_subset == '.').any(axis=1)
-    X_clean, y_clean = X_subset[~bad_feature_mask], y_split[~bad_feature_mask]
-
-    dropped_len = initial_len - len(X_clean)
-    if dropped_len > 0:
-        print(f"cleaned rows. before: {initial_len} | after: {len(X_clean)} | dropped: {dropped_len}")
-    return X_clean, y_clean
 
 def compute_auprc(y_true, y_scores) -> float:
     precision, recall, _ = precision_recall_curve(y_true, y_scores)
@@ -532,101 +389,4 @@ def evaluate_and_save_pr_curves(y_train, y_train_preds, y_val, y_val_preds,
     # Close figures to free up memory
     plt.close(train_fig)
     plt.close(val_fig)
-
-def infer_main(model_path: Path, df: pd.DataFrame, columns_path: Path, output_path: Path):
-    """
-    Preprocess according to inference mode, run inference on supplied model and columns
-    and save output TSV.
-
-    1-5. Preprocess
-    6. (GENERATED) Reorder columns to match training order
-        - Given by param (combinations) for inference, should be the training columns of used model.
-    """
-    with open(model_path, 'rb') as file:
-        model = pickle.load(file)
-
-    with open(columns_path, 'rb') as file:
-        columns = json.load(file)
-
-    df_original = df.copy()
-    df = preprocess(train_mode=False, df=df)
-
-    print(f"vcf has {len(df.columns)} columns (including dummies)")
-
-    print(df.head(2))
-
-    print("excluded columns:", set(df.columns) - set(columns))
-    print("expected but unpresent columns:", set(columns) - set(df.columns))
-
-    # features = df[columns]
-
-    features, _ = filter_bad_features(df, pd.Series([0]*len(df)), columns)
-
-    if len(features) == 0:
-        print("No valid rows after filtering for inference. Saving empty output.")
-        df['introme_score'] = np.nan
-        df.to_csv(output_path, sep='\t', index=False)
-        return
-
-    y_scores = model.predict_proba(features)[:, 1]
-    scores_series = pd.Series(y_scores, index=features.index).astype(object)
-    scores_full = scores_series.reindex(df_original.index, fill_value=None)
-
-    # for col starting with "INFO:" if tuple but only length one, unpack to just that value
-    for col in df_original.columns:
-        if col.startswith("INFO:") and df_original[col].apply(lambda x: (isinstance(x, tuple) and len(x) == 1) or x is None or x == ".").all():
-            df_original[col] = df_original[col].apply(lambda x: x[0] if isinstance(x, tuple) and len(x) == 1 else x)
-    df_original['introme_score'] = scores_full
-    df_original.to_csv(output_path, sep='\t', index=False)
-
-def existing_file(path_str: str) -> Path:
-    path = Path(path_str)
-    if not path.is_file():
-        raise argparse.ArgumentTypeError(f"Expected an existing file path, got: {path_str}")
-    return path
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Train or run inference for the Introme ensemble score model.")
-    subparsers = parser.add_subparsers(dest="mode", required=True, help="Mode of operation: 'train' or 'infer'")
-
-    infer_parser = subparsers.add_parser("infer", help="Run inference using a saved model and feature columns.")
-    infer_parser.add_argument("--model-path", required=True, type=existing_file, help="Path to an existing model pickle (.pkl) file.")
-    infer_parser.add_argument("--columns-path", required=True, type=existing_file, help="Path to an existing columns JSON file.")
-    infer_parser.add_argument("--input-vcf", required=True, type=existing_file, help="Path to the input VCF file with splicing annotations.")
-    infer_parser.add_argument("--output-tsv", required=True, type=Path, help="Path to write the output TSV scores")
-
-    train_parser = subparsers.add_parser("train", help="Train candidate models and save selected model + columns")
-    train_parser.add_argument("--save-dir", required=True, type=Path, help="Directory to save the best model pickle and columns JSON.")
-    train_parser.add_argument("--input-vcf", required=True, type=existing_file, help="Path to the input VCF file with splicing annotations and labels.")
-    train_parser.add_argument("--log-dir", required=True, type=Path, help="Directory to save training logs, metrics, and plots.")
-    train_parser.add_argument("--run-name", required=True, type=str, help="Name for this training run (used in saved files).")
-    train_parser.add_argument("--test-chroms", default=DEFAULT_TEST_CHROMS, nargs='+', help=f"List of chromosomes to use as test set (default: {DEFAULT_TEST_CHROMS})")
-
-    return parser
-
-if __name__ == "__main__":
-    parser = build_parser()
-    args = parser.parse_args()
-
-    is_train_mode = (args.mode == "train")
-    df = vcf2pandas(str(args.input_vcf),
-        remove_empty_columns=is_train_mode,
-        info_fields=INFO_FIELDS
-    )
-
-    if is_train_mode:
-        train_main(
-            save_dir=args.save_dir,
-            df=df,
-            test_chroms=args.test_chroms,
-            log_dir=args.log_dir,
-            run_name=args.run_name
-        )
-    else:
-        infer_main(
-            model_path=args.model_path,
-            df=df,
-            columns_path=args.columns_path,
-            output_path=args.output_tsv
-        )
 

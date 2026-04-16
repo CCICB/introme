@@ -152,10 +152,11 @@ RAW_SCORE_COLS = {
     "mmsplice": ['INFO:MMSplice_delta_logit_PSI'],
 }
 
-ClassifierCtor: TypeAlias = type[RandomForestClassifier | HistGradientBoostingClassifier]
+ClassifierCtor: TypeAlias = type[RandomForestClassifier | HistGradientBoostingClassifier | GradientBoostingClassifier]
 ClassifierSpec: TypeAlias = tuple[ClassifierCtor, dict[str, Any]]
 
 CLASSIFIERS: dict[str, ClassifierSpec] = {
-    "RandomForest": (RandomForestClassifier, {}),
-    "HistGradientBoosting": (HistGradientBoostingClassifier, {}),
+    "RandomForest": (RandomForestClassifier, {'n_jobs': -1, 'min_samples_leaf': 5}),
+    "XGBoost": (GradientBoostingClassifier, {'min_samples_leaf': 5}),
+    "HistGradientBoosting": (HistGradientBoostingClassifier, {'min_samples_leaf': 5}),
 }

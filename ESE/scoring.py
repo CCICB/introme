@@ -11,7 +11,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 
-CONTEXT_LENGTH = 12
+# CONTEXT_LENGTH = 12
 
 # strand_d = {
 #     'strand=+': StrandDirection.FORWARD,
@@ -20,7 +20,7 @@ CONTEXT_LENGTH = 12
 #     '.': StrandDirection.UNKNOWN
 # }
 
-def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: list[RBPsplice]) -> pd.DataFrame:
+def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: list[RBPsplice], context_length: int) -> pd.DataFrame:
     data: list[list] = []
 
     for record in vcf:
@@ -29,7 +29,7 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
         id_ = "." if not record.id else record.id
         ref = record.ref
         # alt handled below
-        quality = "." if not record.qual else record.qual
+        quality = "." if record.qual is None else record.qual
         filter_ = "." if not (f:="".join(str(f) for f in record.filter)) else f
         info = "." if not (i:=";".join(f"{k}={v}" for k, v in record.info.items())) else i
 
@@ -67,7 +67,7 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
         #     continue
         
         variant = Variant(chromosome, position, "." if ref is None else ref, alt, strand_dir)
-        variant_context = variant.faidx_context(ref_genome, CONTEXT_LENGTH)
+        variant_context = variant.faidx_context(ref_genome, context_length)
         if variant_context is None: continue
 
         motif_scores = []
@@ -106,9 +106,10 @@ def read_vcf(vcf: pysam.VariantFile, ref_genome: pysam.FastaFile, RBPmotifs: lis
 
 def is_path_writable(path: str) -> bool:
     """Check if a file path is writable."""
-    
+    directory = os.path.dirname(os.path.abspath(path)) or "."
+
     # Check if directory exists
-    if not os.path.isdir(os.path.dirname(path)):
+    if not os.path.isdir(directory):
         return False
     
     # If file exists, check if it's writable
@@ -139,7 +140,7 @@ def main():
     if not is_path_writable(output_path):
         raise ValueError(f"File path '{output_path}' is not writable!")
 
-    df = read_vcf(vcf_file, reference_genome, motifs)
+    df = read_vcf(vcf_file, reference_genome, motifs, CONTEXT_LENGTH)
 
     df.to_csv(output_path, mode='w', encoding='utf-8', index=False, sep='\t')
 

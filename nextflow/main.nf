@@ -125,7 +125,7 @@ include { spip }                from './modules/spip/spip.nf'
 include { squirl }              from './modules/squirl.nf'
 include { introme_functions }   from './modules/introme_functions.nf'
 include { splicing_anno }       from './modules/splicing_anno.nf'
-include { ensemble }            from './modules/ensemble.nf'
+include { ensemble_infer; ensemble_train } from './modules/ensemble.nf'
 
 /* 
  * Print summary of supplied parameters
@@ -137,6 +137,51 @@ log.info paramsSummaryLog(workflow)
  * Main pipeline logic
  */
 workflow {
+    // Validate required top-level params once at workflow start.
+    def ml_mode = (params.ml_mode ?: 'infer').toString().toLowerCase()
+    def ml_test_chroms_arg = null
+
+    ['vcf', 'ref_genome', 'gtf', 'chrRename'].each { key ->
+      def value = params[key]
+      if (value == null || value.toString().trim() == '') {
+        error "Missing required parameter --${key}"
+      }
+    }
+
+    if (!(ml_mode in ['infer', 'train'])) {
+      error "Invalid --ml_mode '${params.ml_mode}'. Supported values: infer | train"
+    }
+
+    if (ml_mode == 'infer') {
+      ['ml_model_path', 'ml_columns_path'].each { key ->
+        def value = params[key]
+        if (value == null || value.toString().trim() == '') {
+          error "When --ml_mode infer, --${key} is required"
+        }
+      }
+    } else {
+      ['ml_save_dir', 'ml_log_dir', 'ml_run_name'].each { key ->
+        def value = params[key]
+        if (value == null || value.toString().trim() == '') {
+          error "When --ml_mode train, --${key} is required"
+        }
+      }
+
+      def ml_test_chroms = params.ml_test_chroms
+      if (ml_test_chroms == null || ml_test_chroms.toString().trim() == '') {
+        ml_test_chroms = ['chr1', 'chr3', 'chr5', 'chr7', 'chr9']
+      } else if (!(ml_test_chroms instanceof List)) {
+        ml_test_chroms = ml_test_chroms.toString().split(/[\s,]+/).findAll { it }
+      }
+
+      ml_test_chroms = ml_test_chroms.collect { it.toString().trim() }.findAll { it }
+      if (ml_test_chroms.isEmpty()) {
+        error "When --ml_mode train, --ml_test_chroms must contain at least one chromosome"
+      }
+
+      ml_test_chroms_arg = ml_test_chroms.join(' ')
+    }
+
     // Input variables
     vcf = Channel.fromPath(params.vcf) 
     ref_genome = Channel.fromPath(params.ref_genome, type: 'file') 
@@ -262,16 +307,24 @@ workflow {
       introme_functions.out.ese_score_tbi
     )
 
-    // TODO: decide on where to put inference script.
-    ensemble_score_script_path = file('../ESE/ML/main2.py')
-    clf_model_path = Channel.fromPath(assets_path + '/models/all_hgb_model_SEP25.pkl')
-    columns_path = Channel.fromPath(assets_path + '/models/columns.json')
+    // STEP 7: Generate consensus scores - ML mode selection (infer | train)
+    ensemble_score_script_path = file('../ESE/ML/main.py')
 
-    // STEP 7: Generate consensus scores - ML
-    ensemble(
-      ensemble_score_script_path,
-      clf_model_path,
-      columns_path,
-      splicing_anno.out.splicing_anno_output
-    )
+    if (ml_mode == 'infer') {
+      clf_model_path = Channel.fromPath(params.ml_model_path, type: 'file')
+      columns_path = Channel.fromPath(params.ml_columns_path, type: 'file')
+
+      ensemble_infer(
+        ensemble_score_script_path,
+        clf_model_path,
+        columns_path,
+        splicing_anno.out.splicing_anno_output
+      )
+    } else {
+      ensemble_train(
+        ensemble_score_script_path,
+        splicing_anno.out.splicing_anno_output,
+        ml_test_chroms_arg
+      )
+    }
 }
