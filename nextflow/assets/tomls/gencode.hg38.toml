@@ -1,5 +1,6 @@
 ## Gencode annotations
 [[annotation]]
+# Dynamically replaced using sed. Better idea than hardcoding file paths? Idk.
 file = "REPLACE_gencode_file"
 columns = [3,7,9]
 ops = ["self","uniq","self"]

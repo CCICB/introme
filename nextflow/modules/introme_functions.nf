@@ -10,9 +10,9 @@ process introme_functions {
         path ag_script_path
         path ese_script_path
 
-        path variant_info
+        // path variant_info
         path variant_info_stripped
-        path variant_info_rmanno
+        // path variant_info_rmanno
         path ref_genome
         path template_header_vcf
 		 

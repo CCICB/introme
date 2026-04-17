@@ -2,7 +2,7 @@ process ensemble_infer {
     container "${params.introme_functions_docker_container}"
     beforeScript 'echo Starting Introme ensemble inference'
     afterScript  'echo Completed Introme ensemble inference'
-    publishDir (path: "${params.outdir}/ensemble")
+    publishDir (path: "${params.outdir}/ensemble_infer")
 
     debug true
     cache false
