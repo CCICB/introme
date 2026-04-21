@@ -8,10 +8,11 @@ This guide covers architecture, module-level design, assets, containers, model t
 - This file contains deep technical documentation for development and extension.
 
 1. [Module Map](#module-map)
+1. [Legacy v1 -> v2 Step Mapping](#legacy-v1---v2-step-mapping)
 1. [Annotation and Asset Files](#annotation-and-asset-files)
 1. [Container and Docker Layout](#container-and-docker-layout)
+1. [Extending Introme](#extending-introme)
 1. [How to Train the Consensus Scoring Model](#how-to-train-the-consensus-scoring-model)
-1. [Legacy v1 -> v2 Step Mapping](#legacy-v1---v2-step-mapping)
 1. [Known Caveats and TODOs](#known-caveats-and-todos)
 1. [Recommended Operational Workflow](#recommended-operational-workflow)
 
@@ -25,7 +26,7 @@ Modules ingest defined inputs, and upon completion, respectively expose selected
 | Subset + normalise | `data_preprocessing` | Input VCF, reference FASTA, input GTF | `chrRename.tsv` | `*.subset.vcf.gz`, `sorted.gtf.gz` |
 | Quality filter | `quality_filter` | Input VCF, params (`quality_filter`, `min_QUAL`, `min_DP`, `min_AD`) | - | `*.quality_filter.vcf.gz` |
 | Pre-annotation | `variant_info` | Filtered/unfilterd VCF, sorted GTF | vcfanno `assets/` files: `conf_pre_anno.lua`, `tomls/gencode.[build].toml` | `*.variant_info.vcf.gz` and stripped + rmanno versions |
-| | | | |
+| | | | | |
 | SpliceAI | `spliceai` | rmanno VCF, FASTA | SpliceAI anno DB (`params.spliceai_db`, downloaded at runtime) | `*.spliceai.vcf` |
 | MMSplice | `mmsplice` | rmanno VCF, FASTA, GTF | `modules/mmsplice/run_mmsplice.py` | `*.mmsplice.vcf` |
 | Pangolin | `pangolin` | rmanno VCF, FASTA | Pangolin anno DB (`params.pangolin_db`, downloaded at runtime) | `*.pangolin.vcf` |
@@ -33,9 +34,22 @@ Modules ingest defined inputs, and upon completion, respectively expose selected
 | Spliceogen | `spliceogen` | rmanno VCF, FASTA, GTF | - | `*.spliceogen.tsv` |
 | Introme feature modules | `introme_functions` | stripped VCF, FASTA | `AG_check/AG_check.py`, `ESE/scoring.py`, `assets/introme_annotate.vcf` | `*.ag_check.vcf.gz`, `*.ESE.tsv.gz` |
 | | | | | |
-| Ensemble collation | `splicing_anno` | `variant_info` VCF, tool score and `.vcf`/`.tsv` outputs | vcfanno `assets/` files: `conf_ensemble.lua`, `tomls/annotate.[build].toml`, `tomls/vcfanno_splicing_ensemble.toml`, `branchpointer/[build].bed.gz`, `regions/[build].bed.gz`, `U12/[build].bed.gz` |  `*.ensemblescored.vcf.gz` |
+| Ensemble collation | `splicing_anno` | `variant_info` VCF, tool score and `.vcf`/`.tsv` outputs | vcfanno `assets/` files: `conf_ensemble.lua`, `tomls/annotate.[build].toml`, `tomls/vcfanno_splicing_ensemble.toml`, `branchpointer/[build].bed.gz`, `regions/[build].bed.gz`, `U12/[build].bed.gz` | `*.ensemblescored.vcf.gz` |
 | ML inference | `ensemble_infer` | Scored VCF from `splicing_anno` | `ESE/ML/main.py`, model `.pkl`, columns `.json` | `*.introme.predictions.tsv` |
 | ML training | `ensemble_train` | Scored VCF from `splicing_anno` | `ESE/ML/main.py`, test chromosome set, train config params (`params.json`) | `models/*`, `logs/*` |
+
+## Legacy v1 -> v2 Step Mapping
+
+| v1 (`run_introme.sh`) | v2 module/process |
+| --- | --- |
+| Step 1: subset VCF | `data_preprocessing` |
+| Step 2: quality filter | `quality_filter` (optional) |
+| Step 3: annotate VCF | `variant_info` |
+| Step 4: annotation-value filtering based on gnomAD_PM_AF | Disabled: Commented out AF anno in .toml, and vcfanno in `variant_info` |
+| Step 5: MMSplice/SpliceAI (+tool stage) | `spliceai`, `mmsplice`, `pangolin`, `spip`, `spliceogen` |
+| Step 6: Introme functions | `introme_functions` + `splicing_anno` |
+| Step 7: TSV export | produced via ensemble inference output TSV |
+| Step 8: consensus scoring | `ensemble_infer` or `ensemble_train` |
 
 ## Annotation and Asset Files
 
@@ -87,6 +101,66 @@ Source Dockerfiles for maintenance and rebuilds:
 
 > NOTE: GPU images are large (each 10GB) due to needing GPU libraries. SpliceAI and MMSplice use tensorflow. Pangolin uses Pytorch. Images can probably be slimmed down, probably also can merge the tensorflow images.
 
+## Extending Introme
+
+This section describes how to introduce or remove features in two common scenarios.
+
+1. Case A: a new external tool is called and produces scores.
+1. Case B: an additional annotation source is added via TOML only.
+
+### Case A: Tool-calling integration (new score-producing tool)
+
+#### Step 1. Dockerfile and process wiring
+
+1. Create or update container build files under `modules/TOOL_NAME/`, including `Dockerfile` or `Dockerfile.cpu` and `Dockerfile.gpu` plus optional helper runner scripts.
+1. Add a process module `modules/TOOL_NAME/TOOL_NAME.nf` that consumes the expected VCF/FASTA/GTF inputs, emits an output file (VCF/TSV), and publishes outputs to `output/TOOL_NAME`.
+1. Wire the process into orchestration in `main.nf`: include the module, call it in workflow order (usually after `variant_info`), and pass its output into `splicing_anno`.
+1. Register runtime image/config knobs in `params.json` (container names, db filenames, toggles) and `nextflow.config` profiles (cpu/mem/gpu label if needed).
+
+To remove a tool, do this in reverse: remove module include/call in `main.nf`, remove process input from `splicing_anno`, and drop image/profile params.
+
+#### Step 2. Parse tool output into ensemble features
+
+1. Add tool extraction logic to `assets/tomls/vcfanno_splicing_ensemble.toml` with `[[annotation]]` for raw field ingestion, `[[postannotation]]` for parsing and feature extraction, and `op = "delete"` cleanup for temporary fields.
+1. If the tool output format is complex, add a parser function in `assets/conf_ensemble.lua` and call it from TOML.
+1. Ensure resulting INFO names are stable and model-friendly (typically prefixed by tool name).
+1. Update all relevant constants in `ESE/ML/pipeline_constants.py`:
+    - `INFO_FIELDS` (maps incoming INFO fields into ML naming),
+    - `ENSEMBLE_SCORE_COLS` (group definition used for feature combinations),
+    - `RAW_SCORE_COLS` (raw-score-only benchmark comparisons).
+    - When adding/removing categorical one-hot fields, register it to `DUMMY_COLS`, list out all possible values cf. `GENE_REGIONS`/`VARIANT_TYPE`, and add it to `columns` keyword of `pd.get_dummies()` in `preprocess()`.
+
+> Note: it is possible to add a feature but not train/infer on it, i.e. just to report it. Simply do not add it to `ENSEMBLE_SCORE_COLS`/`RAW_SCORE_COLS`.
+
+To remove a tool, remove its blocks from `vcfanno_splicing_ensemble.toml` and remove its entries from the same constant sets.
+
+#### Step 3. Missing-feature imputation and tuple sanitisation
+
+1. Update preprocessing in `ESE/ML/utils.py` inside `preprocess(...)`, where `assert_and_convert_single_float_tuples_allow_dot(...)` is called.
+1. Add or remove tool prefixes in the imputation controls: `dots_largeminus`, `dots_zeros`, `nans_zeros`, and `nans_large_minus`.
+1. Choose strategy intentionally: use large negative sentinels for unscorable or missing-is-informative values, and use zeros for neutral absence.
+1. Verify downstream filtering behavior in `filter_bad_features(...)` remains aligned with your missingness policy.
+
+### Case B: Annotation-only integration (no new tool call)
+
+This path is for adding static annotations (for example branchpointer-like tracks or extra BED/VCF-based fields).
+
+#### Step 1. Annotation TOML changes
+
+1. Add annotation entries in `assets/tomls/annotate.hg38.toml` (and usually `annotate.hg19.toml` for parity), including `[[annotation]]` sources, optional `[[postannotation]]` transforms, and optional cleanup with `delete`.
+1. Ensure files are present under `assets/` and referenced with the same relative paths expected by `vcfanno`.
+1. No new Dockerfile is required if this is purely annotation-file driven.
+
+Step 2-3: Follow the above method for Case A.
+
+### Step 4. Training and evaluation (applies to both cases)
+
+1. Run training through Nextflow (`--ml_mode train`) after every feature-schema change.
+1. Compare best model versus raw-score-only baselines in training outputs (`training_results_*.json`, PR curves).
+1. Confirm exported model/columns artifacts are regenerated together and versioned as a pair.
+1. Re-run inference with the new model and validate TSV output columns against expectations.
+1. If removing tools/features, retrain before production use to avoid stale expected columns.
+
 ## How to Train the Consensus Scoring Model
 
 Training uses `../ESE/ML/main.py train` through `ensemble_train`.
@@ -100,7 +174,7 @@ Required training params:
 
 Optional params:
 
-5. `--ml_test_chroms` (defaults to: `chr1 chr3 chr5 chr7 chr9`)
+1. `--ml_test_chroms` (defaults to: `chr1 chr3 chr5 chr7 chr9`)
 
 Example command:
 
@@ -126,19 +200,6 @@ Training artifacts are published to:
 
 - models: `${ml_save_dir}/models/*`
 - logs: `${ml_log_dir}/logs/*`
-
-## Legacy v1 -> v2 Step Mapping
-
-| v1 (`run_introme.sh`) | v2 module/process |
-| --- | --- |
-| Step 1: subset VCF | `data_preprocessing` |
-| Step 2: quality filter | `quality_filter` (optional) |
-| Step 3: annotate VCF | `variant_info` |
-| Step 4: annotation-value filtering based on gnomAD_PM_AF | Disabled: Commented out AF anno in .toml, and vcfanno in `variant_info` |
-| Step 5: MMSplice/SpliceAI (+tool stage) | `spliceai`, `mmsplice`, `pangolin`, `spip`, `spliceogen` |
-| Step 6: Introme functions | `introme_functions` + `splicing_anno` |
-| Step 7: TSV export | produced via ensemble inference output TSV |
-| Step 8: consensus scoring | `ensemble_infer` or `ensemble_train` |
 
 ## Known Caveats and TODOs
 
