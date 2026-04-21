@@ -57,6 +57,8 @@ Execution order in `main.nf`:
 1. Reference genome FASTA hg19/hg38.
 1. Gene annotation GTF.
 
+> WARNING: hg19 annotation files were not migrated. Running with the hg19 build has not been tested.
+
 ### Optional input files
 
 1. BED file for region-restricted analysis (`--bed`).
@@ -64,9 +66,7 @@ Execution order in `main.nf`:
 
 ## Configuration Files
 
-| ! NOTE                      |
-|:----------------------------|
-| Paths are resolved relative to the terminal (alias `$launchDir`). Use `$projectDir` if referring to a file relative to the folder containing `main.nf`|
+> Note: Paths are resolved relative to the terminal (alias `$launchDir`). Use `$projectDir` if referring to a file relative to the folder containing `main.nf`
 
 - `params.json`:
   - User-editable run inputs, including paths to VCF, FASTA, GTF, and BED files.
