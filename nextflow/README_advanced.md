@@ -105,7 +105,7 @@ Source Dockerfiles for maintenance and rebuilds:
 
 This section describes how to introduce or remove features in two common scenarios.
 
-1. Case A: a new external tool is called and produces scores.
+1. Case A: a new external tool is called and dynamically produces scores.
 1. Case B: an additional annotation source is added via TOML only.
 
 ### Case A: Tool-calling integration (new score-producing tool)
@@ -116,8 +116,6 @@ This section describes how to introduce or remove features in two common scenari
 1. Add a process module `modules/TOOL_NAME/TOOL_NAME.nf` that consumes the expected VCF/FASTA/GTF inputs, emits an output file (VCF/TSV), and publishes outputs to `output/TOOL_NAME`.
 1. Wire the process into orchestration in `main.nf`: include the module, call it in workflow order (usually after `variant_info`), and pass its output into `splicing_anno`.
 1. Register runtime image/config knobs in `params.json` (container names, db filenames, toggles) and `nextflow.config` profiles (cpu/mem/gpu label if needed).
-
-To remove a tool, do this in reverse: remove module include/call in `main.nf`, remove process input from `splicing_anno`, and drop image/profile params.
 
 #### Step 2. Parse tool output into ensemble features
 
@@ -132,7 +130,7 @@ To remove a tool, do this in reverse: remove module include/call in `main.nf`, r
 
 > Note: it is possible to add a feature but not train/infer on it, i.e. just to report it. Simply do not add it to `ENSEMBLE_SCORE_COLS`/`RAW_SCORE_COLS`.
 
-To remove a tool, remove its blocks from `vcfanno_splicing_ensemble.toml` and remove its entries from the same constant sets.
+To remove a tool, remove its blocks from `vcfanno_splicing_ensemble.toml` and remove its entries from the Python constants.
 
 #### Step 3. Missing-feature imputation and tuple sanitisation
 
@@ -212,7 +210,11 @@ Training artifacts are published to:
     - Pangolin doesn't support `(len(ref) != 1 and len(alt) != 1 and len(ref) != len(alt))` ([Github source](https://github.com/tkzeng/Pangolin/blob/5cf94b8db938c658391b4305cd7ce33297d44ff7/pangolin/pangolin.py#L88))
     - Lowercase variant bases, e.g. `chr11:47334593 ctCTG>c`
     - For further investigation, missing features can be filtered for by feature name in the jupyter notebook.
-1. SpliceAI, Pangolin script entrypoints are fine for individual variant calls, but especially for GPU-enabled machines do not take advantage of batched processing. It should not take 90 minutes to process 25k variants. For comparison, training OpenSpliceAI from scratch takes 2 hours on the same hardware.
+1. SpliceAI, Pangolin script entrypoints are fine for individual variant calls, but especially for GPU-enabled machines __do not take advantage of batched processing__. It should not take 90 minutes to process 25k variants. For comparison, training OpenSpliceAI from scratch takes 2 hours on the same hardware.
+1. The Pangolin module will download its 300MB annotation file each time it runs -- SpliceAI's 10MB is not that bad. Since this is not removed, these files will accumulate on your computer in the work directory. Even if it were to be removed, isn't it wasteful to host a server to download this to you? TODO: either have an ability to specify a Pangolin annotation file path as main params, or dynamically create the annotation database each time, as per their instructions:
+
+    - > Create an annotation database from a GTF file using scripts/create_db.py. This will take several minutes. ([Github source](https://github.com/tkzeng/Pangolin/blob/main/README.md))
+
 1. SQUIRL integration exists (`modules/squirl.nf`) but is currently not active in `main.nf`. Some other Dockerfile sources e.g. Absplice are being kept in Confluence.
 1. `MNV.sh` scoring logic is deprecated, as we rely on the implementation in bw2 fork, introduced in Apr 2023 ([Github source](https://github.com/bw2/SpliceAI/commit/1dcd441d4e931909007f06a60c9e285c994699b0)).
 
