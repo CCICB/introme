@@ -269,7 +269,7 @@ workflow {
         regions_dir,
         u12_dir,
 
-        // tbi files generated within splicing_anno module
+        // tbi files are generated within splicing_anno module
         spliceai.out.spliceai_output, 
         mmsplice.out.mmsplice_output,
         pangolin.out.pangolin_output,

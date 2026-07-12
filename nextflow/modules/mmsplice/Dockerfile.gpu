@@ -47,6 +47,6 @@ RUN git clone --branch ${VERSION} --depth 1 ${MMSPLICE_REPO} /tmp/mmsplice && \
     pip install --no-cache-dir /tmp/mmsplice && \
     rm -rf /tmp/mmsplice
 
-COPY --chmod=744 run_mmsplice.py .
+COPY --chmod=755 run_mmsplice.py .
 
-LABEL version="v2.1-gpu"
+LABEL version="v2.2-gpu"
