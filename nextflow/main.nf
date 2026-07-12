@@ -52,12 +52,6 @@
 */
 
 
-
-/* 
- * Enable DSL 2 syntax
- */
-nextflow.enable.dsl = 2
-
 /*
  * Provide workflow description and default param values to user
  */
@@ -192,7 +186,8 @@ workflow {
 
     // STEP 2: Hard filtering on variant quality (this is here to reduce the number of variants going into the CPU-costly annotation step below)
     def anno_input
-    if (params.quality_filter == true) {
+    def run_quality_filter = params.quality_filter.toString().toBoolean()
+    if (run_quality_filter) {
         // run filter process
         quality_filter(data_preprocessing.out.preprocessed_output)
         // trigger input file for next step to be filtered output
