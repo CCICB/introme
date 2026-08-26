@@ -29,9 +29,11 @@ RUN git init Spliceogen \
 WORKDIR /Spliceogen
 
 # Make the RUN.sh script executable
-RUN chmod +x RUN.sh
+RUN chmod +x RUN.sh && \
+    mkdir -p data temp output && \
+    chmod -R 777 data temp output
 
 # Set the entrypoint to run the application
 ENTRYPOINT ["./RUN.sh"]
 
-LABEL version="v2.0"
+LABEL version="v2.1"
