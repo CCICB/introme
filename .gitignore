@@ -1,3 +1,5 @@
-__pycache__
-
+.nextflow
+gencode.*.annotation.gtf.gz
 *.fa
+*.vcf
+__pycache__
