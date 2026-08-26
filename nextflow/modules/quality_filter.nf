@@ -10,16 +10,44 @@ process quality_filter {
     output:
         path "${params.prefix}.quality_filter.vcf.gz", emit: quality_filter
         path "${params.prefix}.quality_filter.vcf.gz.tbi", emit: quality_filter_tbi
-        val variant_count
+        path "${params.prefix}.quality_filter.variant_count.txt", emit: variant_count
 
     script:
         """
-        bcftools filter --threads \$(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL${params.min_QUAL} || QUAL='.') && MAX(FORMAT/DP[*])${params.min_DP} && MAX(FORMAT/AD[*:1])${params.min_AD}" $input_vcf | bgzip > ${params.prefix}.quality_filter.vcf.gz
-        tabix -p vcf ${params.prefix}.quality_filter.vcf.gz
-        variant_count=\$(bcftools view -H ${params.prefix}.quality_filter.vcf.gz | wc -l | tr -d ' ')
-        echo \$(date +%x_%r) 'Quality filtering complete -' \$(variant_count) 'variants remaining'
+        # bcftools filter --threads \$(getconf _NPROCESSORS_ONLN) -i"(FILTER='PASS' || FILTER='.') && (QUAL${params.min_QUAL} || QUAL='.') && MAX(FORMAT/DP[*])${params.min_DP} && MAX(FORMAT/AD[*:1])${params.min_AD}" $input_vcf | bgzip > ${params.prefix}.quality_filter.vcf.gz
 
-        if [[ \$(variant_count) == 0 ]]; then
+        has_format_dp=\$(bcftools view -h ${input_vcf} | grep -q '^##FORMAT=<ID=DP,' && echo true || echo false)
+        has_format_ad=\$(bcftools view -h ${input_vcf} | grep -q '^##FORMAT=<ID=AD,' && echo true || echo false)
+
+        expr="(FILTER='PASS' || FILTER='.') && (QUAL>=${params.min_QUAL} || QUAL='.')"
+
+        if [[ "\$has_format_dp" == true ]]; then
+            expr="\$expr && MAX(FORMAT/DP[*])>=${params.min_DP}"
+        else
+            echo "WARNING: FORMAT/DP not found in VCF header; skipping DP filter" >&2
+        fi
+
+        if [[ "\$has_format_ad" == true ]]; then
+            expr="\$expr && MAX(FORMAT/AD[*:1])>=${params.min_AD}"
+        else
+            echo "WARNING: FORMAT/AD not found in VCF header; skipping AD filter" >&2
+        fi
+
+        echo "Using bcftools filter expression: \$expr" >&2
+
+        bcftools filter --threads \$(getconf _NPROCESSORS_ONLN) \
+            -i "\$expr" \
+            ${input_vcf} \
+            -Oz -o ${params.prefix}.quality_filter.vcf.gz
+
+        tabix -p vcf ${params.prefix}.quality_filter.vcf.gz
+
+        variant_count=\$(bcftools view -H ${params.prefix}.quality_filter.vcf.gz | wc -l | tr -d ' ')
+        echo "\$variant_count" > ${params.prefix}.quality_filter.variant_count.txt
+
+        echo \$(date +%x_%r) 'Quality filtering complete -' \$variant_count 'variants remaining'
+
+        if [[ \$variant_count == 0 ]]; then
             echo \$(date +%x_%r) 'No variants passed quality filtering - perhaps rerun with -q (triggers no quality filtering)'
             exit 1
         fi

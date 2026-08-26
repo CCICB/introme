@@ -52,16 +52,11 @@
 */
 
 
-
-/* 
- * Enable DSL 2 syntax
- */
-nextflow.enable.dsl = 2
-
 /*
  * Provide workflow description and default param values to user
  */
-log.info """\
+def intromeBanner(workflowParams) {
+    return """\
 
 ====================================================================================
 ██╗███╗   ██╗████████╗██████╗  ██████╗ ███╗   ███╗███████╗    ██████╗     ██████╗ 
@@ -85,29 +80,47 @@ Runs the Introme pipeline in the following steps:
     7. Machine Learning: Generate consensus scores using a ML algorithm
 
 Inputs:
-    vcf               : ${params.vcf}
-    reference genome  : ${params.ref_genome} 
-    gtf               : ${params.gtf}
-    genome build      : ${params.genome_build}
-    prefix            : ${params.prefix}
-    bed               : ${params.bed}
+    vcf               : ${workflowParams.vcf}
+    reference genome  : ${workflowParams.ref_genome}
+    gtf               : ${workflowParams.gtf}
+    genome build      : ${workflowParams.genome_build}
+    prefix            : ${workflowParams.prefix}
+    bed               : ${workflowParams.bed}
 
 Process:
         Dockers:
-                spliceai            : ${params.spliceai_docker_container}
-                mmsplice            : ${params.mmsplice_docker_container}
-                spliceogen          : ${params.spliceogen_docker_container}
-                pangolin            : ${params.pangolin_docker_container}
-                spip                : ${params.spip_docker_container}
-                squirl              : ${params.squirl_docker_container}
-                data_preprocessing  : ${params.data_preprocessing_docker_container}
-                variant_info        : ${params.variant_info_docker_container}
-                introme_functions   : ${params.introme_functions_docker_container}
+                spliceai            : ${workflowParams.spliceai_docker_container}
+                mmsplice            : ${workflowParams.mmsplice_docker_container}
+                spliceogen          : ${workflowParams.spliceogen_docker_container}
+                pangolin            : ${workflowParams.pangolin_docker_container}
+                spip                : ${workflowParams.spip_docker_container}
+                squirl              : ${workflowParams.squirl_docker_container}
+                data_preprocessing  : ${workflowParams.data_preprocessing_docker_container}
+                variant_info        : ${workflowParams.variant_info_docker_container}
+                introme_functions   : ${workflowParams.introme_functions_docker_container}
 
 Output:
-        Output folder  : ${params.outdir}
+        Output folder  : ${workflowParams.outdir}
         
 """
+}
+
+def resolveRequiredPath(workflowParams, key) {
+    def value = workflowParams[key]
+    if (value == null || value.toString().trim() == '') {
+        error "Missing required parameter --${key}"
+    }
+    file(value.toString(), checkIfExists: true)
+}
+
+def resolveRequiredPatternPath(workflowParams, key, token) {
+    def pattern = workflowParams[key]
+    if (pattern == null || pattern.toString().trim() == '') {
+        error "Missing required parameter --${key}"
+    }
+    def resolved = String.format(pattern.toString(), token)
+    file(resolved, checkIfExists: true)
+}
 
 
 /* 
@@ -128,15 +141,12 @@ include { splicing_anno }       from './modules/splicing_anno.nf'
 include { ensemble_infer; ensemble_train } from './modules/ensemble.nf'
 
 /* 
- * Print summary of supplied parameters
- */
-log.info paramsSummaryLog(workflow)
-
-
-/* 
  * Main pipeline logic
  */
 workflow {
+    log.info intromeBanner(params)
+    log.info paramsSummaryLog(workflow)
+
     // Validate required top-level params once at workflow start.
     def ml_mode = (params.ml_mode ?: 'infer').toString().toLowerCase()
     def ml_test_chroms_arg = null
@@ -148,16 +158,16 @@ workflow {
     if (ml_mode == 'train') {
         def ml_test_chroms = params.ml_test_chroms
         if (!(ml_test_chroms instanceof List)) {
-            ml_test_chroms = ml_test_chroms?.toString()?.split(/[\s,]+/)?.findAll { it } ?: []
+            ml_test_chroms = ml_test_chroms?.toString()?.split(/[\s,]+/)?.findAll { chrom -> chrom } ?: []
         }
 
-        ml_test_chroms = ml_test_chroms.collect { it.toString().trim() }.findAll { it }
+        ml_test_chroms = ml_test_chroms.collect { chrom -> chrom.toString().trim() }.findAll { chrom -> chrom }
         if (ml_test_chroms.isEmpty()) {
             error "When --ml_mode train, --ml_test_chroms must contain at least one chromosome"
         }
 
         def validChromPattern = ~/^chr(?:[1-9]|1[0-9]|2[0-2]|X|Y)$/
-        def invalidChroms = ml_test_chroms.findAll { !(it ==~ validChromPattern) }
+        def invalidChroms = ml_test_chroms.findAll { chrom -> !(chrom ==~ validChromPattern) }
         if (!invalidChroms.isEmpty()) {
             error "Invalid --ml_test_chroms values: ${invalidChroms.join(', ')}. Allowed values are chr1-chr22, chrX, chrY"
         }
@@ -165,35 +175,19 @@ workflow {
         ml_test_chroms_arg = ml_test_chroms.join(' ')
     }
 
-    // Resolve required singleton files/dirs once and fail early if anything is missing.
-    def resolveRequiredPath = { String key ->
-        def value = params[key]
-        if (value == null || value.toString().trim() == '') {
-            error "Missing required parameter --${key}"
-        }
-        file(value.toString(), checkIfExists: true)
-    }
-
-    def resolveRequiredPatternPath = { String key, String token ->
-        def pattern = params[key]
-        if (pattern == null || pattern.toString().trim() == '') {
-            error "Missing required parameter --${key}"
-        }
-        def resolved = String.format(pattern.toString(), token)
-        file(resolved, checkIfExists: true)
-    }
-
     // Input variables
-    vcf = resolveRequiredPath('vcf')
-    ref_genome = resolveRequiredPath('ref_genome')
-    gtf = resolveRequiredPath('gtf')
-    chrRename = resolveRequiredPath('chrRename')
+    def vcf = resolveRequiredPath(params, 'vcf')
+    def ref_genome = resolveRequiredPath(params, 'ref_genome')
+    def gtf = resolveRequiredPath(params, 'gtf')
+    def chrRename = resolveRequiredPath(params, 'chrRename')
 
     // STEP 1: subsetting the VCF to genomic regions of interest (first because it gets rid of the most variants)
     data_preprocessing(vcf, ref_genome, gtf, chrRename)
 
     // STEP 2: Hard filtering on variant quality (this is here to reduce the number of variants going into the CPU-costly annotation step below)
-    if (params.quality_filter == true) {
+    def anno_input
+    def run_quality_filter = params.quality_filter.toString().toBoolean()
+    if (run_quality_filter) {
         // run filter process
         quality_filter(data_preprocessing.out.preprocessed_output)
         // trigger input file for next step to be filtered output
@@ -206,16 +200,16 @@ workflow {
 
     // STEP 3: annotate the subsetted VCF with useful information, to be used for filtering downstream
     //         and run hard filtering on the values of annotations added in the previous step
-    conf_pre_lua_path = resolveRequiredPath('conf_pre_anno_lua')
-    toml_path = resolveRequiredPatternPath('gencode_toml_pattern', params.genome_build.toString())
+    def conf_pre_lua_path = resolveRequiredPath(params, 'conf_pre_anno_lua')
+    def toml_path = resolveRequiredPatternPath(params, 'gencode_toml_pattern', params.genome_build.toString())
     variant_info(anno_input, data_preprocessing.out.sorted_gtf, conf_pre_lua_path, toml_path)
 
 
     // STEP 4: Run MMSplice, Splice AI, Pangolin, Spliceogen, Squirls and Spip
 
     // Define paramaters for SpliceAI
-    distance = 1000
-    mask = 0
+    def distance = 1000
+    def mask = 0
     // Run SpliceAI
     spliceai(variant_info.out.variant_info_rmanno, ref_genome, distance, mask)
 
@@ -231,17 +225,17 @@ workflow {
     // Run Squirl
     // download from patricia server to run squirl??? 
     // TODO fix squirl
-    // SQUIRLS_DATA = resolveRequiredPath('squirls_data_dir')
+    // SQUIRLS_DATA = resolveRequiredPath(params, 'squirls_data_dir')
     // squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
 
     // Run Splicoegen
     spliceogen(variant_info.out.variant_info_rmanno, ref_genome, gtf)
 
     // STEP 5: Execute introme functions such as AG_check
-    ag_script_path = resolveRequiredPath('ag_script_path')
-    ese_script_path = resolveRequiredPath('ese_script_path')
+    def ag_script_path = resolveRequiredPath(params, 'ag_script_path')
+    def ese_script_path = resolveRequiredPath(params, 'ese_script_path')
     // mnv_script_path = file('../MNV.sh')
-    template_header_vcf = resolveRequiredPath('template_header_vcf')
+    def template_header_vcf = resolveRequiredPath(params, 'template_header_vcf')
 
     introme_functions(ag_script_path, ese_script_path,
                                         // variant_info.out.variant_info,
@@ -250,13 +244,13 @@ workflow {
                                         ref_genome,
                                         template_header_vcf)
 
-    conf_ensemble_lua_path = resolveRequiredPath('conf_ensemble_lua')
-    ensemble_anno_toml = resolveRequiredPath('ensemble_anno_toml')
-    annotate_toml = resolveRequiredPatternPath('annotate_toml_pattern', params.genome_build.toString())
+    def conf_ensemble_lua_path = resolveRequiredPath(params, 'conf_ensemble_lua')
+    def ensemble_anno_toml = resolveRequiredPath(params, 'ensemble_anno_toml')
+    def annotate_toml = resolveRequiredPatternPath(params, 'annotate_toml_pattern', params.genome_build.toString())
 
-    branchpointer_dir = resolveRequiredPath('branchpointer_dir')
-    regions_dir = resolveRequiredPath('regions_dir')
-    u12_dir = resolveRequiredPath('u12_dir')
+    def branchpointer_dir = resolveRequiredPath(params, 'branchpointer_dir')
+    def regions_dir = resolveRequiredPath(params, 'regions_dir')
+    def u12_dir = resolveRequiredPath(params, 'u12_dir')
     
     // STEP 6: Run splicing annotations
     splicing_anno(
@@ -284,11 +278,11 @@ workflow {
     )
 
     // STEP 7: Generate consensus scores - ML mode selection (infer | train)
-    ensemble_score_script_path = resolveRequiredPath('ensemble_score_script_path')
+    def ensemble_score_script_path = resolveRequiredPath(params, 'ensemble_score_script_path')
 
     if (ml_mode == 'infer') {
-        clf_model_path = resolveRequiredPath('ml_model_path')
-        columns_path = resolveRequiredPath('ml_columns_path')
+        def clf_model_path = resolveRequiredPath(params, 'ml_model_path')
+        def columns_path = resolveRequiredPath(params, 'ml_columns_path')
 
         ensemble_infer(
             ensemble_score_script_path,

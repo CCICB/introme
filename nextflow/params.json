@@ -1,7 +1,7 @@
 {
-    "min_QUAL": ">=200",
-    "min_DP" : ">=20",
-    "min_AD" : ">=5",
+    "min_QUAL": 200,
+    "min_DP" : 20,
+    "min_AD" : 5,
 
     "quality_filter": false,
 
