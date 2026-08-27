@@ -179,10 +179,13 @@ workflow {
     def vcf = resolveRequiredPath(params, 'vcf')
     def ref_genome = resolveRequiredPath(params, 'ref_genome')
     def gtf = resolveRequiredPath(params, 'gtf')
+    def gtf_prefix = gtf.name
+            .replaceFirst(/\.gtf\.gz$/, '')
+            .replaceFirst(/\.gtf$/, '')
     def chrRename = resolveRequiredPath(params, 'chrRename')
 
     // STEP 1: subsetting the VCF to genomic regions of interest (first because it gets rid of the most variants)
-    data_preprocessing(vcf, ref_genome, gtf, chrRename)
+    data_preprocessing(vcf, ref_genome, gtf, chrRename, gtf_prefix)
 
     // STEP 2: Hard filtering on variant quality (this is here to reduce the number of variants going into the CPU-costly annotation step below)
     def anno_input
@@ -279,7 +282,7 @@ workflow {
 
     // STEP 7: Generate consensus scores - ML mode selection (infer | train)
     def ensemble_score_script_path = resolveRequiredPath(params, 'ensemble_score_script_path')
-
+    def introme_toml = resolveRequiredPath(params, 'introme_toml')
     if (ml_mode == 'infer') {
         def clf_model_path = resolveRequiredPath(params, 'ml_model_path')
         def columns_path = resolveRequiredPath(params, 'ml_columns_path')
@@ -288,7 +291,8 @@ workflow {
             ensemble_score_script_path,
             clf_model_path,
             columns_path,
-            splicing_anno.out.splicing_anno_output
+            splicing_anno.out.splicing_anno_output,
+            introme_toml
         )
     } else {
         ensemble_train(

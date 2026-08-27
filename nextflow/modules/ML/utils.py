@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from pipeline_constants import (
     DUMMY_COLS,
@@ -155,3 +156,42 @@ def filter_bad_features(X_split, y_split, feature_cols):
     if dropped_len > 0:
         print(f"cleaned rows. before: {initial_len} | after: {len(X_clean)} | dropped: {dropped_len}")
     return X_clean, y_clean
+
+def fmt_float32(value, dp: int=-1):
+    """Format a number like vcfgo's fmtFloat32."""
+    if value == "." or value is None:
+        return value
+
+    # Preserve integer INFO fields exactly rather than converting them to float32.
+    if isinstance(value, (int, np.integer)) and not isinstance(value, bool):
+        return str(value)
+
+    v = np.float32(value)
+
+    if dp >= 0:
+        val = f"{v:.{dp}f}"
+    else:
+        if v > 0.02 or v < -0.02:
+            val = f"{v:.4f}"
+        else:
+            val = f"{v:.5g}"
+
+    val = val.rstrip("0").rstrip(".")
+
+    if val in ("", "-"):
+        val = "0"
+
+    return val
+
+def is_numeric_info_column(series):
+    def is_numeric_value(x):
+        if x is None or x == ".":
+            return True
+
+        if isinstance(x, (float, np.floating)) and np.isnan(x):
+            return True
+
+        return isinstance(x, (int, float, np.integer, np.floating)) \
+            and not isinstance(x, bool)
+
+    return series.map(is_numeric_value).all()

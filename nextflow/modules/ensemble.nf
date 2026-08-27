@@ -12,9 +12,11 @@ process ensemble_infer {
         path clf_model_path
         path columns_path
         path splicing_anno_vcf
+        path introme_toml
     
     output:
-		path "${params.prefix}.introme.predictions.tsv", emit: ensemble_output
+		path "${params.prefix}.introme.predictions.tsv", emit: ensemble_report
+        path "${params.prefix}.introme.predictions.vcf.gz", emit: ensemble_vcf
 
     script:
     """
@@ -23,6 +25,26 @@ process ensemble_infer {
         --columns-path ${columns_path} \
         --input-vcf ${splicing_anno_vcf} \
         --output-tsv ${params.prefix}.introme.predictions.tsv
+
+    bgzip -c ${params.prefix}.introme.predictions.tsv > introme.predictions.tsv.gz
+    tabix -S1 -s1 -b2 -e2 introme.predictions.tsv.gz
+
+    introme_col=\$(
+        zcat introme.predictions.tsv.gz \
+        | head -1 \
+        | tr '\t' '\n' \
+        | awk '\$0 == "introme_score" {print NR; exit}'
+    )
+
+    sed "s/__INTROME_COL__/\${introme_col}/" introme.toml > introme.generated.toml
+
+    vcfanno \
+        -base-path ./ \
+        -p \$(getconf _NPROCESSORS_ONLN) \
+        introme.generated.toml \
+        ${splicing_anno_vcf} > ${params.prefix}.introme.predictions.vcf
+
+    bgzip ${params.prefix}.introme.predictions.vcf
     """
 }
 

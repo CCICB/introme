@@ -41,8 +41,14 @@ if __name__ == "__main__":
 
     df = vcf2pandas(str(args.input_vcf),
         remove_empty_columns=False,
-        info_fields=INFO_FIELDS
+        info_fields=INFO_FIELDS,
+        format_fields=[], # Default of None would include all FORMAT fields
     )
+
+    if df["ALT"].apply(lambda x: isinstance(x, tuple) and len(x) == 1).all():
+                    df["ALT"] = df["ALT"].apply(lambda x: x[0])
+    else:
+        raise ValueError("ALT column contains values that are not tuples of length 1.")
 
     if (args.mode == "train"):
         train_main(

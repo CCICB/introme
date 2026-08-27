@@ -47,7 +47,7 @@ process introme_functions {
     python3 ${ese_script_path} ${variant_info_stripped} ./${params.prefix}.introme_annotate.ESE.vcf ${ref_genome}
     mv ${params.prefix}.introme_annotate.ESE.vcf ${params.prefix}.introme_annotate.ESE.tsv
     bgzip -k ${params.prefix}.introme_annotate.ESE.tsv
-    tabix -s1 -b2 -e2 ${params.prefix}.introme_annotate.ESE.tsv.gz
+    tabix -s1 -b2 -e2 -c # ${params.prefix}.introme_annotate.ESE.tsv.gz
     """
     // ### MNV scoring ###
 

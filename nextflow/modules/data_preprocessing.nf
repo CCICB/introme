@@ -9,17 +9,20 @@ process data_preprocessing {
         path ref_genome
         path input_gtf
         path chrRename
+        val gtf_prefix
     
     output:
         path "${params.prefix}.subset.vcf.gz", emit: preprocessed_output
         path "${params.prefix}.subset.vcf.gz.tbi", emit: preprocessed_output_tbi
-        path "sorted.gtf.gz", emit: sorted_gtf
+        path "${gtf_prefix}.sorted.gtf.gz", emit: sorted_gtf
 
     script:
+        def sorted_gtf_name = "${gtf_prefix}.sorted.gtf.gz"
+
         """
         CHROMS="chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY"
 
-        gtf_path=\$(echo input_gtf | sed 's/.gtf.gz$/\.sorted\.gtf\.gz/')
+        gtf_path="${sorted_gtf_name}"
 
         echo \$(date +%x_%r) \$(bcftools view -H "$input_vcf" | wc -l) 'variants prior to subsetting'
 

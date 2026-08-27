@@ -1,0 +1,6 @@
+# Introme classification score extraction
+[[annotation]]
+file = "introme.predictions.tsv.gz"
+columns = [__INTROME_COL__]
+ops = ["uniq"]
+names = ["Introme_Score"]

@@ -5,7 +5,7 @@ import pickle
 import pandas as pd
 import numpy as np
 
-from utils import preprocess, filter_bad_features
+from utils import preprocess, filter_bad_features, fmt_float32, is_numeric_info_column
 
 def infer_main(model_path: Path, df: pd.DataFrame, columns_path: Path, output_path: Path):
     """
@@ -46,9 +46,17 @@ def infer_main(model_path: Path, df: pd.DataFrame, columns_path: Path, output_pa
     scores_series = pd.Series(y_scores, index=features.index).astype(object)
     scores_full = scores_series.reindex(df_original.index, fill_value=None)
 
+    df_original['introme_score'] = scores_full
     # for col starting with "INFO:" if tuple but only length one, unpack to just that value
     for col in df_original.columns:
         if col.startswith("INFO:") and df_original[col].apply(lambda x: (isinstance(x, tuple) and len(x) == 1) or x is None or x == ".").all():
             df_original[col] = df_original[col].apply(lambda x: x[0] if isinstance(x, tuple) and len(x) == 1 else x)
-    df_original['introme_score'] = scores_full
+        if is_numeric_info_column(df_original[col]):
+                df_original[col] = df_original[col].map(fmt_float32)
+
+    # Round introme predictions to 4 dp.
+    df_original["introme_score"] = df_original["introme_score"].map(
+        lambda x: fmt_float32(x, dp=4)
+    )
+
     df_original.to_csv(output_path, sep='\t', index=False)
