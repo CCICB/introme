@@ -9,15 +9,21 @@ names = ["Variant_Type", "AG_Created", "AG_Lost", "GT_Created", "GT_Lost"]
 
 # ESE Scoring (computed during Introme)
 [[annotation]]
-# file = "introme_annotate.ESE.vcf.gz"
 file = "introme_annotate.ESE.tsv.gz"
 columns = [9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]
-# names =  ["A1_Hazeem_alt"]
-# ops = ["self"]
-# columns = [3]
-# fields =  ["A1_Hazeem_alt", "A1_Hazeem_diff", "A1_Hazeem_july_alt", "A1_Hazeem_july_diff", "A1_neuBG_alt", "A1_neuBG_diff", "A1_winBG_alt", "A1_winBG_diff", "SRSF1_alt", "SRSF1_diff", "SRSF1_igM_alt", "SRSF1_igM_diff", "SRSF2_alt", "SRSF2_diff", "SRSF5_alt", "SRSF5_diff", "SRSF6_alt", "SRSF6_diff"]
-ops = ["self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self", "self"]
-names =  ["ESE_A1_Hazeem_alt", "ESE_A1_Hazeem_diff", "ESE_A1_Hazeem_july_alt", "ESE_A1_Hazeem_july_diff", "ESE_A1_neuBG_alt", "ESE_A1_neuBG_diff", "ESE_A1_winBG_alt", "ESE_A1_winBG_diff", "ESE_SRSF1_alt", "ESE_SRSF1_diff", "ESE_SRSF1_igM_alt", "ESE_SRSF1_igM_diff", "ESE_SRSF2_alt", "ESE_SRSF2_diff", "ESE_SRSF5_alt", "ESE_SRSF5_diff", "ESE_SRSF6_alt", "ESE_SRSF6_diff"]
+ops = ["uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq", "uniq"]
+# Appended _float so vcfanno typecasts it (removed afterwards)
+names =  [
+    "ESE_A1_Hazeem_alt_float", "ESE_A1_Hazeem_diff_float",
+    "ESE_A1_Hazeem_july_alt_float", "ESE_A1_Hazeem_july_diff_float",
+    "ESE_A1_neuBG_alt_float", "ESE_A1_neuBG_diff_float",
+    "ESE_A1_winBG_alt_float", "ESE_A1_winBG_diff_float",
+    "ESE_SRSF1_alt_float", "ESE_SRSF1_diff_float",
+    "ESE_SRSF1_igM_alt_float", "ESE_SRSF1_igM_diff_float",
+    "ESE_SRSF2_alt_float", "ESE_SRSF2_diff_float",
+    "ESE_SRSF5_alt_float", "ESE_SRSF5_diff_float",
+    "ESE_SRSF6_alt_float", "ESE_SRSF6_diff_float"
+]
 
 # SpliceAI Annotations
 #SpliceAI VCF Processing
@@ -45,9 +51,6 @@ name = "SpliceAI_processed"
 #          1    | 2  | 3    | 4   | 5   | 6   | 7   | 8   | 9   | 10  | 11  |
 # DS_AG_REF|DS_AG_ALT|DS_AL_REF|DS_AL_ALT|DS_DG_REF|DS_DG_ALT|DS_DL_REF|DS_DL_ALT">
 #  12      | 13      | 14      | 15      | 16      | 17      | 18      | 19
-
-# TODO: seems really wasteful to have to split anew for every score
-# - why not compute everything into a table once and access by index?
 
 # SpliceAI DS_AG
 [[postannotation]]
