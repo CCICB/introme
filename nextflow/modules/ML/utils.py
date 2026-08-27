@@ -104,7 +104,8 @@ def assert_and_convert_single_float_tuples_allow_dot(df: pd.DataFrame, *,
                     return True
                 if (x[0] is None):
                     print(col, x[0])
-                return (len(x) == 1 and (isinstance(x[0], float) or x[0] is None))
+                # return (len(x) == 1 and (isinstance(x[0], float) or x[0] is None))
+                return ((len(x) == 1) and (isinstance(x[0], float) or x[0] is None)) or (len(x) > 1 and all(elem == x[0] for elem in x[1:]))
 
             # If any row fails the validity check, raise an error
             valid_series = df[col].apply(is_valid_tuple)
