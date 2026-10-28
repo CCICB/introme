@@ -1,40 +1,72 @@
-# Use the Miniconda base image
-FROM continuumio/miniconda3:latest
+FROM anaconda/miniconda:26.9.4
 
 # Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive \
-LANG=C.UTF-8 \
-LC_ALL=C.UTF-8 \
-PATH=/opt/conda/bin:$PATH
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
 
-# Install system packages and clean up
+ARG IMAGE_VERSION=2.0.0
+ARG CONDA_ENV=introme
+ARG PYTHON_VERSION=3.10
+ARG TORCH_VERSION=2.12.1
+
+ARG PANGOLIN_REPO=https://github.com/donren-leung/PangolinBatched/
+ARG PANGOLIN_COMMIT=71cad1c2e53210662cde89f344e37ab143c80e62
+
+# System tools
 RUN apt-get update && \
-apt-get install -y --no-install-recommends apt-utils wget git && \
-apt-get -y upgrade && \
-rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        wget \
+        git && \
+    rm -rf /var/lib/apt/lists/*
 
-# Update Conda and install Python and packages
-RUN conda update -n base -c defaults conda && \
-conda install -y python=3.9 && \
-conda config --add channels bioconda && \
-conda install -y -c conda-forge pyvcf && \
-conda clean -afy
+# Python + PyVCF
+RUN conda create -y \
+        --name "${CONDA_ENV}" \
+        --override-channels \
+        -c conda-forge \
+        "python=${PYTHON_VERSION}" \
+        pyvcf && \
+    conda clean -afy
 
-# Upgrade pip and install Python packages
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir gffutils biopython pandas pyfastx
+ENV PATH="/opt/miniconda3/envs/${CONDA_ENV}/bin:${PATH}"
 
-# Define build-time variable for Pangolin commit
-ARG PANGOLIN_REPO=https://github.com/bw2/Pangolin
-ARG PANGOLIN_COMMIT=fd12887eff04720ea0b4cdd02373f23132b39774
+# PyTorch CPU
+RUN python -m pip install --no-cache-dir \
+        "torch==${TORCH_VERSION}" \
+        --index-url https://download.pytorch.org/whl/cpu
 
-RUN git clone ${PANGOLIN_REPO} /tmp/pangolin --depth 1 && \
+# Pangolin dependencies
+RUN python -m pip install --no-cache-dir \
+        gffutils \
+        biopython \
+        pandas \
+        pyfastx
+
+# Install Pangolin and retain its DB-generation script
+RUN git init /tmp/pangolin && \
     cd /tmp/pangolin && \
-    git checkout ${PANGOLIN_COMMIT} && \
-    sed -i -E 's_if (seq\[5000\+d:5000\+d\+len\(ref\)\]) != (ref)_if \1.upper() != \2.upper()_' pangolin/pangolin.py && \
-    pip install --no-cache-dir . && \
-    cd && \
+    git remote add origin "${PANGOLIN_REPO}" && \
+    git fetch --depth 1 origin "${PANGOLIN_COMMIT}" && \
+    git checkout --detach FETCH_HEAD && \
+    python -m pip install --no-cache-dir . && \
+    mkdir -p /opt/introme/bin && \
+    install -m 0755 scripts/create_db.py /opt/introme/bin/create_pangolin_db.py && \
     rm -rf /tmp/pangolin
 
-LABEL version="v1.3-cpu"
+# Final sanity checks
+RUN python -c "\
+import torch; \
+print('torch:', torch.__version__); \
+assert torch.version.cuda is None" && \
+    python /opt/introme/bin/create_pangolin_db.py --help >/dev/null && \
+    python -m pip check
+
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.source="https://github.com/CCICB/introme" \
+      org.ccicb.introme.runtime="cpu" \
+      org.ccicb.introme.python.version="${PYTHON_VERSION}" \
+      org.ccicb.introme.torch.version="${TORCH_VERSION}" \
+      org.ccicb.introme.pangolin.source="${PANGOLIN_REPO}" \
+      org.ccicb.introme.pangolin.commit="${PANGOLIN_COMMIT}"

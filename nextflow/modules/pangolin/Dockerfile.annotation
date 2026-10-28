@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ARG GENCODE_VERSION
+ARG GENCODE_GTF
+
+ENV PANGOLIN_DB_DIR=/opt/introme/db
+
+RUN --mount=type=bind,source=${GENCODE_GTF},target=/tmp/gencode.gtf.gz,readonly \
+    set -eux; \
+    mkdir -p "${PANGOLIN_DB_DIR}"; \
+    cd /tmp; \
+    python /opt/introme/bin/create_pangolin_db.py \
+        /tmp/gencode.gtf.gz \
+        --filter None \
+        --drop-gene-feature \
+        --drop-attributes; \
+    mv /tmp/gencode_no_gene_lessattrs.db \
+       "${PANGOLIN_DB_DIR}/gencode.v${GENCODE_VERSION}.annotation.all-transcripts.pangolin.db"; \
+    sha256sum /tmp/gencode.gtf.gz \
+        | awk '{print $1}' \
+        > "${PANGOLIN_DB_DIR}/gencode-source.sha256"
+
+ENV PANGOLIN_DB="${PANGOLIN_DB_DIR}/gencode.v${GENCODE_VERSION}.annotation.all-transcripts.pangolin.db"
+
+LABEL org.ccicb.introme.annotation.source="GENCODE" \
+      org.ccicb.introme.annotation.version="${GENCODE_VERSION}" \
+      org.ccicb.introme.annotation.filter="all-transcripts"
