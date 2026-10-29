@@ -5,7 +5,7 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
 
-ARG IMAGE_VERSION=2.0.0
+ARG IMAGE_VERSION=2.0.1
 ARG CONDA_ENV=introme
 ARG PYTHON_VERSION=3.10
 ARG TORCH_VERSION=2.12.1
@@ -17,6 +17,7 @@ ARG PANGOLIN_COMMIT=71cad1c2e53210662cde89f344e37ab143c80e62
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
+        procps \
         wget \
         git && \
     rm -rf /var/lib/apt/lists/*

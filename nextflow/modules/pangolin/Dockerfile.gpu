@@ -1,24 +1,17 @@
-ARG CUDA_VERSION=12.6.3
-ARG UBUNTU_VERSION=22.04
+FROM anaconda/miniconda:26.9.4
 
-FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_VERSION}
-
-# Re-declare ARGs after FROM so they are available in this build stage
-ARG CUDA_VERSION
-ARG UBUNTU_VERSION
-
+# Set environment variables
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
 
-ARG IMAGE_VERSION=2.0.0
+ARG IMAGE_VERSION=2.0.1
 ARG CONDA_ENV=introme
 ARG PYTHON_VERSION=3.10
+
 ARG TORCH_VERSION=2.12.1
 ARG TORCH_CUDA_INDEX=cu126
-
-ARG MINICONDA_INSTALLER=Miniconda3-py310_26.9.4-0-Linux-x86_64.sh
-ARG MINICONDA_SHA256=258005644606ee77d2ed31bcff9dd14975885f601a1fd55d06e4628d0a047f89
+ARG TORCH_CUDA_VERSION=12.6
 
 ARG PANGOLIN_REPO=https://github.com/donren-leung/PangolinBatched/
 ARG PANGOLIN_COMMIT=71cad1c2e53210662cde89f344e37ab143c80e62
@@ -27,19 +20,10 @@ ARG PANGOLIN_COMMIT=71cad1c2e53210662cde89f344e37ab143c80e62
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
+        procps \
         wget \
         git && \
     rm -rf /var/lib/apt/lists/*
-
-# Install Miniconda
-RUN wget --quiet \
-        "https://repo.anaconda.com/miniconda/${MINICONDA_INSTALLER}" \
-        -O /tmp/miniconda.sh && \
-    echo "${MINICONDA_SHA256}  /tmp/miniconda.sh" | sha256sum -c - && \
-    bash /tmp/miniconda.sh -b -p /opt/miniconda3 && \
-    rm /tmp/miniconda.sh
-
-ENV PATH="/opt/miniconda3/bin:${PATH}"
 
 # Python + PyVCF
 RUN conda create -y \
@@ -75,15 +59,13 @@ RUN git init /tmp/pangolin && \
     install -m 0755 scripts/create_db.py /opt/introme/bin/create_pangolin_db.py && \
     rm -rf /tmp/pangolin
 
-# NVIDIA runtime library paths
-ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}"
-
 # Build-time sanity checks
 RUN python -c "\
 import torch; \
 print('torch:', torch.__version__); \
 print('torch CUDA build:', torch.version.cuda); \
-assert torch.version.cuda is not None" && \
+assert torch.__version__.startswith('${TORCH_VERSION}'); \
+assert torch.version.cuda == '${TORCH_CUDA_VERSION}'" && \
     python /opt/introme/bin/create_pangolin_db.py --help >/dev/null && \
     python -m pip check
 
@@ -92,7 +74,7 @@ LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.ccicb.introme.runtime="gpu" \
       org.ccicb.introme.python.version="${PYTHON_VERSION}" \
       org.ccicb.introme.torch.version="${TORCH_VERSION}" \
-      org.ccicb.introme.torch.cuda="${TORCH_CUDA_INDEX}" \
-      org.ccicb.introme.cuda.base="${CUDA_VERSION}" \
+      org.ccicb.introme.torch.cuda.index="${TORCH_CUDA_INDEX}" \
+      org.ccicb.introme.torch.cuda.version="${TORCH_CUDA_VERSION}" \
       org.ccicb.introme.pangolin.source="${PANGOLIN_REPO}" \
       org.ccicb.introme.pangolin.commit="${PANGOLIN_COMMIT}"

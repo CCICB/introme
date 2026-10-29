@@ -1,12 +1,6 @@
-ARG CUDA_VERSION=12.2.2
-ARG UBUNTU_VERSION=22.04
+FROM anaconda/miniconda:26.9.4
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION}
-
-# Re-declare ARGs after FROM so they are available in this stage
-ARG CUDA_VERSION
-ARG UBUNTU_VERSION
-
+# Set environment variables
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
@@ -15,12 +9,11 @@ ARG IMAGE_VERSION=3.0.0
 ARG CONDA_ENV=introme
 ARG PYTHON_VERSION=3.10
 ARG TF_VERSION=2.15.1
+ARG TF_CUDA_VERSION=12.2
 ARG NUMPY_VERSION=1.26.4
 ARG CYVCF2_VERSION=0.30.15
 ARG SETUPTOOLS_VERSION=80.10.2
 
-ARG MINICONDA_INSTALLER=Miniconda3-py310_26.9.4-0-Linux-x86_64.sh
-ARG MINICONDA_SHA256=258005644606ee77d2ed31bcff9dd14975885f601a1fd55d06e4628d0a047f89
 
 ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
 ARG MMSPLICE_VERSION=2.4.0
@@ -32,22 +25,11 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
-        wget \
         procps \
         git && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Miniconda
-RUN wget --quiet \
-        "https://repo.anaconda.com/miniconda/${MINICONDA_INSTALLER}" \
-        -O /tmp/miniconda.sh && \
-    echo "${MINICONDA_SHA256}  /tmp/miniconda.sh" | sha256sum -c - && \
-    bash /tmp/miniconda.sh -b -p /opt/miniconda3 && \
-    rm /tmp/miniconda.sh
-
-ENV PATH="/opt/miniconda3/bin:${PATH}"
-
-# Python
+# Python environment
 RUN conda create -y \
         --name "${CONDA_ENV}" \
         --override-channels \
@@ -56,11 +38,11 @@ RUN conda create -y \
         pip && \
     conda clean -afy
 
-# Everything below here uses the Introme Conda environment
 ENV PATH="/opt/miniconda3/envs/${CONDA_ENV}/bin:${PATH}"
 
+# TensorFlow + explicitly pinned key dependencies
 RUN python -m pip install --no-cache-dir \
-        "tensorflow==${TF_VERSION}" \
+        "tensorflow[and-cuda]==${TF_VERSION}" \
         "numpy==${NUMPY_VERSION}" \
         "cyvcf2==${CYVCF2_VERSION}" \
         "setuptools==${SETUPTOOLS_VERSION}" \
@@ -68,6 +50,8 @@ RUN python -m pip install --no-cache-dir \
         pybigwig
 
 # Fix writeVCF IndexError: index 0 is out of bounds for axis 0 with size 0
+# MMSplice 2.4.0 depends on pyranges, which depends on native extensions
+# such as ncls and sorted_nearest, which is why we tmp install build-essential
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential && \
@@ -78,13 +62,12 @@ RUN apt-get update && \
     git checkout --detach FETCH_HEAD && \
     grep -Fq 'if pred is not None:' mmsplice/utils.py && \
     sed -i 's/if pred is not None:/if (pred is not None and len(pred.index) > 0 ):/' /tmp/mmsplice/mmsplice/utils.py && \
-    # MMSplice declares "tensorflow", but this CPU image uses tensorflow-cpu
     grep -Fq "'tensorflow'," setup.py && \
     sed -i \
         "s/'tensorflow',/'tensorflow==${TF_VERSION}',/" \
         setup.py && \
     \
-    pip install --no-cache-dir . && \
+    python -m pip install --no-cache-dir . && \
     rm -rf /tmp/mmsplice && \
     apt-get purge -y --auto-remove build-essential && \
     rm -rf /var/lib/apt/lists/*
@@ -107,7 +90,8 @@ print('cuDNN version:', build.get('cudnn_version')); \
 assert tf.__version__ == '${TF_VERSION}'; \
 assert np.__version__ == '${NUMPY_VERSION}'; \
 assert mmsplice.__version__ == '${MMSPLICE_VERSION}'; \
-assert build.get('is_cuda_build') is True" && \
+assert build.get('is_cuda_build') is True; \
+assert build.get('cuda_version') == '${TF_CUDA_VERSION}'" && \
     python -m pip check && \
     command -v run_mmsplice.py
 
@@ -116,9 +100,9 @@ LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.ccicb.introme.runtime="gpu" \
       org.ccicb.introme.python.version="${PYTHON_VERSION}" \
       org.ccicb.introme.tensorflow.version="${TF_VERSION}" \
+      org.ccicb.introme.tensorflow.cuda="${TF_CUDA_VERSION}" \
       org.ccicb.introme.numpy.version="${NUMPY_VERSION}" \
       org.ccicb.introme.cyvcf2.version="${CYVCF2_VERSION}" \
       org.ccicb.introme.setuptools.version="${SETUPTOOLS_VERSION}" \
-      org.ccicb.introme.cuda.base="${CUDA_VERSION}" \
       org.ccicb.introme.mmsplice.source="${MMSPLICE_REPO}" \
       org.ccicb.introme.mmsplice.commit="${MMSPLICE_COMMIT}"
