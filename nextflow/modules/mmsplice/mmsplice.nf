@@ -15,7 +15,7 @@ process mmsplice {
     input:
         path vcf
         path ref_genome
-        path gtf
+        path subset_gtf
 
     output:
         path "${params.prefix}.mmsplice.vcf", emit:  mmsplice_output
@@ -25,10 +25,9 @@ process mmsplice {
         """
         pwd
         ls
-
         export TF_FORCE_GPU_ALLOW_GROWTH=true
 
-		run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $gtf --output ${params.prefix}.mmsplice.vcf
+		run_mmsplice.py --vcf $vcf --fasta $ref_genome --gtf $subset_gtf --output ${params.prefix}.mmsplice.vcf
         # bgzip mmsplice.vcf
         # tabix mmsplice.vcf.gz
         """

@@ -23,7 +23,13 @@ RUN --mount=type=bind,source=${GENCODE_GTF},target=/tmp/gencode.gtf.gz,readonly 
         | awk '{print $1}' \
         > "${PANGOLIN_DB_DIR}/gencode-source.sha256"
 
+        
 ENV PANGOLIN_DB="${PANGOLIN_DB_DIR}/gencode.v${GENCODE_VERSION}.annotation.all-transcripts.pangolin.db"
+
+# Not the best spot but putting here because I forgot before and don't want to rebuild everything
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends procps \
+    && rm -rf /var/lib/apt/lists/*
 
 LABEL org.ccicb.introme.annotation.source="GENCODE" \
       org.ccicb.introme.annotation.version="${GENCODE_VERSION}" \

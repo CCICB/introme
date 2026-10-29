@@ -1,35 +1,97 @@
-FROM python:3.9-slim
+FROM anaconda/miniconda:26.9.4
 
-USER root
+# Set environment variables
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
+
+ARG IMAGE_VERSION=3.0.0
+ARG CONDA_ENV=introme
+ARG PYTHON_VERSION=3.10
+ARG TF_VERSION=2.15.1
+ARG NUMPY_VERSION=1.26.4
+ARG CYVCF2_VERSION=0.30.15
+ARG SETUPTOOLS_VERSION=80.10.2
+
+ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
+ARG MMSPLICE_VERSION=2.4.0
+ARG MMSPLICE_COMMIT=31513da3846b187b3d7f96ad14f3c71e1177b0d3
+
 WORKDIR /app
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ENV PATH=/app:/opt/conda/bin:$PATH
-
+# System tools
 RUN apt-get update && \
-    apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
+        ca-certificates \
         procps \
-        # gcc \
-        # build-essential \
-        # zlib1g-dev \
         git && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir numpy==1.26.4 cython pybigwig cyvcf2
+# Python environment
+RUN conda create -y \
+        --name "${CONDA_ENV}" \
+        --override-channels \
+        -c conda-forge \
+        "python=${PYTHON_VERSION}" \
+        pip && \
+    conda clean -afy
 
+ENV PATH="/opt/miniconda3/envs/${CONDA_ENV}/bin:${PATH}"
 
-ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
-ARG VERSION=2.4.0
+# TensorFlow + explicitly pinned key dependencies
+RUN python -m pip install --no-cache-dir \
+        "tensorflow-cpu==${TF_VERSION}" \
+        "numpy==${NUMPY_VERSION}" \
+        "cyvcf2==${CYVCF2_VERSION}" \
+        "setuptools==${SETUPTOOLS_VERSION}" \
+        cython \
+        pybigwig
 
 # Fix writeVCF IndexError: index 0 is out of bounds for axis 0 with size 0
-RUN git clone --branch ${VERSION} --depth 1 ${MMSPLICE_REPO} /tmp/mmsplice && \
+# MMSplice 2.4.0 depends on pyranges, which depends on native extensions
+# such as ncls and sorted_nearest, which is why we tmp install build-essential
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential && \
+    git init /tmp/mmsplice && \
+    cd /tmp/mmsplice && \
+    git remote add origin "${MMSPLICE_REPO}" && \
+    git fetch --depth 1 origin "${MMSPLICE_COMMIT}" && \
+    git checkout --detach FETCH_HEAD && \
+    grep -Fq 'if pred is not None:' mmsplice/utils.py && \
     sed -i 's/if pred is not None:/if (pred is not None and len(pred.index) > 0 ):/' /tmp/mmsplice/mmsplice/utils.py && \
-    pip install --no-cache-dir /tmp/mmsplice && \
-    rm -rf /tmp/mmsplice
+    # MMSplice declares "tensorflow", but this CPU image uses tensorflow-cpu
+    grep -Fq "'tensorflow'," setup.py && \
+    sed -i \
+        "s/'tensorflow',/'tensorflow-cpu==${TF_VERSION}',/" \
+        setup.py && \
+    \
+    pip install --no-cache-dir . && \
+    rm -rf /tmp/mmsplice && \
+    apt-get purge -y --auto-remove build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY --chmod=755 run_mmsplice.py .
+# Introme MMSplice wrapper
+COPY --chmod=0755 run_mmsplice.py /usr/local/bin/run_mmsplice.py
 
-LABEL version="v2.2"
+# Final sanity checks
+RUN python -c "\
+import tensorflow as tf; \
+import numpy as np; \
+import mmsplice; \
+print('tensorflow:', tf.__version__); \
+print('numpy:', np.__version__); \
+print('mmsplice:', mmsplice.__version__); \
+assert tf.__version__ == '${TF_VERSION}'; \
+assert np.__version__ == '${NUMPY_VERSION}'" && \
+    python -m pip check && \
+    command -v run_mmsplice.py
+
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.source="https://github.com/CCICB/introme" \
+      org.ccicb.introme.runtime="cpu" \
+      org.ccicb.introme.python.version="${PYTHON_VERSION}" \
+      org.ccicb.introme.tensorflow.version="${TF_VERSION}" \
+      org.ccicb.introme.numpy.version="${NUMPY_VERSION}" \
+      org.ccicb.introme.mmsplice.source="${MMSPLICE_REPO}" \
+      org.ccicb.introme.mmsplice.commit="${MMSPLICE_COMMIT}"

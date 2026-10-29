@@ -1,52 +1,124 @@
-# Use NVIDIA’s CUDA runtime as the base image
-FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
+ARG CUDA_VERSION=12.2.2
+ARG UBUNTU_VERSION=22.04
 
-# Set environment variables for noninteractive apt and locale settings
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION}
 
-# Install essential packages
+# Re-declare ARGs after FROM so they are available in this stage
+ARG CUDA_VERSION
+ARG UBUNTU_VERSION
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
+
+ARG IMAGE_VERSION=3.0.0
+ARG CONDA_ENV=introme
+ARG PYTHON_VERSION=3.10
+ARG TF_VERSION=2.15.1
+ARG NUMPY_VERSION=1.26.4
+ARG CYVCF2_VERSION=0.30.15
+ARG SETUPTOOLS_VERSION=80.10.2
+
+ARG MINICONDA_INSTALLER=Miniconda3-py310_26.9.4-0-Linux-x86_64.sh
+ARG MINICONDA_SHA256=258005644606ee77d2ed31bcff9dd14975885f601a1fd55d06e4628d0a047f89
+
+ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
+ARG MMSPLICE_VERSION=2.4.0
+ARG MMSPLICE_COMMIT=31513da3846b187b3d7f96ad14f3c71e1177b0d3
+
+WORKDIR /app
+
+# System tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        apt-utils \
+        ca-certificates \
         wget \
+        procps \
         git && \
-    apt-get -y upgrade && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Miniconda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
-    bash /tmp/miniconda.sh -b -p /opt/conda && \
+RUN wget --quiet \
+        "https://repo.anaconda.com/miniconda/${MINICONDA_INSTALLER}" \
+        -O /tmp/miniconda.sh && \
+    echo "${MINICONDA_SHA256}  /tmp/miniconda.sh" | sha256sum -c - && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda3 && \
     rm /tmp/miniconda.sh
 
-# Update PATH to include conda
-ENV PATH=/opt/conda/bin:$PATH
+ENV PATH="/opt/miniconda3/bin:${PATH}"
 
-# Update conda, install Python 3.9, add channels, and clean up caches
-RUN conda update -n base -c defaults conda -y && \
-    conda install -y python=3.9 && \
-    conda config --add channels bioconda && \
+# Python
+RUN conda create -y \
+        --name "${CONDA_ENV}" \
+        --override-channels \
+        -c conda-forge \
+        "python=${PYTHON_VERSION}" \
+        pip && \
     conda clean -afy
 
-# Upgrade pip and install TensorFlow (GPU-capable) (split commands for caching w/ SpliceAI)
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir tensorflow[and-cuda]
+# Everything below here uses the Introme Conda environment
+ENV PATH="/opt/miniconda3/envs/${CONDA_ENV}/bin:${PATH}"
 
-RUN pip install --no-cache-dir numpy==1.26.4 cython pybigwig cyvcf2
-
-WORKDIR /app
-ENV PATH=/app:$PATH
-
-ARG MMSPLICE_REPO=https://github.com/gagneurlab/MMSplice_MTSplice.git
-ARG VERSION=2.4.0
+RUN python -m pip install --no-cache-dir \
+        "tensorflow==${TF_VERSION}" \
+        "numpy==${NUMPY_VERSION}" \
+        "cyvcf2==${CYVCF2_VERSION}" \
+        "setuptools==${SETUPTOOLS_VERSION}" \
+        cython \
+        pybigwig
 
 # Fix writeVCF IndexError: index 0 is out of bounds for axis 0 with size 0
-RUN git clone --branch ${VERSION} --depth 1 ${MMSPLICE_REPO} /tmp/mmsplice && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential && \
+    git init /tmp/mmsplice && \
+    cd /tmp/mmsplice && \
+    git remote add origin "${MMSPLICE_REPO}" && \
+    git fetch --depth 1 origin "${MMSPLICE_COMMIT}" && \
+    git checkout --detach FETCH_HEAD && \
+    grep -Fq 'if pred is not None:' mmsplice/utils.py && \
     sed -i 's/if pred is not None:/if (pred is not None and len(pred.index) > 0 ):/' /tmp/mmsplice/mmsplice/utils.py && \
-    pip install --no-cache-dir /tmp/mmsplice && \
-    rm -rf /tmp/mmsplice
+    # MMSplice declares "tensorflow", but this CPU image uses tensorflow-cpu
+    grep -Fq "'tensorflow'," setup.py && \
+    sed -i \
+        "s/'tensorflow',/'tensorflow==${TF_VERSION}',/" \
+        setup.py && \
+    \
+    pip install --no-cache-dir . && \
+    rm -rf /tmp/mmsplice && \
+    apt-get purge -y --auto-remove build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY --chmod=755 run_mmsplice.py .
+# Introme MMSplice wrapper
+COPY --chmod=0755 run_mmsplice.py /usr/local/bin/run_mmsplice.py
 
-LABEL version="v2.2-gpu"
+RUN python -c "\
+import tensorflow as tf; \
+import numpy as np; \
+import mmsplice; \
+build = tf.sysconfig.get_build_info(); \
+print('tensorflow:', tf.__version__); \
+print('numpy:', np.__version__); \
+print('mmsplice:', mmsplice.__version__); \
+print('TensorFlow build info:', build); \
+print('CUDA build:', build.get('is_cuda_build')); \
+print('CUDA version:', build.get('cuda_version')); \
+print('cuDNN version:', build.get('cudnn_version')); \
+assert tf.__version__ == '${TF_VERSION}'; \
+assert np.__version__ == '${NUMPY_VERSION}'; \
+assert mmsplice.__version__ == '${MMSPLICE_VERSION}'; \
+assert build.get('is_cuda_build') is True" && \
+    python -m pip check && \
+    command -v run_mmsplice.py
+
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.source="https://github.com/CCICB/introme" \
+      org.ccicb.introme.runtime="gpu" \
+      org.ccicb.introme.python.version="${PYTHON_VERSION}" \
+      org.ccicb.introme.tensorflow.version="${TF_VERSION}" \
+      org.ccicb.introme.numpy.version="${NUMPY_VERSION}" \
+      org.ccicb.introme.cyvcf2.version="${CYVCF2_VERSION}" \
+      org.ccicb.introme.setuptools.version="${SETUPTOOLS_VERSION}" \
+      org.ccicb.introme.cuda.base="${CUDA_VERSION}" \
+      org.ccicb.introme.mmsplice.source="${MMSPLICE_REPO}" \
+      org.ccicb.introme.mmsplice.commit="${MMSPLICE_COMMIT}"

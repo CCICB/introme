@@ -217,7 +217,7 @@ workflow {
     spliceai(variant_info.out.variant_info_rmanno, ref_genome, distance, mask)
 
     // // Run MMSplice
-    mmsplice(variant_info.out.variant_info_rmanno, ref_genome, data_preprocessing.out.sorted_gtf)
+    mmsplice(variant_info.out.variant_info_rmanno, ref_genome, data_preprocessing.out.subsetted_gtf)
 
     // Run Pangolin
     pangolin(variant_info.out.variant_info_rmanno, ref_genome)
@@ -232,7 +232,7 @@ workflow {
     // squirl(SQUIRLS_DATA, variant_info.out.variant_info_rmanno)
 
     // Run Splicoegen
-    spliceogen(variant_info.out.variant_info_rmanno, ref_genome, data_preprocessing.out.sorted_gtf)
+    spliceogen(variant_info.out.variant_info_rmanno, ref_genome, data_preprocessing.out.subsetted_gtf)
 
     // STEP 5: Execute introme functions such as AG_check
     def ag_script_path = resolveRequiredPath(params, 'ag_script_path')
