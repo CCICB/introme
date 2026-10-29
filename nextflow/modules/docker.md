@@ -12,6 +12,10 @@
 2.0.1: procps back in the base images. GPU image builds torch CUDA dependencies through pip, not as base image.
 2.0.0: Using anaconda/miniconda:26.9.4 as base for CPU. Rich labels. procps tacked on in annotation image in version b. Annotation image bakes in pangolin generated db annotations from provided annotation gtf.
 
+### SpliceAI
+
+2.0.0: Using anaconda/miniconda:26.9.4 as base for CPU. Rich labels. Annotation image bakes in bw-spliceai generated db annotations from provided annotation gtf.
+
 ## Build Commands
 
 ```sh
@@ -36,5 +40,32 @@ docker build -f nextflow/modules/pangolin/Dockerfile.annotation \
     --build-arg GENCODE_VERSION=50 \
     --build-arg GENCODE_GTF=</path/to/gtf> \
     -t introme-pangolin:2.0.0-cpu-gencode50     .
+
+docker build -f nextflow/modules/pangolin/Dockerfile.annotation \
+    --build-arg BASE_IMAGE=introme-pangolin:2.0.0-runtime-gpu \
+    --build-arg GENCODE_VERSION=50 \
+    --build-arg GENCODE_GTF=</path/to/gtf> \
+    -t introme-pangolin:2.0.0-gpu-gencode50     .
+
+# spliceai
+docker build -f nextflow/modules/spliceai/Dockerfile.cpu  \
+    --build-arg IMAGE_VERSION=2.0.0 \
+    -t introme-spliceai:2.0.0-runtime-cpu     .
+
+docker build -f nextflow/modules/spliceai/Dockerfile.gpu \
+    --build-arg IMAGE_VERSION=2.0.0 \
+    -t introme-spliceai:2.0.0-runtime-gpu .
+
+ docker build -f nextflow/modules/spliceai/Dockerfile.annotation \
+    --build-arg BASE_IMAGE=introme-spliceai:2.0.0-runtime-cpu \
+    --build-arg GENCODE_VERSION=50 \
+    --build-arg GENCODE_GTF=</path/to/gtf> \
+    -t introme-spliceai:2.0.0-cpu-gencode-v50   .
+
+ docker build -f nextflow/modules/spliceai/Dockerfile.annotation \
+    --build-arg BASE_IMAGE=introme-spliceai:2.0.0-runtime-gpu \
+    --build-arg GENCODE_VERSION=50 \
+    --build-arg GENCODE_GTF=</path/to/gtf> \
+    -t introme-spliceai:2.0.0-gpu-gencode-v50   .
 
 ```

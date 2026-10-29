@@ -1,28 +1,84 @@
-# Dockerfile.cpu
-FROM python:3.9-slim
+FROM anaconda/miniconda:26.9.4
 
-# Set noninteractive mode and locale
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+# Set environment variables
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
 
-# Install system packages (note: no CUDA toolkit), and clean up apt caches
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        procps \
-        wget \
-        git && \
-    apt-get -y upgrade && \
-    rm -rf /var/lib/apt/lists/*
-
-# Upgrade pip and install TensorFlow (CPU‑only) and SpliceAI
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir tensorflow-cpu
+ARG IMAGE_VERSION=2.0.0
+ARG CONDA_ENV=introme
+ARG PYTHON_VERSION=3.10
+ARG TF_VERSION=2.15.1
+ARG KERAS_VERSION=2.15.0
+ARG NUMPY_VERSION=1.26.4
+ARG PANDAS_VERSION=2.1.4
+ARG PYFASTX_VERSION=2.2.0
+ARG PYSAM_VERSION=0.23.3
+ARG SETUPTOOLS_VERSION=80.10.2
 
 # Define build-time variable for SpliceAI commit
 ARG SPLICEAI_REPO=https://github.com/donren-leung/SpliceAI
 ARG SPLICEAI_COMMIT=3577e1823a607265064874102e63dcdca049b9d4
 
-RUN pip install --no-cache-dir spliceai@git+${SPLICEAI_REPO}@${SPLICEAI_COMMIT}
+# System tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        procps \
+        wget \
+        git && \
+    rm -rf /var/lib/apt/lists/*
 
-LABEL version="v1.4-cpu"
+# Python environment
+RUN conda create -y \
+        --name "${CONDA_ENV}" \
+        --override-channels \
+        -c conda-forge \
+        "python=${PYTHON_VERSION}" \
+        pip && \
+    conda clean -afy
+
+ENV PATH="/opt/miniconda3/envs/${CONDA_ENV}/bin:${PATH}"
+
+# TensorFlow + explicitly pinned key dependencies
+RUN python -m pip install --no-cache-dir \
+        "tensorflow-cpu==${TF_VERSION}" \
+        "keras==${KERAS_VERSION}" \
+        "numpy==${NUMPY_VERSION}" \
+        "pandas==${PANDAS_VERSION}" \
+        "setuptools==${SETUPTOOLS_VERSION}" \
+        "pyfastx==${PYFASTX_VERSION}" \
+        "pysam==${PYSAM_VERSION}"
+
+# Install SpliceAI from pinned commit
+RUN git init /tmp/spliceai && \
+    cd /tmp/spliceai && \
+    git remote add origin "${SPLICEAI_REPO}" && \
+    git fetch --depth 1 origin "${SPLICEAI_COMMIT}" && \
+    git checkout --detach FETCH_HEAD && \
+    python -m pip install --no-cache-dir --no-deps . && \
+    rm -rf /tmp/spliceai
+
+# Build-time sanity checks
+RUN python -c "\
+import tensorflow as tf; \
+import keras; \
+import spliceai; \
+print('TensorFlow:', tf.__version__); \
+print('Keras:', keras.__version__); \
+print('Built with CUDA:', tf.test.is_built_with_cuda()); \
+assert tf.__version__ == '${TF_VERSION}'; \
+assert keras.__version__ == '${KERAS_VERSION}'; \
+assert not tf.test.is_built_with_cuda()" && \
+    spliceai --help >/dev/null && \
+    python -m pip check
+
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.source="https://github.com/CCICB/introme" \
+      org.ccicb.introme.runtime="cpu" \
+      org.ccicb.introme.python.version="${PYTHON_VERSION}" \
+      org.ccicb.introme.tensorflow.version="${TF_VERSION}" \
+      org.ccicb.introme.keras.version="${KERAS_VERSION}" \
+      org.ccicb.introme.numpy.version="${NUMPY_VERSION}" \
+      org.ccicb.introme.spliceai.source="${SPLICEAI_REPO}" \
+      org.ccicb.introme.spliceai.commit="${SPLICEAI_COMMIT}"

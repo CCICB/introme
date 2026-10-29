@@ -24,13 +24,13 @@ process spliceai {
     script:
         """
         export TF_FORCE_GPU_ALLOW_GROWTH=true
-        wget https://compbio.ccia.org.au/introme/files/${params.genome_build}/${params.spliceai_db} --no-check-certificate
+        # wget https://compbio.ccia.org.au/introme/files/${params.genome_build}/${params.spliceai_db} --no-check-certificate
         touch ${params.prefix}.spliceai.vcf
 
         ls -lah
-        spliceai -I ${vcf} -O ${params.prefix}.spliceai.vcf -R ${ref_genome} -A ${params.spliceai_db} -D ${distance} -M ${mask} 1>./log
+        spliceai -I ${vcf} -O ${params.prefix}.spliceai.vcf -R ${ref_genome} -A "\$SPLICEAI_ANNOTATION" -D ${distance} -M ${mask} 1>./log
 
-        sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1\\&\\2/g' ${params.prefix}.spliceai.vcf
+        # sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1\\&\\2/g' ${params.prefix}.spliceai.vcf
 
         # Check if need to sort 
         # bgzip spliceai.vcf 

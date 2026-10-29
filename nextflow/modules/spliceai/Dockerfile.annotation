@@ -1,0 +1,105 @@
+# syntax=docker/dockerfile:1
+
+ARG BASE_IMAGE
+
+# =============================================
+# Shared configuration
+# =============================================
+FROM ${BASE_IMAGE} AS common
+
+ARG GENCODE_VERSION=50
+ARG GENCODE_GTF
+
+ARG ENSEMBL_DATABASE=homo_sapiens_core_116_38
+ARG MANE_RELEASE=1.4
+
+ARG SPLICEAI_LOOKUP_REPO=https://github.com/broadinstitute/SpliceAI-lookup.git
+ARG SPLICEAI_LOOKUP_REF=ebf44fd5a0c1217c979065c88fd95d68a4934489
+
+ARG ANNOTATION_UTILS_REPO=https://github.com/bw2/annotation-utils.git
+ARG ANNOTATION_UTILS_REF=c4a567f86b9a3f2472f22ee2e0c3d2058c368d2a
+
+ENV SPLICEAI_ANNOTATION_DIR=/opt/introme/annotations
+
+ENV SPLICEAI_ANNOTATION="${SPLICEAI_ANNOTATION_DIR}/gencode.v${GENCODE_VERSION}.annotation.deduplicated.spliceai.txt.gz"
+
+# syntax=docker/dockerfile:1
+
+ARG BASE_IMAGE
+
+# =============================================
+# Stage 1: Generate annotations
+# =============================================
+FROM common AS annotation_builder
+
+# Build-only dependency for annotation_utils/get_ensembl_db_info.py
+# pandas and git are already in the SpliceAI base image
+RUN python -m pip install --no-cache-dir \
+        "pymysql==1.1.1"
+
+RUN set -eux; \
+    git init /tmp/annotation-utils; \
+    cd /tmp/annotation-utils; \
+    git remote add origin "${ANNOTATION_UTILS_REPO}"; \
+    git fetch --depth 1 origin "${ANNOTATION_UTILS_REF}"; \
+    git checkout --detach FETCH_HEAD; \
+    python -m pip install --no-cache-dir --no-deps .; \
+    mkdir -p "${SPLICEAI_ANNOTATION_DIR}"; \
+    git rev-parse HEAD \
+        > "${SPLICEAI_ANNOTATION_DIR}/annotation-utils.commit"
+
+RUN set -eux; \
+    git init /tmp/spliceai-lookup; \
+    cd /tmp/spliceai-lookup; \
+    git remote add origin "${SPLICEAI_LOOKUP_REPO}"; \
+    git fetch --depth 1 origin "${SPLICEAI_LOOKUP_REF}"; \
+    git checkout --detach FETCH_HEAD; \
+    git rev-parse HEAD \
+        > "${SPLICEAI_ANNOTATION_DIR}/spliceai-lookup.commit"
+
+# Generate annotation using both original Broad scripts
+RUN --mount=type=bind,source=${GENCODE_GTF},target=/tmp/gencode.gtf.gz,readonly \
+    set -eux; \
+    cd /tmp; \
+    \
+    python /tmp/spliceai-lookup/annotations/generate_transcript_annotation_json.py \
+        --ensembl-database "${ENSEMBL_DATABASE}" \
+        --mane-url-base "https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_${MANE_RELEASE}" \
+        --mane-summary-table-filename "MANE.GRCh38.v${MANE_RELEASE}.summary.txt.gz" \
+        /tmp/gencode.gtf.gz; \
+    \
+    python /tmp/spliceai-lookup/annotations/convert_gtf_to_SpliceAI_annotation_input_format.py \
+        -a /tmp/gencode.transcript_annotations.json.gz \
+        /tmp/gencode.gtf.gz; \
+    \
+    gzip -t /tmp/gencode.txt.gz; \
+    \
+    mv /tmp/gencode.txt.gz \
+       "${SPLICEAI_ANNOTATION_DIR}/gencode.v${GENCODE_VERSION}.annotation.deduplicated.spliceai.txt.gz"; \
+    \
+    mv /tmp/gencode.transcript_annotations.json.gz \
+       "${SPLICEAI_ANNOTATION_DIR}/gencode.v${GENCODE_VERSION}.transcript_annotations.json.gz"; \
+    \
+    sha256sum /tmp/gencode.gtf.gz \
+        | awk '{print $1}' \
+        > "${SPLICEAI_ANNOTATION_DIR}/gencode-source.sha256"
+
+# =============================================
+# Stage 2: Final SpliceAI image
+# =============================================
+FROM common AS final
+
+COPY --from=annotation_builder \
+    /opt/introme/annotations/ \
+    /opt/introme/annotations/
+
+LABEL org.ccicb.introme.annotation.source="GENCODE" \
+      org.ccicb.introme.annotation.version="${GENCODE_VERSION}" \
+      org.ccicb.introme.annotation.filter="boundary-deduplicated" \
+      org.ccicb.introme.annotation.format="spliceai" \
+      org.ccicb.introme.annotation.ensembl.database="${ENSEMBL_DATABASE}" \
+      org.ccicb.introme.annotation.mane.version="${MANE_RELEASE}" \
+      org.ccicb.introme.annotation.converter.source="${SPLICEAI_LOOKUP_REPO}" \
+      org.ccicb.introme.annotation.converter.ref="${SPLICEAI_LOOKUP_REF}" \
+      org.ccicb.introme.annotation.utils.source="${ANNOTATION_UTILS_REPO}" \
+      org.ccicb.introme.annotation.utils.ref="${ANNOTATION_UTILS_REF}"
