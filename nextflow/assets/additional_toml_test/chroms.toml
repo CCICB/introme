@@ -1,0 +1,5 @@
+[[annotation]]
+file = "chroms.bed.gz"
+columns = [4]
+ops = ["uniq"]
+names = ["TEST_FIELD"]

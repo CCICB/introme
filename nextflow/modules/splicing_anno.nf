@@ -39,11 +39,33 @@ process splicing_anno {
 		path ese_score
 		path ese_score_tbi
 
+        path custom_anno_dir, stageAs: 'custom_annotations'
+        path custom_anno_toml, stageAs: 'custom_annotations.toml'
+
     output:
 		path "${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf.gz", emit: splicing_anno_output
         // path "${params.prefix}.annotated.tsv", emit: annotated_tsv
 
     script:
+    def hasCustom = custom_anno_dir && custom_anno_toml
+
+    def customAnnotation = hasCustom ? """
+        echo "Running custom vcfanno annotations"
+
+        vcfanno \
+            -base-path ${custom_anno_dir} \
+            -p \$(getconf _NPROCESSORS_ONLN) \
+            -lua ${conf_lua} \
+            ${custom_anno_toml} \
+            step1.vcf.gz > step_custom.vcf
+
+        bgzip step_custom.vcf
+    """ : ''
+
+    def ensembleInput = hasCustom
+        ? 'step_custom.vcf.gz'
+        : 'step1.vcf.gz'
+
     """
     echo splicing_anno
     # sed -i -E 's/([0-9]+),(NM_|ENST|ENSG)/\\1\\&\\2/g' ${spliceai_output} #
@@ -83,12 +105,14 @@ process splicing_anno {
     # turns into step1.vcf.gz
     bgzip step1.vcf
 
+    ${customAnnotation}
+
     vcfanno \
         -base-path ./ \
         -p \$(getconf _NPROCESSORS_ONLN) \
         -lua ${conf_lua} \
         ${ensemble_anno_toml} \
-        step1.vcf.gz > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
+        ${ensembleInput} > ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     
     bgzip -k ${params.prefix}.highquality.annotated.filtered.ensemblescored.vcf
     """

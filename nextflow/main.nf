@@ -184,6 +184,18 @@ workflow {
             .replaceFirst(/\.gtf$/, '')
     def chrRename = resolveRequiredPath(params, 'chrRename')
 
+
+    def hasCustomDir = !!params.custom_anno_dir
+    def hasCustomToml = !!params.custom_anno_toml
+
+    if (hasCustomDir != hasCustomToml) {
+        error "Both --custom_anno_dir and --custom_anno_toml must be provided together"
+    }
+
+    def customAnnoDir = hasCustomDir ? file(params.custom_anno_dir, checkIfExists: true) : []
+    def customAnnoToml = hasCustomToml ? file(params.custom_anno_toml, checkIfExists: true) : []
+
+
     // STEP 1: subsetting the VCF to genomic regions of interest (first because it gets rid of the most variants)
     data_preprocessing(vcf, ref_genome, gtf, chrRename, gtf_prefix)
 
@@ -277,7 +289,10 @@ workflow {
         introme_functions.out.ag_check,
         introme_functions.out.ag_check_tbi,
         introme_functions.out.ese_score,
-        introme_functions.out.ese_score_tbi
+        introme_functions.out.ese_score_tbi,
+
+        customAnnoDir,
+        customAnnoToml
     )
 
     // STEP 7: Generate consensus scores - ML mode selection (infer | train)

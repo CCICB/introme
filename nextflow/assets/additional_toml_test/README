@@ -1,0 +1,5 @@
+# Example test command
+
+```sh
+--custom_anno_dir assets/additional_toml_test --custom_anno_toml assets/additional_toml_test/chroms.toml
+```
