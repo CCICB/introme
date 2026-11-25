@@ -28,6 +28,10 @@
 - BGZip 1.13+ds (same version as tabix)
 - vcfanno version 0.3.3 [built with go1.18.1]
 
+### functions
+
+1.7.0: 1.6.0 built to new image standards with version pinning of bioinformatic tools and python libraries, validation and labelling.
+
 ## Build Commands
 
 ```sh
