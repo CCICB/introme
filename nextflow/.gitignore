@@ -5,3 +5,5 @@ work/
 params.json
 *.html
 *.txt
+!modules/AG_check/**
+!ESE/**
