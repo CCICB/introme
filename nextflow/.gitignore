@@ -6,4 +6,4 @@ params.json
 *.html
 *.txt
 !modules/AG_check/**
-!ESE/**
+!modules/ESE/reverse_engineer/**
